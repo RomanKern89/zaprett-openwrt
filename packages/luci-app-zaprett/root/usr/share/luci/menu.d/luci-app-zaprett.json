@@ -1,0 +1,68 @@
+{
+	"admin/services/zaprett": {
+		"title": "zaprett",
+		"order": 60,
+		"action": {
+			"type": "alias",
+			"path": "admin/services/zaprett/overview"
+		},
+		"depends": {
+			"acl": [ "luci-app-zaprett" ],
+			"uci": { "zaprett": true }
+		}
+	},
+
+	"admin/services/zaprett/overview": {
+		"title": "Overview",
+		"order": 10,
+		"action": {
+			"type": "view",
+			"path": "zaprett/overview"
+		}
+	},
+
+	"admin/services/zaprett/strategies": {
+		"title": "Strategies",
+		"order": 20,
+		"action": {
+			"type": "view",
+			"path": "zaprett/strategies"
+		}
+	},
+
+	"admin/services/zaprett/lists": {
+		"title": "Lists",
+		"order": 30,
+		"action": {
+			"type": "view",
+			"path": "zaprett/lists"
+		}
+	},
+
+	"admin/services/zaprett/repo": {
+		"title": "Repository",
+		"order": 40,
+		"action": {
+			"type": "view",
+			"path": "zaprett/repo"
+		}
+	},
+
+	"admin/services/zaprett/settings": {
+		"title": "Settings",
+		"order": 50,
+		"action": {
+			"type": "view",
+			"path": "zaprett/settings"
+		}
+	},
+
+	"admin/services/zaprett/diagnostics": {
+		"title": "Diagnostics",
+		"order": 60,
+		"action": {
+			"type": "view",
+			"path": "zaprett/diagnostics"
+		}
+	}
+}

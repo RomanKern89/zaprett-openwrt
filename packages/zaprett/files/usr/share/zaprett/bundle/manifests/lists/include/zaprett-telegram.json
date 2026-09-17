@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-telegram",
+  "type": "list",
+  "name": "Telegram",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "Домены Telegram (17 шт.): telegram.org, t.me, telesco.pe и другие сайты Telegram. Взяты домены, которые есть и в CherretGit/zaprett-repo, и в itdoginfo/allow-domains и существуют в DNS. Приложение Telegram ходит по IP-адресам — для него нужен лист «Telegram: IP-сети».",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/lists/include/zaprett-telegram.txt",
+  "source": "bundle",
+  "sha256": "966dc007f4bfb378c460ccae8b5c7f0397d73876060741bca363603e4e0ab460",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

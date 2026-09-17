@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-ultimatefix-mgts",
+  "name": "strategy-ultimatefix-mgts",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-ultimatefix-mgts.txt",
+    "sha256": "e9fd8395bf73bd3fc0b695979d571ae19bdf52a605a066a409da3268d9c50feb"
+  }
+}

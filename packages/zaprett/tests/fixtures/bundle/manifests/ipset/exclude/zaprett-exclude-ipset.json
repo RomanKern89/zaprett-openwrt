@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-exclude-ipset",
+  "type": "ipset_exclude",
+  "name": "zaprett-exclude-ipset",
+  "version": "2026.09.17",
+  "author": "test",
+  "description": "fixture",
+  "dependencies": [],
+  "file": "zaprett-exclude-ipset.txt",
+  "source": "bundle",
+  "sha256": "452d3fb6c2d4dcf252980c0539dca0a54d24dd614796ce3c428fd7619bb76a74",
+  "installed_at": 1758100000,
+  "manifest_url": null
+}

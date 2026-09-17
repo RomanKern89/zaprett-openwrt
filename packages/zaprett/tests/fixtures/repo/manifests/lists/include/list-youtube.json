@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "list-youtube",
+  "name": "list-youtube",
+  "version": "1.0.0",
+  "author": "zaprett-devs",
+  "description": "Домены YouTube",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/include/list-youtube.txt",
+    "sha256": "c23327c320866a95db797603d2ab4a60e4f4f750c2f0f9d0568314327941418f"
+  }
+}

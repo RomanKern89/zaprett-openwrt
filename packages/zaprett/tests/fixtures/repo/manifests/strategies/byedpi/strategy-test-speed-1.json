@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "strategy-test-speed-1",
+  "name": "strategy-test-speed-1",
+  "version": "1.0.0",
+  "author": "Владимир",
+  "description": "Порт стратегии Владимира (портировал HelloGames_.)",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/byedpi/strategy-test-speed-1.txt",
+    "sha256": "c48a774d6bc48becf4959b245641953b697fa8da8af61608db7c49bfb40726ac"
+  }
+}

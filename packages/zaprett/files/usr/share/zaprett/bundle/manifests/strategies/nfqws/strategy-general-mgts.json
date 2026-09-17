@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-general-mgts",
+  "type": "nfqws",
+  "name": "strategy-general-mgts",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-general-mgts.txt",
+  "source": "bundle",
+  "sha256": "a71352dba61af60df26bd87312f3b0ab5f17534aaab60888e69f3ca9faf0c2da",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-general-mgts.json"
+}

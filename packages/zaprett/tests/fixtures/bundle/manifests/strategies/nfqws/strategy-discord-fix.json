@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-discord-fix",
+  "name": "strategy-discord-fix",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-discord-fix.txt",
+  "source": "bundle",
+  "sha256": "e66cabc5d4b4deb8bf43e2de8b1db243f32f0ad5dee8849fd3874027126d6d49",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discord-fix.json"
+}

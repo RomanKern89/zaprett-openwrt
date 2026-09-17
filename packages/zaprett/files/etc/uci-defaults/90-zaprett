@@ -1,0 +1,33 @@
+#!/bin/sh
+# zaprett: first-time setup, idempotent (safe to run again).
+
+# fw4 script include that restores table inet zaprett after `service firewall stop/start`
+if [ "$(uci -q get firewall.zaprett)" != "include" ]; then
+	uci -q delete firewall.zaprett
+	uci set firewall.zaprett=include
+	uci set firewall.zaprett.type='script'
+	uci set firewall.zaprett.path='/usr/share/zaprett/fw4-include.sh'
+	uci set firewall.zaprett.fw4_compatible='1'
+	uci commit firewall
+fi
+
+# configuration sections that may be missing after manual edits
+uci -q get zaprett.main >/dev/null || { uci set zaprett.main=main; uci set zaprett.main.enabled='0'; }
+uci -q get zaprett.repo >/dev/null || uci set zaprett.repo=repo
+uci -q get zaprett.test >/dev/null || uci set zaprett.test=test
+uci commit zaprett
+
+# user lists (conffiles) and runtime directories
+mkdir -p /etc/zaprett/user/strategies/nfqws /etc/zaprett/user/strategies/nfqws2
+for f in hosts-include.txt hosts-exclude.txt ipset-include.txt ipset-exclude.txt; do
+	[ -f "/etc/zaprett/user/$f" ] || : > "/etc/zaprett/user/$f"
+done
+
+# default subscriptions added by newer versions (the kept /etc/config/zaprett lacks them after an upgrade);
+# those deleted by the user are listed in zaprett.main.deleted_sources and are not restored
+/usr/bin/zaprett sources defaults --quiet >/dev/null 2>&1
+
+# daily autoupdate line in /etc/crontabs/root (random minute, hour from UCI)
+/usr/bin/zaprett cron sync --quiet >/dev/null 2>&1
+
+exit 0

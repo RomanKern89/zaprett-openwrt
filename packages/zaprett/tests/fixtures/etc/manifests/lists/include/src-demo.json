@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "src-demo",
+  "type": "list",
+  "name": "Demo subscription",
+  "version": "2026.09.17",
+  "author": "",
+  "description": "https://example.org/list.txt",
+  "dependencies": [],
+  "file": "src-demo.txt",
+  "source": "url",
+  "sha256": "300de60b4f89aacd7eb76111e67c8f70452ae39056f9eff228f1e7bc7b185c53",
+  "installed_at": 1758100002,
+  "manifest_url": null,
+  "url": "https://example.org/list.txt",
+  "entries": 2
+}

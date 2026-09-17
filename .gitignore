@@ -1,0 +1,4 @@
+dist/
+build/work/
+__pycache__/
+*.tmp

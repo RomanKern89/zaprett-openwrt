@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-simple-fake-alt",
+  "name": "strategy-simple-fake-alt",
+  "version": "1.0.0",
+  "author": "flowseal",
+  "description": "Стратегия simple-fake-alt из репозитория zapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-simple-fake-alt.txt",
+  "source": "bundle",
+  "sha256": "92b9a59f8709cb66c59b0ce3ebf5a79dae061d724eb92017aadeb05370987d58",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-simple-fake-alt.json"
+}

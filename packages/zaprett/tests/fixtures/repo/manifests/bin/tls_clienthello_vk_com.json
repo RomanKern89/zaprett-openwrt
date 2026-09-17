@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "tls_clienthello_vk_com",
+  "name": "tls_clienthello_vk_com",
+  "version": "1.0.0",
+  "author": "zaprett-devs",
+  "description": "Фека vk.com",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/bin/tls_clienthello_vk_com.bin",
+    "sha256": "d6d63c53bc0e1d97e913a43fc4db34f6558bb807228bf6100e3b6863f0720404"
+  }
+}

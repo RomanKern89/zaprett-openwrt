@@ -1,0 +1,392 @@
+{
+  "schema": 1,
+  "snapshot": "2026.09.17",
+  "zaprett_repo_commit": "09b30f0ee80731807eec59d2a5b796681739e654",
+  "items": [
+    {
+      "id": "zaprett-youtube",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-youtube.json"
+    },
+    {
+      "id": "zaprett-discord",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-discord.json"
+    },
+    {
+      "id": "zaprett-telegram",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-telegram.json"
+    },
+    {
+      "id": "zaprett-rutracker",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-rutracker.json"
+    },
+    {
+      "id": "zaprett-telegram-ipset",
+      "type": "ipset",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-telegram-ipset.json"
+    },
+    {
+      "id": "zaprett-exclude",
+      "type": "list_exclude",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/exclude/zaprett-exclude.json"
+    },
+    {
+      "id": "zaprett-exclude-ipset",
+      "type": "ipset_exclude",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/exclude/zaprett-exclude-ipset.json"
+    },
+    {
+      "id": "strategy-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt.json"
+    },
+    {
+      "id": "strategy-alt10",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt10.json"
+    },
+    {
+      "id": "strategy-alt11",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt11.json"
+    },
+    {
+      "id": "strategy-alt2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt2.json"
+    },
+    {
+      "id": "strategy-alt2-roblox",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt2-roblox.json"
+    },
+    {
+      "id": "strategy-alt3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt3.json"
+    },
+    {
+      "id": "strategy-alt4",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt4.json"
+    },
+    {
+      "id": "strategy-alt5",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt5.json"
+    },
+    {
+      "id": "strategy-alt6",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt6.json"
+    },
+    {
+      "id": "strategy-alt7",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt7.json"
+    },
+    {
+      "id": "strategy-alt8",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-alt8.json"
+    },
+    {
+      "id": "strategy-default",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-default.json"
+    },
+    {
+      "id": "strategy-discord",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-discord.json"
+    },
+    {
+      "id": "strategy-discord-fix",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-discord-fix.json"
+    },
+    {
+      "id": "strategy-discordfix-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-discordfix-alt.json"
+    },
+    {
+      "id": "strategy-discordfix-alt2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-discordfix-alt2.json"
+    },
+    {
+      "id": "strategy-discordfix-mgts",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-discordfix-mgts.json"
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fake-tls-auto-alt.json"
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fake-tls-auto-alt2.json"
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fake-tls-auto-alt3.json"
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt3-roblox",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fake-tls-auto-alt3-roblox.json"
+    },
+    {
+      "id": "strategy-fix-v1",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fix-v1.json"
+    },
+    {
+      "id": "strategy-fix-v2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fix-v2.json"
+    },
+    {
+      "id": "strategy-fix-v3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-fix-v3.json"
+    },
+    {
+      "id": "strategy-general",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general.json"
+    },
+    {
+      "id": "strategy-general-fake-tls-auto",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-fake-tls-auto.json"
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt.json"
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt-2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt-2.json"
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt-3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt-3.json"
+    },
+    {
+      "id": "strategy-general-mgts",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-mgts.json"
+    },
+    {
+      "id": "strategy-general-mgts2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-mgts2.json"
+    },
+    {
+      "id": "strategy-general-old",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-old.json"
+    },
+    {
+      "id": "strategy-general-simple-fake",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-simple-fake.json"
+    },
+    {
+      "id": "strategy-general-simple-fake-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-general-simple-fake-alt.json"
+    },
+    {
+      "id": "strategy-generalfix",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-generalfix.json"
+    },
+    {
+      "id": "strategy-generalfix-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-generalfix-alt.json"
+    },
+    {
+      "id": "strategy-generalfix-alt3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-generalfix-alt3.json"
+    },
+    {
+      "id": "strategy-generalfix-alt4",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-generalfix-alt4.json"
+    },
+    {
+      "id": "strategy-preset-russia",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-preset-russia.json"
+    },
+    {
+      "id": "strategy-russiafix",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-russiafix.json"
+    },
+    {
+      "id": "strategy-shizapret-alt-port",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-shizapret-alt-port.json"
+    },
+    {
+      "id": "strategy-shizapret-dot",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-shizapret-dot.json"
+    },
+    {
+      "id": "strategy-shizapret-dot-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-shizapret-dot-alt.json"
+    },
+    {
+      "id": "strategy-shizapret-md5sig-port",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-shizapret-md5sig-port.json"
+    },
+    {
+      "id": "strategy-shizapret-port",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-shizapret-port.json"
+    },
+    {
+      "id": "strategy-simple-fake",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-simple-fake.json"
+    },
+    {
+      "id": "strategy-simple-fake-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-simple-fake-alt.json"
+    },
+    {
+      "id": "strategy-ultimatefix",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-extended",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-extended.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v10",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v10.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v2.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v3.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v4",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v4.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v5",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v5.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v6",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v6.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v7",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v7.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v8",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v8.json"
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v9",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-alt-v9.json"
+    },
+    {
+      "id": "strategy-ultimatefix-mgts",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-mgts.json"
+    },
+    {
+      "id": "strategy-ultimatefix-universal",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-universal.json"
+    },
+    {
+      "id": "strategy-ultimatefix-universal-v2",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-universal-v2.json"
+    },
+    {
+      "id": "strategy-ultimatefix-universal-v3",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-ultimatefix-universal-v3.json"
+    },
+    {
+      "id": "strategy-youtubefix-alt",
+      "type": "nfqws",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws/strategy-youtubefix-alt.json"
+    },
+    {
+      "id": "quic_initial_www_google_com",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/quic_initial_www_google_com.json"
+    },
+    {
+      "id": "tls_clienthello_4pda_to",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_4pda_to.json"
+    },
+    {
+      "id": "tls_clienthello_max_ru",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_max_ru.json"
+    },
+    {
+      "id": "tls_clienthello_www_google_com",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_www_google_com.json"
+    },
+    {
+      "id": "tls_clienthello_vk_com",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_vk_com.json"
+    },
+    {
+      "id": "tls_clienthello_sberbank_ru",
+      "type": "bin",
+      "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_sberbank_ru.json"
+    }
+  ]
+}

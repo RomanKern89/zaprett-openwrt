@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-youtube",
+  "type": "list",
+  "name": "zaprett-youtube",
+  "version": "2026.09.17",
+  "author": "test",
+  "description": "fixture",
+  "dependencies": [],
+  "file": "zaprett-youtube.txt",
+  "source": "bundle",
+  "sha256": "b6d7e661aa8e05efcc4b405155e617936c8ea0ee46df8203c59baf05da9f3c6e",
+  "installed_at": 1758100000,
+  "manifest_url": null
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-youtube",
+  "type": "list",
+  "name": "YouTube",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "Домены YouTube (13 шт.): сайт, видео (googlevideo.com), превью и API. Очищенный набор от 2026-09-17: домен взят, если он есть минимум в двух независимых источниках (Flowseal/zapret-discord-youtube, itdoginfo/allow-domains, CherretGit/zaprett-repo, remittor/zapret-openwrt) и существует в DNS. Поддомены учитываются автоматически.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+  "source": "bundle",
+  "sha256": "82adaddbb7f4a91b284444c2ac1f68b726bca4feb08780e63d3524a1f83d7967",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

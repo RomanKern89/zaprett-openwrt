@@ -1,0 +1,9 @@
+#!/bin/sh
+# Make LuCI pick up the new menu entries and the rpcd plugin luci.zaprett
+# (also on first boot of an image built with the package).
+
+rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*
+rm -rf /tmp/luci-modulecache/
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload
+
+exit 0

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-ultimatefix-universal",
+  "name": "strategy-ultimatefix-universal",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-ultimatefix-universal.txt",
+    "sha256": "ed26639b2394e1c6f50ac8ea5a93ad350ef5d48e3d12403e84b7bf03b51f7848"
+  }
+}

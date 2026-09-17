@@ -1,0 +1,1725 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-app-zaprett 1.0.0\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "\"Disable autostart\" also stops zaprett. \"Start\" turns autostart on."
+msgstr "«Выключить автозапуск» заодно останавливает zaprett. «Запустить» включает автозапуск."
+
+msgid "%d marked strategies will be checked. During the check connections through zaprett may briefly drop. Start?"
+msgstr "Будут проверены отмеченные стратегии: %d. Во время проверки соединения через zaprett могут ненадолго прерываться. Начать?"
+
+msgid "%d ms"
+msgstr "%d мс"
+
+msgid "%s (not installed)"
+msgstr "%s (не установлено)"
+
+msgid "%s → %s"
+msgstr "%s → %s"
+
+msgid "%s: failed"
+msgstr "%s: ошибка"
+
+msgid "%s: finished."
+msgstr "%s: готово."
+
+msgid "A file could not be written on the router. Check free space."
+msgstr "Не удалось записать файл на роутере. Проверьте, есть ли свободное место."
+
+msgid "A strategy is a set of engine options that describes how to modify the first packets of a connection so that the provider equipment does not recognize the site. Providers block differently, so a strategy that works for one may not work for another. The easiest way is to run automatic selection."
+msgstr "Стратегия — это набор параметров движка: как изменить первые пакеты соединения, чтобы оборудование провайдера не узнало сайт. Провайдеры блокируют по-разному, поэтому стратегия, которая работает у одного, может не работать у другого. Проще всего запустить автоподбор."
+
+msgid "A strategy profile applies to all sites"
+msgstr "Профиль стратегии действует на все сайты"
+
+msgid "A strategy with this name already exists."
+msgstr "Стратегия с таким названием уже есть."
+
+msgid "A subscription has not been downloaded yet"
+msgstr "Подписка ещё не загружена"
+
+msgid "A subscription with this name already exists."
+msgstr "Подписка с таким названием уже есть."
+
+msgid "Access denied. Log in to LuCI again as a user with access to zaprett."
+msgstr "Нет доступа. Войдите в LuCI заново под пользователем, которому разрешено управлять zaprett."
+
+msgid "Add subscription"
+msgstr "Добавить подписку"
+
+msgid "Address"
+msgstr "Адрес"
+
+msgid "Address of index.json of the zaprett repository. Change it only to use a mirror."
+msgstr "Адрес файла index.json репозитория zaprett. Меняйте, только если пользуетесь зеркалом."
+
+msgid "Addresses or networks (for example 149.154.160.0/20) whose connections get the bypass. Used in the whitelist mode."
+msgstr "Адреса или сети (например, 149.154.160.0/20), соединения с которыми идут через обход. Используются в режиме «белый список»."
+
+msgid "Advanced"
+msgstr "Расширенные"
+
+msgid "After start the engine drops root privileges and works as this system user."
+msgstr "После запуска движок отказывается от прав root и работает от имени этого системного пользователя."
+
+msgid "All checked sites open even without zaprett. Either the provider does not block them now, or the checked sites are not representative, so the comparison below says little."
+msgstr "Все проверенные сайты открываются и без zaprett. Либо провайдер сейчас их не блокирует, либо проверялись не те сайты, поэтому сравнение ниже мало что говорит."
+
+msgid "All devices"
+msgstr "Все устройства"
+
+msgid "All devices except the listed ones"
+msgstr "Все, кроме указанных устройств"
+
+msgid "All installed strategies will be checked; it may take a long time. During the check connections through zaprett may briefly drop. Start?"
+msgstr "Будут проверены все установленные стратегии — это может занять много времени. Во время проверки соединения через zaprett могут ненадолго прерываться. Начать?"
+
+msgid "All sites except the exclusions (blacklist)"
+msgstr "Все сайты, кроме исключений (чёрный список)"
+
+msgid "All types"
+msgstr "Все типы"
+
+msgid "Also used directly by strategies: %s. For them the switch has no effect."
+msgstr "Кроме того, его напрямую используют стратегии: %s. На них этот переключатель не влияет."
+
+msgid "An enabled list was not found"
+msgstr "Включённый список не найден"
+
+msgid "An enabled subscription list has never been downloaded, so it is skipped for now. Open \"Lists\" → \"Subscriptions\" and press \"Update now\"."
+msgstr "Включённый список-подписка ещё ни разу не загружался, поэтому пока не используется. Откройте «Списки» → «Подписки» и нажмите «Обновить сейчас»."
+
+msgid "Another background task is already running. Wait until it finishes and try again."
+msgstr "Уже выполняется другая фоновая задача. Дождитесь её окончания и повторите."
+
+msgid "Another service command is still running. Try again in a few seconds."
+msgstr "Ещё выполняется другая команда управления службой. Повторите через несколько секунд."
+
+msgid "Apply"
+msgstr "Применить"
+
+msgid "Apply the best strategy"
+msgstr "Применить лучшую стратегию"
+
+msgid "Apply the selection"
+msgstr "Применить выбор"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Automatic selection"
+msgstr "Автоподбор"
+
+msgid "Automatic strategy selection"
+msgstr "Автоподбор стратегии"
+
+msgid "Automatic update"
+msgstr "Автообновление"
+
+msgid "Autostart"
+msgstr "Автозапуск"
+
+msgid "Autostart is disabled, zaprett is stopped."
+msgstr "Автозапуск выключен, zaprett остановлен."
+
+msgid "Autostart is enabled."
+msgstr "Автозапуск включён."
+
+msgid "Average time"
+msgstr "Среднее время"
+
+msgid "Background task: %s, %d%% done."
+msgstr "Фоновая задача: %s, выполнено %d%%."
+
+msgid "Best result: \"%s\", %d of %d sites opened."
+msgstr "Лучший результат: «%s», открылось %d из %d сайтов."
+
+msgid "Blacklist: everything except the exclusions"
+msgstr "Чёрный список: всё, кроме исключений"
+
+msgid "Builds the engine arguments from the current settings and asks the engine to check them without starting."
+msgstr "Собирает параметры движка из текущих настроек и просит движок проверить их без запуска."
+
+msgid "Built-in"
+msgstr "Встроенный"
+
+msgid "Built-in and custom items cannot be removed from the repository page."
+msgstr "Встроенные и свои элементы со страницы репозитория не удаляются."
+
+msgid "ByeDPI strategies work only in the Android application and cannot be used on the router."
+msgstr "Стратегии ByeDPI работают только в приложении для Android, на роутере их использовать нельзя."
+
+msgid "ByeDPI strategy"
+msgstr "Стратегия ByeDPI"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Cancel task"
+msgstr "Отменить задачу"
+
+msgid "Cancellation is requested. The task stops after the current step; this may take a minute."
+msgstr "Отмена запрошена. Задача остановится после текущего шага — это может занять около минуты."
+
+msgid "Catalog"
+msgstr "Каталог"
+
+msgid "Catalog address"
+msgstr "Адрес каталога"
+
+msgid "Catalog address: %s"
+msgstr "Адрес каталога: %s"
+
+msgid "Catalog error: %s"
+msgstr "Ошибка в каталоге: %s"
+
+msgid "Catalog loaded: %s"
+msgstr "Каталог загружен: %s"
+
+msgid "Change these parameters only if you know what you are doing: wrong values can break the bypass or the internet access. An empty field means the default value, shown in grey."
+msgstr "Меняйте эти параметры, только если понимаете, что делаете: неверные значения могут сломать обход или доступ в интернет. Пустое поле означает значение по умолчанию — оно показано серым."
+
+msgid "Check and save"
+msgstr "Проверить и сохранить"
+
+msgid "Check configuration"
+msgstr "Проверить настройки"
+
+msgid "Check details: %s"
+msgstr "Подробности проверки: %s"
+
+msgid "Check only the recommended strategies: much faster. Without this option all installed strategies are checked. If you mark strategies in the table below, only the marked ones are checked."
+msgstr "Проверять только рекомендованные стратегии — так намного быстрее. Без этой галочки проверяются все установленные стратегии. Если отметить стратегии в таблице ниже, проверятся только отмеченные."
+
+msgid "Check this strategy during automatic selection"
+msgstr "Проверить эту стратегию при автоподборе"
+
+msgid "Checked: %s"
+msgstr "Проверено: %s"
+
+msgid "Choose a strategy on the \"Strategies\" page or run automatic selection."
+msgstr "Выберите стратегию на странице «Стратегии» или запустите автоподбор."
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Configuration check"
+msgstr "Проверка настроек"
+
+msgid "Connection to the router failed (HTTP %d). Reload the page."
+msgstr "Не удалось связаться с роутером (HTTP %d). Обновите страницу."
+
+msgid "Connections recognised by these site names are never changed, in both modes. If the same site is also covered by an enabled IP network list, add its addresses to the IP network exclusions as well."
+msgstr "Соединения, узнанные по этим именам сайтов, не меняются никогда, в обоих режимах. Если тот же сайт попадает и во включённый список IP-сетей, добавьте его адреса ещё и в исключения IP-сетей."
+
+msgid "Copied to the clipboard."
+msgstr "Скопировано в буфер обмена."
+
+msgid "Copy"
+msgstr "Скопировать"
+
+msgid "Copy log"
+msgstr "Скопировать журнал"
+
+msgid "Could not apply the strategy"
+msgstr "Не удалось применить стратегию"
+
+msgid "Could not cancel the task"
+msgstr "Не удалось отменить задачу"
+
+msgid "Could not change the subscription"
+msgstr "Не удалось изменить подписку"
+
+msgid "Could not check the configuration"
+msgstr "Не удалось проверить настройки"
+
+msgid "Could not collect the diagnostic report"
+msgstr "Не удалось собрать диагностический отчёт"
+
+msgid "Could not delete the strategy"
+msgstr "Не удалось удалить стратегию"
+
+msgid "Could not delete the subscription"
+msgstr "Не удалось удалить подписку"
+
+msgid "Could not disable autostart"
+msgstr "Не удалось выключить автозапуск"
+
+msgid "Could not disable the list \"%s\""
+msgstr "Не удалось выключить список «%s»"
+
+msgid "Could not enable autostart"
+msgstr "Не удалось включить автозапуск"
+
+msgid "Could not enable the list \"%s\""
+msgstr "Не удалось включить список «%s»"
+
+msgid "Could not enable the lists of the selected services"
+msgstr "Не удалось включить списки выбранных сервисов"
+
+msgid "Could not get the state of zaprett"
+msgstr "Не удалось узнать состояние zaprett"
+
+msgid "Could not get the task state"
+msgstr "Не удалось узнать состояние задачи"
+
+msgid "Could not load the list"
+msgstr "Не удалось загрузить список"
+
+msgid "Could not load the list of services"
+msgstr "Не удалось загрузить перечень сервисов"
+
+msgid "Could not load the lists"
+msgstr "Не удалось загрузить списки"
+
+msgid "Could not load the strategy"
+msgstr "Не удалось загрузить стратегию"
+
+msgid "Could not load the strategy list"
+msgstr "Не удалось загрузить перечень стратегий"
+
+msgid "Could not load the subscriptions"
+msgstr "Не удалось загрузить подписки"
+
+msgid "Could not read the catalog"
+msgstr "Не удалось прочитать каталог"
+
+msgid "Could not read the task log"
+msgstr "Не удалось прочитать журнал задачи"
+
+msgid "Could not remove \"%s\""
+msgstr "Не удалось удалить «%s»"
+
+msgid "Could not restart zaprett"
+msgstr "Не удалось перезапустить zaprett"
+
+msgid "Could not select the strategy"
+msgstr "Не удалось выбрать стратегию"
+
+msgid "Could not show the strategy"
+msgstr "Не удалось показать стратегию"
+
+msgid "Could not start strategy selection"
+msgstr "Не удалось запустить автоподбор"
+
+msgid "Could not start the installation"
+msgstr "Не удалось начать установку"
+
+msgid "Could not start the update"
+msgstr "Не удалось начать обновление"
+
+msgid "Could not start updating the subscriptions"
+msgstr "Не удалось начать обновление подписок"
+
+msgid "Could not start zaprett"
+msgstr "Не удалось запустить zaprett"
+
+msgid "Could not stop zaprett"
+msgstr "Не удалось остановить zaprett"
+
+msgid "Could not update the catalog"
+msgstr "Не удалось обновить каталог"
+
+msgid "Create custom strategy"
+msgstr "Создать свою стратегию"
+
+msgid "Current strategy"
+msgstr "Текущая стратегия"
+
+msgid "Custom"
+msgstr "Свой"
+
+msgid "Debug log"
+msgstr "Отладочный журнал"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Delete strategy"
+msgstr "Удаление стратегии"
+
+msgid "Delete subscription"
+msgstr "Удаление подписки"
+
+msgid "Delete the custom strategy \"%s\"? This cannot be undone."
+msgstr "Удалить свою стратегию «%s»? Отменить это действие будет нельзя."
+
+msgid "Delete the subscription \"%s\"? The downloaded list is removed too."
+msgstr "Удалить подписку «%s»? Загруженный список тоже удалится."
+
+msgid "Details"
+msgstr "Подробнее"
+
+msgid "Devices"
+msgstr "Устройства"
+
+msgid "Diagnostic report"
+msgstr "Диагностический отчёт"
+
+msgid "Diagnostics"
+msgstr "Диагностика"
+
+msgid "Different providers block in different ways, so the default strategy may not suit yours. Automatic selection checks strategies one by one and shows which of them open the selected services. It takes several minutes; connections through zaprett may briefly drop during the check."
+msgstr "Провайдеры блокируют по-разному, поэтому стратегия по умолчанию может не подойти вашему. Автоподбор проверяет стратегии по очереди и показывает, какие из них открывают выбранные сервисы. Это занимает несколько минут; во время проверки соединения через zaprett могут ненадолго прерываться."
+
+msgid "Disable autostart"
+msgstr "Выключить автозапуск"
+
+msgid "Do not change"
+msgstr "Не менять"
+
+msgid "Domain exclusions"
+msgstr "Исключения доменов"
+
+msgid "Domain list"
+msgstr "Список доменов"
+
+msgid "Domain lists"
+msgstr "Списки доменов"
+
+msgid "Domain lists and IP network lists; exclusions are sites and networks that must never be touched."
+msgstr "Списки доменов или IP-сетей; исключения — это сайты и сети, которые трогать нельзя."
+
+msgid "Domains"
+msgstr "Домены"
+
+msgid "Download"
+msgstr "Скачать"
+
+msgid "Download and update automatically"
+msgstr "Загружать и обновлять автоматически"
+
+msgid "Download and update this list"
+msgstr "Загружать и обновлять этот список"
+
+msgid "Download failed. Check the internet connection of the router."
+msgstr "Не удалось скачать файл. Проверьте, есть ли у роутера доступ в интернет."
+
+msgid "Downloads from the repository, updates and automatic strategy selection run in the background. Here you can see the last such task and its log."
+msgstr "Загрузка из репозитория, обновления и автоподбор стратегии выполняются в фоне. Здесь видна последняя такая задача и её журнал."
+
+msgid "During the check connections through zaprett may briefly drop. After the check the previous strategy is restored; nothing changes until you apply a result."
+msgstr "Во время проверки соединения через zaprett могут ненадолго прерываться. После проверки вернётся прежняя стратегия: ничего не изменится, пока вы сами не примените результат."
+
+msgid "During the check the bypass is restarted several times, so connections through zaprett may briefly drop."
+msgstr "Во время проверки обход несколько раз перезапускается, поэтому соединения через zaprett могут ненадолго прерываться."
+
+msgid "Edit"
+msgstr "Изменить"
+
+msgid "Edit list \"%s\""
+msgstr "Редактирование списка «%s»"
+
+msgid "Edit strategy \"%s\""
+msgstr "Редактирование стратегии «%s»"
+
+msgid "Edit subscription \"%s\""
+msgstr "Редактирование подписки «%s»"
+
+msgid "Empty answer"
+msgstr "Пустой ответ"
+
+msgid "Empty profiles were removed from the strategy"
+msgstr "Из стратегии убраны пустые профили"
+
+msgid "Enable autostart"
+msgstr "Включить автозапуск"
+
+msgid "Enable if your provider gives you IPv6 internet access. Otherwise leave it off."
+msgstr "Включите, если провайдер даёт доступ в интернет по IPv6. Иначе оставьте выключенным."
+
+msgid "Enabled"
+msgstr "Вкл."
+
+msgid "Enabled lists"
+msgstr "Включённые списки"
+
+msgid "Enabled subscriptions need about %d MiB of memory, and the router has %d MiB in total. The router may become unstable: turn off large subscriptions."
+msgstr "Включённым подпискам нужно около %d МиБ памяти, а у роутера всего %d МиБ. Роутер может начать работать нестабильно — выключите большие подписки."
+
+msgid "Enabled subscriptions need about %d MiB of router memory. On routers with 128 MB of memory or less this can make the router unstable."
+msgstr "Включённым подпискам нужно около %d МиБ оперативной памяти роутера. На роутерах, где памяти 128 МБ и меньше, это может нарушить их стабильную работу."
+
+msgid "Enabled, but not running"
+msgstr "Включён, но не работает"
+
+msgid "Engine"
+msgstr "Движок"
+
+msgid "Engine arguments"
+msgstr "Параметры движка"
+
+msgid "Engine arguments with the lists substituted"
+msgstr "Параметры движка с подставленными списками"
+
+msgid "Engine output"
+msgstr "Вывод движка"
+
+msgid "Engine user"
+msgstr "Пользователь движка"
+
+msgid "Engine: %s"
+msgstr "Движок: %s"
+
+msgid "Enter a link that starts with https://."
+msgstr "Укажите ссылку, которая начинается с https://."
+
+msgid "Enter a name: Latin letters, digits, dot, dash and underscore."
+msgstr "Введите название: латинские буквы, цифры, точка, дефис и подчёркивание."
+
+msgid "Enter a name: lowercase Latin letters, digits and underscore, up to 32 characters."
+msgstr "Введите название: строчные латинские буквы, цифры и подчёркивание, не больше 32 символов."
+
+msgid "Enter a title."
+msgstr "Укажите заголовок."
+
+msgid "Entries"
+msgstr "Записей"
+
+msgid "Entries: %d, size: %s"
+msgstr "Записей: %d, размер: %s"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Exit code"
+msgstr "Код завершения"
+
+msgid "Expecting a non-zero mark: hexadecimal like 0x40000000 or decimal"
+msgstr "Нужна ненулевая метка: шестнадцатеричная вида 0x40000000 или десятичная"
+
+msgid "Expecting a system user name"
+msgstr "Нужно имя системного пользователя"
+
+msgid "Expecting an http:// or https:// address"
+msgstr "Нужен адрес, начинающийся с http:// или https://"
+
+msgid "Fake packet file"
+msgstr "Файл фейкового пакета"
+
+msgid "Find a working strategy"
+msgstr "Подобрать рабочую стратегию"
+
+msgid "Finished"
+msgstr "Завершена"
+
+msgid "Firewall mark of packets sent by the engine, so that they are not processed again. Hexadecimal, one bit."
+msgstr "Метка межсетевого экрана на пакетах, которые отправил сам движок, чтобы они не обрабатывались повторно. Шестнадцатеричное число с одним битом."
+
+msgid "Firewall mark used to skip already processed packets after NAT. Must differ from the mark of engine packets."
+msgstr "Метка межсетевого экрана, по которой после NAT пропускаются уже обработанные пакеты. Должна отличаться от метки пакетов движка."
+
+msgid "Firewall rules"
+msgstr "Правила межсетевого экрана"
+
+msgid "Firewall rules are not applied"
+msgstr "Правила межсетевого экрана не применены"
+
+msgid "Flow offloading"
+msgstr "Ускорение (flow offloading)"
+
+msgid "Flow offloading is enabled"
+msgstr "Включено ускорение (flow offloading)"
+
+msgid "For large lists update not more often than every 48 hours: frequent writes wear the router flash."
+msgstr "Большие списки обновляйте не чаще раза в 48 часов: частая запись изнашивает флеш-память роутера."
+
+msgid "General"
+msgstr "Основные"
+
+msgid "Grant access to zaprett"
+msgstr "Доступ к управлению zaprett"
+
+msgid "Helps only partially."
+msgstr "Помогает только частично."
+
+msgid "How long to wait for one site to answer."
+msgstr "Сколько ждать ответа одного сайта."
+
+msgid "How many domains from the enabled lists are added to the check of every strategy. More sites make the check longer."
+msgstr "Сколько доменов из включённых списков добавлять в проверку каждой стратегии. Чем больше сайтов, тем дольше проверка."
+
+msgid "How many first packets of every outgoing TCP connection go to the engine. 0 turns off processing of outgoing TCP."
+msgstr "Сколько первых пакетов каждого исходящего TCP-соединения передавать движку. 0 — не обрабатывать исходящий TCP."
+
+msgid "How many first packets of every outgoing UDP flow (QUIC, voice) go to the engine. 0 turns off processing of UDP."
+msgstr "Сколько первых пакетов каждого исходящего UDP-потока (QUIC, голосовые звонки) передавать движку. 0 — не обрабатывать UDP."
+
+msgid "How many first reply UDP packets go to the engine. Usually 0."
+msgstr "Сколько первых ответных UDP-пакетов передавать движку. Обычно 0."
+
+msgid "How many first reply packets of a TCP connection go to the engine. Some strategies need them to detect the server answer."
+msgstr "Сколько первых ответных пакетов TCP-соединения передавать движку. Некоторым стратегиям они нужны, чтобы увидеть ответ сервера."
+
+msgid "How many sites are checked at the same time. Lower it on weak routers."
+msgstr "Сколько сайтов проверять одновременно. На слабых роутерах уменьшите."
+
+msgid "IP network exclusions"
+msgstr "Исключения IP-сетей"
+
+msgid "IP network list"
+msgstr "Список IP-сетей"
+
+msgid "IP network lists"
+msgstr "Списки IP-сетей"
+
+msgid "IP networks"
+msgstr "IP-сети"
+
+msgid "IPv4 address, network (for example 192.168.1.0/24) or MAC address of a device in the local network. It is better to give devices static addresses in \"Network → DHCP and DNS\" first."
+msgstr "IPv4-адрес, сеть (например, 192.168.1.0/24) или MAC-адрес устройства в локальной сети. Если указываете IP-адреса, лучше сначала закрепить их за устройствами в «Сеть → DHCP и DNS»."
+
+msgid "If the downloaded file has fewer entries, it is considered broken and the previous list is kept."
+msgstr "Если в скачанном файле записей меньше, он считается битым и остаётся прежний список."
+
+msgid "In whitelist mode zaprett bypasses blocking only for sites from the enabled lists. No list is enabled now, so the bypass affects nothing. Enable lists on the \"Lists\" page or use \"Quick setup\" below."
+msgstr "В режиме «белый список» zaprett обходит блокировки только для сайтов из включённых списков. Сейчас не включён ни один список, поэтому обход ни на что не действует. Включите списки на странице «Списки» или воспользуйтесь «Быстрой настройкой» ниже."
+
+msgid "Incoming TCP packets"
+msgstr "Входящие TCP-пакеты"
+
+msgid "Incoming UDP packets"
+msgstr "Входящие UDP-пакеты"
+
+msgid "Information for finding problems. If you ask for help, attach the diagnostic report: it contains versions, the firewall table of zaprett, the service state and recent log messages, but no passwords."
+msgstr "Сведения для поиска неполадок. Если просите помощи, приложите диагностический отчёт: в нём версии, таблица межсетевого экрана zaprett, состояние службы и последние сообщения журнала, но нет паролей."
+
+msgid "Install"
+msgstr "Установить"
+
+msgid "Install selected"
+msgstr "Установить выбранные"
+
+msgid "Install selected (%d)"
+msgstr "Установить выбранные (%d)"
+
+msgid "Installed only"
+msgstr "Только установленные"
+
+msgid "Installed strategies"
+msgstr "Установленные стратегии"
+
+msgid "Installing from the repository"
+msgstr "Установка из репозитория"
+
+msgid "Interfaces through which the router reaches the internet. Leave empty to detect them automatically by the default route."
+msgstr "Интерфейсы, через которые роутер выходит в интернет. Оставьте пустым — они определятся автоматически по маршруту по умолчанию."
+
+msgid "Internet interface not found"
+msgstr "Не найден интерфейс выхода в интернет"
+
+msgid "Internet interfaces"
+msgstr "Интерфейсы выхода в интернет"
+
+msgid "Invalid name. Use only Latin letters, digits, dot, dash and underscore (up to 96 characters)."
+msgstr "Недопустимое название. Можно использовать только латинские буквы, цифры, точку, дефис и подчёркивание (не больше 96 символов)."
+
+msgid "Its lists are not installed. Install them from the \"Repository\" page or set up a subscription on the \"Lists\" page."
+msgstr "Его списки не установлены. Установите их на странице «Репозиторий» или настройте подписку на странице «Списки»."
+
+msgid "Kernel modules are missing"
+msgstr "Не хватает модулей ядра"
+
+msgid "LAN clients"
+msgstr "Устройства в сети"
+
+msgid "Large list: it needs a lot of router memory. Enable it only on routers with 256 MB of memory or more."
+msgstr "Большой список: ему нужно много оперативной памяти. Включайте его только на роутерах, где памяти 256 МБ или больше."
+
+msgid "Last background task"
+msgstr "Последняя фоновая задача"
+
+msgid "Last update"
+msgstr "Обновлено"
+
+msgid "Later"
+msgstr "Позже"
+
+msgid "Latin letters, digits, dot, dash and underscore."
+msgstr "Латинские буквы, цифры, точка, дефис и подчёркивание."
+
+msgid "Line %d: \"%s\" — %s"
+msgstr "Строка %d: «%s» — %s"
+
+msgid "Line %d: expected an IPv4 or IPv6 address or network, for example 192.0.2.0/24."
+msgstr "Строка %d: ожидается IPv4- или IPv6-адрес либо сеть, например 192.0.2.0/24."
+
+msgid "Line %d: masks like *.example.com are not supported, write example.com: subdomains are included automatically."
+msgstr "Строка %d: маски вида *.example.com не поддерживаются. Пишите просто example.com — поддомены учитываются автоматически."
+
+msgid "Line %d: one domain per line, without spaces."
+msgstr "Строка %d: по одному домену в строке, без пробелов."
+
+msgid "Line %d: write national domain names in punycode (xn--…), for example xn--p1ai instead of рф."
+msgstr "Строка %d: национальные домены пишите в punycode (xn--…), например xn--p1ai вместо рф."
+
+msgid "Line %d: write only the site name without http:// and paths."
+msgstr "Строка %d: укажите только имя сайта, без http:// и пути."
+
+msgid "Link"
+msgstr "Ссылка"
+
+msgid "List"
+msgstr "Список"
+
+msgid "List \"%s\" is disabled."
+msgstr "Список «%s» выключен."
+
+msgid "List \"%s\" is enabled."
+msgstr "Список «%s» включён."
+
+msgid "List \"%s\" is saved, entries: %d."
+msgstr "Список «%s» сохранён, записей: %d."
+
+msgid "List \"%s\" is saved."
+msgstr "Список «%s» сохранён."
+
+msgid "List type"
+msgstr "Тип списка"
+
+msgid "Lists"
+msgstr "Списки"
+
+msgid "Lists are enabled"
+msgstr "Списки включены"
+
+msgid "Lists tell zaprett which sites and networks to process. Domain lists work by the site name (subdomains are included automatically), IP network lists work by addresses: they are needed for services that connect without a name, for example Telegram calls. Switches in the tables are saved immediately."
+msgstr "Списки говорят zaprett, какие сайты и сети обрабатывать. Списки доменов работают по имени сайта (поддомены учитываются автоматически), списки IP-сетей — по адресам: они нужны сервисам, которые подключаются без имени, например звонкам Telegram. Переключатели в таблицах сохраняются сразу."
+
+msgid "Load the repository catalog first."
+msgstr "Сначала загрузите каталог репозитория."
+
+msgid "Loading the repository catalog"
+msgstr "Загрузка каталога репозитория"
+
+msgid "Lost track of the background task"
+msgstr "Не удаётся получить состояние фоновой задачи"
+
+msgid "Lowercase Latin letters, digits and underscore. The list will be named src-<name>."
+msgstr "Строчные латинские буквы, цифры и подчёркивание. Список будет называться src-<название>."
+
+msgid "Lua library"
+msgstr "Lua-библиотека"
+
+msgid "Mark at least one service."
+msgstr "Отметьте хотя бы один сервис."
+
+msgid "Mark of engine packets"
+msgstr "Метка пакетов движка"
+
+msgid "Mark of processed connections"
+msgstr "Метка обработанных соединений"
+
+msgid "Mark the services that do not work well with your provider. zaprett enables ready-made lists of their sites, the always-needed exclusions (government services, banks) and the whitelist mode, so other traffic stays untouched. Lists and subscriptions of the services that are not marked are switched off. If a service needs a subscription, its download starts right away. After that it is worth finding a strategy that works with your provider."
+msgstr "Отметьте сервисы, которые у вашего провайдера плохо работают. zaprett включит готовые списки их сайтов, обязательные исключения (госуслуги, банки) и режим «белый список», так что остальной трафик останется нетронутым. Списки и подписки неотмеченных сервисов выключаются. Если сервису нужна подписка, её загрузка начнётся сразу. После этого стоит подобрать стратегию, которая работает у вашего провайдера."
+
+msgid "Memory"
+msgstr "Память"
+
+msgid "Message"
+msgstr "Сообщение"
+
+msgid "Minimum entries"
+msgstr "Минимум записей"
+
+msgid "Name"
+msgstr "Название"
+
+msgid "Needs at least %d MiB of memory, the router has %d MiB: not recommended."
+msgstr "Нужно не меньше %d МиБ памяти, а у роутера %d МиБ — не рекомендуется."
+
+msgid "Networks to bypass"
+msgstr "Сети для обхода"
+
+msgid "Networks to leave untouched"
+msgstr "Сети, которые не трогать"
+
+msgid "New custom strategy"
+msgstr "Новая своя стратегия"
+
+msgid "New subscription"
+msgstr "Новая подписка"
+
+msgid "No background tasks have run since the router started."
+msgstr "С момента включения роутера фоновых задач не было."
+
+msgid "No lists of this kind are installed."
+msgstr "Таких списков не установлено."
+
+msgid "No site lists are enabled"
+msgstr "Не включено ни одного списка сайтов"
+
+msgid "No strategies are installed for the current engine."
+msgstr "Для текущего движка не установлено ни одной стратегии."
+
+msgid "No strategies are installed for this engine."
+msgstr "Для этого движка не установлено ни одной стратегии."
+
+msgid "No strategy is selected"
+msgstr "Стратегия не выбрана"
+
+msgid "None of the checked strategies helped. Install more strategies from the \"Repository\" page and run the selection again, or check that the enabled lists contain the blocked sites."
+msgstr "Ни одна из проверенных стратегий не помогла. Установите больше стратегий на странице «Репозиторий» и запустите подбор снова или проверьте, что во включённых списках есть заблокированные сайты."
+
+msgid "Not enough free space on the router."
+msgstr "На роутере не хватает свободного места."
+
+msgid "Not recommended for this router: it has too little memory for large lists."
+msgstr "Не рекомендуется для этого роутера: для больших списков у него мало памяти."
+
+msgid "Nothing matches the filter."
+msgstr "Под фильтр ничего не подходит."
+
+msgid "Number of the NFQUEUE queue between the firewall and the engine. Change it only if the number is already used by another program."
+msgstr "Номер очереди NFQUEUE между межсетевым экраном и движком. Меняйте, только если этот номер уже занят другой программой."
+
+msgid "Off"
+msgstr "Выключен"
+
+msgid "On: zaprett starts together with the router"
+msgstr "Включён: zaprett запускается вместе с роутером"
+
+msgid "Once a day check the repository and update the installed strategies and lists."
+msgstr "Раз в сутки проверять репозиторий и обновлять установленные стратегии и списки."
+
+msgid "One IPv4 or IPv6 address or network per line, for example 192.0.2.10 or 192.0.2.0/24. Lines starting with # are comments."
+msgstr "По одному IPv4- или IPv6-адресу либо сети в строке, например 192.0.2.10 или 192.0.2.0/24. Строки, которые начинаются с #, — комментарии."
+
+msgid "One domain per line, for example example.com. Subdomains are included automatically: youtube.com also covers www.youtube.com. Lines starting with # are comments."
+msgstr "По одному домену в строке, например example.com. Поддомены учитываются автоматически: youtube.com покрывает и www.youtube.com. Строки, которые начинаются с #, — комментарии."
+
+msgid "One of the enabled lists was removed or is not installed. Check the \"Lists\" page."
+msgstr "Один из включённых списков удалён или не установлен. Проверьте страницу «Списки»."
+
+msgid "One of the profiles of the strategy has no site or network list, so it processes all traffic on its ports. This is normal for some strategies (for example, Discord voice), but if sites that should stay untouched break, choose another strategy."
+msgstr "У одного из профилей стратегии нет списка сайтов или сетей, поэтому он обрабатывает весь трафик на своих портах. Для некоторых стратегий это нормально (например, для голоса Discord), но если перестали работать сайты, которые трогать не нужно, выберите другую стратегию."
+
+msgid "Only https:// links. The file must contain one domain or network per line."
+msgstr "Только ссылки https://. В файле должно быть по одному домену или сети в строке."
+
+msgid "Only sites from the enabled lists (whitelist)"
+msgstr "Только сайты из включённых списков (белый список)"
+
+msgid "Only the listed devices"
+msgstr "Только указанные устройства"
+
+msgid "Open \"Diagnostics\""
+msgstr "Открыть «Диагностику»"
+
+msgid "Open \"Lists\""
+msgstr "Открыть «Списки»"
+
+msgid "Open \"Settings\""
+msgstr "Открыть «Настройки»"
+
+msgid "Open \"Strategies\""
+msgstr "Открыть «Стратегии»"
+
+msgid "Opened"
+msgstr "Открылся"
+
+msgid "Options that zaprett sets itself (queue number, user, marks) are ignored in the strategy text. Nothing needs to be done."
+msgstr "Параметры, которые zaprett задаёт сам (номер очереди, пользователь, метки), в тексте стратегии не учитываются. Делать ничего не нужно."
+
+msgid "Other"
+msgstr "Другое"
+
+msgid "Outgoing TCP packets"
+msgstr "Исходящие TCP-пакеты"
+
+msgid "Outgoing UDP packets"
+msgstr "Исходящие UDP-пакеты"
+
+msgid "Overview"
+msgstr "Обзор"
+
+msgid "Parallel requests"
+msgstr "Одновременных запросов"
+
+msgid "Parameters of the check. Larger timeouts make the check slower but more reliable on slow connections."
+msgstr "Параметры проверки. Чем больше время ожидания, тем дольше идёт проверка, но на медленном интернете она надёжнее."
+
+msgid "Pause after restart, s"
+msgstr "Пауза после перезапуска, с"
+
+msgid "Pause after the engine restart before the check starts."
+msgstr "Пауза между перезапуском движка и началом проверки."
+
+msgid "Press \"Update catalog\" to download the list of available items."
+msgstr "Нажмите «Обновить каталог», чтобы скачать перечень доступного."
+
+msgid "Process IPv6"
+msgstr "Обрабатывать IPv6"
+
+msgid "Processed ports: TCP %s; UDP %s"
+msgstr "Обрабатываемые порты: TCP %s; UDP %s"
+
+msgid "Processing mode"
+msgstr "Режим обработки"
+
+msgid "Progress"
+msgstr "Выполнено"
+
+msgid "Queue number"
+msgstr "Номер очереди"
+
+msgid "Quick check"
+msgstr "Быстрая проверка"
+
+msgid "Quick setup"
+msgstr "Быстрая настройка"
+
+msgid "Received"
+msgstr "Получено"
+
+msgid "Refresh"
+msgstr "Обновить"
+
+msgid "Remove"
+msgstr "Удалить"
+
+msgid "Remove \"%s\" from the router? If it is used by a strategy or enabled as a list, zaprett will refuse to remove it."
+msgstr "Удалить «%s» с роутера? Если его использует стратегия или он включён как список, zaprett откажется удалять."
+
+msgid "Removing an item"
+msgstr "Удаление"
+
+msgid "Repository"
+msgstr "Репозиторий"
+
+msgid "Repository and updates"
+msgstr "Репозиторий и обновления"
+
+msgid "Request timeout, s"
+msgstr "Время ожидания ответа, с"
+
+msgid "Restart"
+msgstr "Перезапустить"
+
+msgid "Restart zaprett to apply the change."
+msgstr "Перезапустите zaprett, чтобы изменение вступило в силу."
+
+msgid "Restart zaprett to apply the new lists."
+msgstr "Перезапустите zaprett, чтобы новые списки заработали."
+
+msgid "Result"
+msgstr "Итог"
+
+msgid "Router memory: %d MiB."
+msgstr "Оперативная память роутера: %d МиБ."
+
+msgid "Run zaprett"
+msgstr "Запускать zaprett"
+
+msgid "Running"
+msgstr "Работает"
+
+msgid "Running, autostart is off"
+msgstr "Работает, автозапуск выключен"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Search by name or description"
+msgstr "Поиск по названию или описанию"
+
+msgid "Search by name, author or description"
+msgstr "Поиск по названию, автору или описанию"
+
+msgid "Select for installation"
+msgstr "Отметить для установки"
+
+msgid "Service state"
+msgstr "Состояние службы"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Settings are applied after pressing \"Save & Apply\". Default values suit most users; the \"Advanced\" tab is needed only in rare cases."
+msgstr "Настройки вступают в силу после нажатия «Применить». Значения по умолчанию подходят большинству; вкладка «Расширенные» нужна только в редких случаях."
+
+msgid "Settings were already invalid"
+msgstr "Настройки и до этого были неверными"
+
+msgid "Show"
+msgstr "Показать"
+
+msgid "Show progress"
+msgstr "Показать ход выполнения"
+
+msgid "Sites from lists"
+msgstr "Сайтов из списков"
+
+msgid "Sites opened"
+msgstr "Открылось сайтов"
+
+msgid "Sites to bypass"
+msgstr "Сайты для обхода"
+
+msgid "Sites to leave untouched"
+msgstr "Сайты, которые не трогать"
+
+msgid "Size"
+msgstr "Размер"
+
+msgid "Software and hardware flow offloading make packets bypass the firewall, and then the bypass does not work. In the automatic mode zaprett turns offloading off while it runs and restores the previous state when stopped."
+msgstr "Программное и аппаратное ускорение пропускают пакеты мимо межсетевого экрана, и тогда обход не работает. В автоматическом режиме zaprett выключает ускорение на время своей работы и возвращает прежнее состояние после остановки."
+
+msgid "Some lines are not valid."
+msgstr "Некоторые строки записаны неверно."
+
+msgid "Some options are ignored and default values are used instead. Check \"Settings\"."
+msgstr "Часть параметров не учитывается, вместо них используются значения по умолчанию. Проверьте «Настройки»."
+
+msgid "Some settings have invalid values"
+msgstr "В настройках есть неверные значения"
+
+msgid "Some strategy options are ignored"
+msgstr "Часть параметров стратегии не учитывается"
+
+msgid "Some subscriptions could not be updated."
+msgstr "Не удалось обновить часть подписок."
+
+msgid "Source"
+msgstr "Источник"
+
+msgid "Start"
+msgstr "Запустить"
+
+msgid "Start selection"
+msgstr "Начать подбор"
+
+msgid "Start the bypass now and after every router reboot."
+msgstr "Включить обход сейчас и после каждой перезагрузки роутера."
+
+msgid "Start zaprett"
+msgstr "Запустить zaprett"
+
+msgid "Started"
+msgstr "Начата"
+
+msgid "State"
+msgstr "Состояние"
+
+msgid "Stop"
+msgstr "Остановить"
+
+msgid "Stopped"
+msgstr "Остановлен"
+
+msgid "Strategies"
+msgstr "Стратегии"
+
+msgid "Strategies for the %s engine. More strategies can be installed on the \"Repository\" page, or you can write your own."
+msgstr "Стратегии для движка %s. Другие стратегии можно установить на странице «Репозиторий» или написать свою."
+
+msgid "Strategy"
+msgstr "Стратегия"
+
+msgid "Strategy \"%s\""
+msgstr "Стратегия «%s»"
+
+msgid "Strategy \"%s\" is deleted."
+msgstr "Стратегия «%s» удалена."
+
+msgid "Strategy \"%s\" is saved and selected."
+msgstr "Стратегия «%s» сохранена и выбрана."
+
+msgid "Strategy \"%s\" is saved."
+msgstr "Стратегия «%s» сохранена."
+
+msgid "Strategy \"%s\" is selected and applied."
+msgstr "Стратегия «%s» выбрана и применена."
+
+msgid "Strategy \"%s\" is selected. It will be used when zaprett starts."
+msgstr "Стратегия «%s» выбрана. Она начнёт работать при запуске zaprett."
+
+msgid "Strategy \"%s\" is selected. Restart zaprett to apply it."
+msgstr "Стратегия «%s» выбрана. Перезапустите zaprett, чтобы она заработала."
+
+msgid "Strategy and lists"
+msgstr "Стратегия и списки"
+
+msgid "Strategy for nfqws"
+msgstr "Стратегия для nfqws"
+
+msgid "Strategy for nfqws2"
+msgstr "Стратегия для nfqws2"
+
+msgid "Strategy selection"
+msgstr "Автоподбор стратегии"
+
+msgid "Strategy selection failed: %s"
+msgstr "Автоподбор завершился ошибкой: %s"
+
+msgid "Strategy selection is finished. Choose a result to apply."
+msgstr "Автоподбор завершён. Выберите, какой результат применить."
+
+msgid "Strategy selection is running"
+msgstr "Идёт автоподбор стратегии"
+
+msgid "Strategy selection is running. Wait until it finishes or stop it."
+msgstr "Идёт автоподбор стратегии. Дождитесь окончания или остановите его."
+
+msgid "Strategy text"
+msgstr "Текст стратегии"
+
+msgid "Subscription"
+msgstr "Подписка"
+
+msgid "Subscription \"%s\" is deleted."
+msgstr "Подписка «%s» удалена."
+
+msgid "Subscription \"%s\" is disabled; the downloaded list is kept."
+msgstr "Подписка «%s» выключена, загруженный список сохранён."
+
+msgid "Subscription \"%s\" is enabled. Press \"Update now\" to download it right away."
+msgstr "Подписка «%s» включена. Нажмите «Обновить сейчас», чтобы загрузить её сразу."
+
+msgid "Subscription \"%s\" is saved."
+msgstr "Подписка «%s» сохранена."
+
+msgid "Subscriptions"
+msgstr "Подписки"
+
+msgid "Subscriptions are enabled: %s. Their lists are being downloaded; progress is on the \"Lists\" page, \"Subscriptions\" tab."
+msgstr "Включены подписки: %s. Их списки загружаются, ход загрузки виден на странице «Списки», вкладка «Подписки»."
+
+msgid "Subscriptions are external lists that the router downloads by a link and updates on schedule, for example the registry of blocked sites. After the first download a subscription becomes a regular list: turn it on with the \"Use\" switch below or on the \"Domains\" and \"IP networks\" tabs. Large lists need a lot of router memory and wear the flash when updated too often."
+msgstr "Подписки — это внешние списки, которые роутер скачивает по ссылке и обновляет по расписанию, например реестр заблокированных сайтов. После первой загрузки подписка становится обычным списком: включите её переключателем «Использовать» ниже или на вкладках «Домены» и «IP-сети». Большим спискам нужно много оперативной памяти, а слишком частые обновления изнашивают флеш-память."
+
+msgid "Subscriptions are updated: %d, unchanged: %d."
+msgstr "Обновлено подписок: %d, без изменений: %d."
+
+msgid "Subscriptions of the services that are not marked are switched off: %s."
+msgstr "Подписки неотмеченных сервисов выключены: %s."
+
+msgid "TCP %s"
+msgstr "TCP %s"
+
+msgid "Task"
+msgstr "Задача"
+
+msgid "Task log (last %d lines)"
+msgstr "Журнал задачи (последние строки, не больше %d)"
+
+msgid "The answer is too large to show in the web interface."
+msgstr "Ответ слишком большой, чтобы показать его в веб-интерфейсе."
+
+msgid "The browser did not allow copying. Select the text and press Ctrl+C."
+msgstr "Браузер не разрешил копирование. Выделите текст и нажмите Ctrl+C."
+
+msgid "The bypass engine is not installed"
+msgstr "Не установлен движок обхода"
+
+msgid "The bypass engine is not installed."
+msgstr "Не установлен движок обхода."
+
+msgid "The bypass is applied to connections to these sites. Used in the whitelist mode."
+msgstr "Обход применяется к соединениям с этими сайтами. Используются в режиме «белый список»."
+
+msgid "The bypass is off: all traffic goes as usual."
+msgstr "Обход выключен: весь трафик идёт как обычно."
+
+msgid "The bypass works for the selected sites."
+msgstr "Обход работает для выбранных сайтов."
+
+msgid "The bypass works now, but it will not start after a router reboot."
+msgstr "Обход работает, но после перезагрузки роутера сам не запустится."
+
+msgid "The catalog has not been loaded yet."
+msgstr "Каталог ещё не загружался."
+
+msgid "The catalog is empty."
+msgstr "Каталог пуст."
+
+msgid "The check was stopped before all strategies were checked."
+msgstr "Проверку остановили раньше, чем были проверены все стратегии."
+
+msgid "The configuration does not pass the check"
+msgstr "Настройки не прошли проверку"
+
+msgid "The downloaded file is damaged (checksum mismatch). Try again later."
+msgstr "Скачанный файл повреждён (не совпала контрольная сумма). Попробуйте позже."
+
+msgid "The engine accepts the current configuration."
+msgstr "Движок принимает текущие настройки."
+
+msgid "The engine arguments could not be built for this strategy."
+msgstr "Для этой стратегии не удалось собрать параметры движка."
+
+msgid "The engine did not start. See \"Diagnostics\" for details."
+msgstr "Движок не запустился. Подробности — на странице «Диагностика»."
+
+msgid "The engine is running, but without its nftables rules traffic does not reach it. Restart zaprett; details are on the \"Diagnostics\" page."
+msgstr "Движок запущен, но без его правил nftables трафик до него не доходит. Перезапустите zaprett; подробности — на странице «Диагностика»."
+
+msgid "The engine program (nfqws or nfqws2) was not found. Install the \"zaprett-nfqws\" package (or \"zaprett-nfqws2\" for the nfqws2 engine) for your router architecture."
+msgstr "Не найдена программа движка (nfqws или nfqws2). Установите пакет «zaprett-nfqws» (или «zaprett-nfqws2» для движка nfqws2) для архитектуры вашего роутера."
+
+msgid "The engine rejected the configuration."
+msgstr "Движок не принял настройки."
+
+msgid "The engine settings could not be prepared"
+msgstr "Не удалось подготовить параметры движка"
+
+msgid "The engine writes a detailed log to the system log (\"Status → System Log\"). It loads the router, keep it off normally."
+msgstr "Движок пишет подробный журнал в системный журнал («Статус → Системный журнал»). Это нагружает роутер, поэтому обычно держите выключенным."
+
+msgid "The hour of the day (router time) when the update starts."
+msgstr "Час, в который начинается обновление (по времени роутера)."
+
+msgid "The installed zaprett service does not support subscriptions yet. Update the \"zaprett\" package."
+msgstr "Установленная служба zaprett пока не поддерживает подписки. Обновите пакет «zaprett»."
+
+msgid "The item is in use. Turn it off first."
+msgstr "Элемент сейчас используется. Сначала выключите его."
+
+msgid "The item is needed by other strategies and cannot be removed."
+msgstr "Элемент нужен другим стратегиям, удалить его нельзя."
+
+msgid "The last start attempt failed. Open \"Diagnostics\" → \"Check configuration\" for details."
+msgstr "Последняя попытка запуска не удалась. Подробности — в «Диагностика» → «Проверить настройки»."
+
+msgid "The last start attempt failed: %s"
+msgstr "Последняя попытка запуска не удалась: %s"
+
+msgid "The list is not saved"
+msgstr "Список не сохранён"
+
+msgid "The list is too large for the web interface (maximum %d KiB). Split it or copy the file to the router over SSH."
+msgstr "Список слишком большой для веб-интерфейса (не больше %d КиБ). Разделите его или скопируйте файл на роутер по SSH."
+
+msgid "The list of installed items could not be loaded, so this field cannot be changed here."
+msgstr "Не удалось загрузить перечень установленного, поэтому здесь это поле изменить нельзя."
+
+msgid "The lists of the selected services are enabled, zaprett works in the whitelist mode."
+msgstr "Списки выбранных сервисов включены, zaprett работает в режиме «белый список»."
+
+msgid "The log is empty."
+msgstr "Журнал пуст."
+
+msgid "The mark 0x08000000 is used by the client filter"
+msgstr "Метку 0x08000000 использует фильтр устройств"
+
+msgid "The marks must be different"
+msgstr "Метки должны различаться"
+
+msgid "The minimum number of entries must be a whole number."
+msgstr "Минимум записей должен быть целым числом."
+
+msgid "The operation was cancelled."
+msgstr "Операция отменена."
+
+msgid "The previous settings did not pass the check either. Open \"Diagnostics\" → \"Check configuration\"."
+msgstr "Прежние настройки тоже не проходили проверку. Откройте «Диагностика» → «Проверить настройки»."
+
+msgid "The previous strategy is restored."
+msgstr "Прежняя стратегия восстановлена."
+
+msgid "The recommended strategies will be checked. During the check connections through zaprett may briefly drop. Start?"
+msgstr "Будут проверены рекомендованные стратегии. Во время проверки соединения через zaprett могут ненадолго прерываться. Начать?"
+
+msgid "The report is empty."
+msgstr "Отчёт пуст."
+
+msgid "The request contains an invalid value."
+msgstr "В запросе недопустимое значение."
+
+msgid "The requested item was not found. The page may be outdated: reload it."
+msgstr "Элемент не найден. Возможно, страница устарела — обновите её."
+
+msgid "The router did not answer in time. Check that it is reachable and try again."
+msgstr "Роутер вовремя не ответил. Проверьте, что он доступен, и повторите."
+
+msgid "The router did not finish the operation in time. It may be busy; wait a little and try again."
+msgstr "Роутер не успел выполнить операцию. Возможно, он занят — подождите немного и повторите."
+
+msgid "The router has %d MiB of memory: choose services with ready-made lists and do not enable large registries of blocked sites."
+msgstr "У роутера %d МиБ памяти: выбирайте сервисы с готовыми списками и не включайте большие реестры заблокированных сайтов."
+
+msgid "The router has %d MiB of memory: large registries of blocked sites can be enabled too."
+msgstr "У роутера %d МиБ памяти: можно включать и большие реестры заблокированных сайтов."
+
+msgid "The router has little memory: choose services with ready-made lists and do not enable large registries of blocked sites."
+msgstr "У роутера мало памяти: выбирайте сервисы с готовыми списками и не включайте большие реестры заблокированных сайтов."
+
+msgid "The router returned error code %d."
+msgstr "Роутер вернул код ошибки %d."
+
+msgid "The same choice as on the \"Strategies\" page."
+msgstr "То же, что выбор на странице «Стратегии»."
+
+msgid "The same switches as on the \"Lists\" page."
+msgstr "То же, что переключатели на странице «Списки»."
+
+msgid "The selected strategy was not found"
+msgstr "Выбранная стратегия не найдена"
+
+msgid "The service is switched off. Press \"Start\"."
+msgstr "Служба выключена. Нажмите «Запустить»."
+
+msgid "The service list is empty."
+msgstr "Перечень сервисов пуст."
+
+msgid "The service reported a problem. See \"Diagnostics\" for details."
+msgstr "Служба сообщила о проблеме. Подробности — на странице «Диагностика»."
+
+msgid "The service should work, but the engine is not running. Press \"Restart\" or look at \"Diagnostics\"."
+msgstr "Служба должна работать, но движок не запущен. Нажмите «Перезапустить» или загляните в «Диагностику»."
+
+msgid "The service should work, but the engine process is not running: it probably stopped with an error. Press \"Restart\"; if it does not help, look at \"Diagnostics\"."
+msgstr "Служба должна работать, но процесс движка не запущен — скорее всего, он завершился с ошибкой. Нажмите «Перезапустить»; если не поможет, загляните в «Диагностику»."
+
+msgid "The settings could not be saved."
+msgstr "Не удалось сохранить настройки."
+
+msgid "The strategy cannot be used with the current settings: %s"
+msgstr "С текущими настройками эту стратегию использовать нельзя: %s"
+
+msgid "The strategy contains empty profiles (extra --new); they are ignored. Nothing needs to be done."
+msgstr "В стратегии есть пустые профили (лишние --new), они не учитываются. Делать ничего не нужно."
+
+msgid "The strategy is not saved"
+msgstr "Стратегия не сохранена"
+
+msgid "The strategy is saved for the %s engine and checked by the engine before saving."
+msgstr "Стратегия сохраняется для движка %s; перед сохранением её проверяет сам движок."
+
+msgid "The strategy processes a wide port range"
+msgstr "Стратегия обрабатывает широкий диапазон портов"
+
+msgid "The strategy sends many ports to the engine, which loads the router more. If the router slows down, choose another strategy."
+msgstr "Стратегия передаёт движку много портов, и роутер нагружается сильнее. Если роутер начал тормозить, выберите другую стратегию."
+
+msgid "The strategy text is empty."
+msgstr "Текст стратегии пуст."
+
+msgid "The strategy was not found. The page may be outdated: reload it."
+msgstr "Стратегия не найдена. Возможно, страница устарела — обновите её."
+
+msgid "The strategy was removed or is not installed. Choose another one on the \"Strategies\" page."
+msgstr "Стратегия удалена или не установлена. Выберите другую на странице «Стратегии»."
+
+msgid "The subscription is not saved"
+msgstr "Подписка не сохранена"
+
+msgid "The subscriptions could not be downloaded right now: %s. Open \"Lists\" → \"Subscriptions\" and press \"Update now\"."
+msgstr "Сейчас загрузить подписки не удалось: %s. Откройте «Списки» → «Подписки» и нажмите «Обновить сейчас»."
+
+msgid "The task is cancelled."
+msgstr "Задача отменена."
+
+msgid "The text is too large (maximum %d KiB)."
+msgstr "Текст слишком большой (не больше %d КиБ)."
+
+msgid "The text is too large."
+msgstr "Текст слишком большой."
+
+msgid "The update interval must be a whole number of hours from 1 to 8760."
+msgstr "Интервал обновления — целое число часов от 1 до 8760."
+
+msgid "The web interface could not create a temporary file on the router. Check free space in /tmp."
+msgstr "Веб-интерфейсу не удалось создать временный файл на роутере. Проверьте, есть ли свободное место в /tmp."
+
+msgid "The web interface module of zaprett is not loaded. Run \"/etc/init.d/rpcd restart\" on the router or reboot it."
+msgstr "Модуль веб-интерфейса zaprett не загружен. Выполните на роутере «/etc/init.d/rpcd restart» или перезагрузите его."
+
+msgid "The zaprett repository contains ready-made strategies, site lists and helper files (fake packets). Installed items are kept on the router and survive firmware updates. Downloading needs access to the repository server."
+msgstr "В репозитории zaprett собраны готовые стратегии, списки сайтов и вспомогательные файлы (фейковые пакеты). Установленное хранится на роутере и сохраняется при обновлении прошивки. Для загрузки нужен доступ к серверу репозитория."
+
+msgid "The zaprett service package is not installed or damaged: /usr/bin/zaprett was not found. Reinstall the \"zaprett\" package."
+msgstr "Пакет службы zaprett не установлен или повреждён: не найден /usr/bin/zaprett. Переустановите пакет «zaprett»."
+
+msgid "The zaprett service returned an unexpected answer. Details are below; the \"Diagnostics\" page may help."
+msgstr "Служба zaprett вернула неожиданный ответ. Подробности ниже; может помочь страница «Диагностика»."
+
+msgid "There are no subscriptions."
+msgstr "Подписок нет."
+
+msgid "There is no running task."
+msgstr "Нет выполняющейся задачи."
+
+msgid "There is nothing to check: enable at least one site list or service."
+msgstr "Проверять нечего: включите хотя бы один список сайтов или сервис."
+
+msgid "These lists are not used in the blacklist mode."
+msgstr "В режиме «чёрный список» эти списки не используются."
+
+msgid "These options are ignored and default values are used instead: %s. Correct them in \"Settings\"."
+msgstr "Эти параметры не учитываются, вместо них используются значения по умолчанию: %s. Исправьте их в «Настройках»."
+
+msgid "These parts of the strategy have no site or network list, so they process all traffic on their ports: %s. This is normal for some strategies (for example, Discord voice), but if sites that should stay untouched break, choose another strategy."
+msgstr "У этих частей стратегии нет списка сайтов или сетей, поэтому они обрабатывают весь трафик на своих портах: %s. Для некоторых стратегий это нормально (например, для голоса Discord), но если перестали работать сайты, которые трогать не нужно, выберите другую стратегию."
+
+msgid "These services are not enabled, because zaprett cannot help with them: %s."
+msgstr "Эти сервисы не включены, потому что zaprett им не поможет: %s."
+
+msgid "This is the quick report. The full one, with the package list and long log, is collected over SSH: zaprett diag --full"
+msgstr "Это быстрый отчёт. Полный, со списком пакетов и длинным журналом, снимается по SSH: zaprett diag --full"
+
+msgid "This service cannot be enabled automatically yet."
+msgstr "Этот сервис пока нельзя включить автоматически."
+
+msgid "Time"
+msgstr "Время"
+
+msgid "Title"
+msgstr "Заголовок"
+
+msgid "Too many sites were checked, so the details are shown only for the first strategies."
+msgstr "Проверялось слишком много сайтов, поэтому подробности показаны только для первых стратегий."
+
+msgid "Traffic of the router itself is not processed in the \"Only the listed devices\" mode."
+msgstr "В режиме «Только указанные устройства» трафик самого роутера не обрабатывается."
+
+msgid "Try again"
+msgstr "Повторить"
+
+msgid "Turn off automatically while zaprett runs (recommended)"
+msgstr "Выключать автоматически на время работы zaprett (рекомендуется)"
+
+msgid "UDP %s"
+msgstr "UDP %s"
+
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+msgid "Unknown error: %s"
+msgstr "Неизвестная ошибка: %s"
+
+msgid "Update"
+msgstr "Обновить"
+
+msgid "Update all"
+msgstr "Обновить всё"
+
+msgid "Update automatically"
+msgstr "Обновлять автоматически"
+
+msgid "Update catalog"
+msgstr "Обновить каталог"
+
+msgid "Update enabled now"
+msgstr "Обновить включённые сейчас"
+
+msgid "Update every %d h"
+msgstr "Обновлять каждые %d ч"
+
+msgid "Update every, hours"
+msgstr "Обновлять раз в, часов"
+
+msgid "Update hour"
+msgstr "Время обновления"
+
+msgid "Update now"
+msgstr "Обновить сейчас"
+
+msgid "Updates available: %d"
+msgstr "Доступно обновлений: %d"
+
+msgid "Updating from the repository"
+msgstr "Обновление из репозитория"
+
+msgid "Updating subscriptions"
+msgstr "Обновление подписок"
+
+msgid "Use"
+msgstr "Использовать"
+
+msgid "Use this list"
+msgstr "Использовать этот список"
+
+msgid "Use this list after the first download"
+msgstr "Использовать этот список после первой загрузки"
+
+msgid "Use this strategy after saving"
+msgstr "Использовать эту стратегию после сохранения"
+
+msgid "Used only with the nfqws2 engine."
+msgstr "Используется только с движком nfqws2."
+
+msgid "Uses large lists: needs a router with at least %d MiB of memory."
+msgstr "Использует большие списки: нужен роутер, где памяти не меньше %d МиБ."
+
+msgid "Uses subscriptions to external lists: they will be downloaded after applying."
+msgstr "Использует подписки на внешние списки — они загрузятся после применения."
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Waiting for the first results…"
+msgstr "Ждём первых результатов…"
+
+msgid "Warning: %s"
+msgstr "Предупреждение: %s"
+
+msgid "What needs attention"
+msgstr "На что обратить внимание"
+
+msgid "Which devices get the bypass"
+msgstr "Каким устройствам нужен обход"
+
+msgid "Which sites are processed"
+msgstr "Какие сайты обрабатываются"
+
+msgid "Which sites to process"
+msgstr "Какие сайты обрабатывать"
+
+msgid "Whitelist: only sites and networks from the enabled lists. Blacklist: all sites. Exclusion lists work in both modes; a domain exclusion does not cover connections that are recognised only by address, so such sites also need IP network exclusions. The whitelist is safer and is recommended."
+msgstr "Белый список — только сайты и сети из включённых списков. Чёрный список — все сайты. Списки исключений действуют в обоих режимах, но исключение по домену не действует на соединения, которые узнаются только по адресу: таким сайтам нужны ещё и исключения IP-сетей. Белый список безопаснее, его и рекомендуем."
+
+msgid "Whitelist: only the enabled lists (recommended)"
+msgstr "Белый список: только включённые списки (рекомендуется)"
+
+msgid "Whitelist: zaprett processes only sites and networks from the enabled lists. Blacklist: zaprett processes connections to all sites. Exclusion lists work in both modes, but a domain exclusion only helps where the site is recognised by its name: if the same site is covered by an enabled IP network list or subscription, its connections are still processed. To exclude it completely, add its addresses to the IP network exclusions. The whitelist is safer: banks, government services and games keep working as before. After changing the mode press \"Save & Apply\" at the bottom of the page."
+msgstr "Белый список — zaprett обрабатывает только сайты и сети из включённых списков. Чёрный список — zaprett обрабатывает соединения со всеми сайтами. Списки исключений действуют в обоих режимах, но исключение по домену помогает лишь там, где сайт узнаётся по имени: если тот же сайт попадает во включённый список IP-сетей или подписку, его соединения всё равно обрабатываются. Чтобы исключить его полностью, добавьте его адреса в исключения IP-сетей. Белый список безопаснее: банки, госуслуги и игры работают как раньше. После смены режима нажмите «Применить» внизу страницы."
+
+msgid "With software or hardware flow offloading most packets bypass the firewall, and zaprett does not see them. Choose \"turn off automatically\" for offloading in \"Settings\" or disable it in \"Network → Firewall\"."
+msgstr "При программном или аппаратном ускорении большинство пакетов идёт мимо межсетевого экрана, и zaprett их не видит. Выберите для ускорения режим «выключать автоматически» в «Настройках» или выключите его в «Сеть → Межсетевой экран»."
+
+msgid "With updates only"
+msgstr "Только с обновлениями"
+
+msgid "Without the bypass %d of %d checked sites opened."
+msgstr "Без обхода открылось %d из %d проверенных сайтов."
+
+msgid "Write the engine options separated by spaces or line breaks. Put ${hostlists} where the enabled domain lists must be substituted and ${ipsets} for the IP network lists; --new starts the next profile. \"--comment\" skips the words after it up to the next option. Example:"
+msgstr "Пишите параметры движка через пробел или с новой строки. Там, куда нужно подставить включённые списки доменов, поставьте ${hostlists}, а для списков IP-сетей — ${ipsets}; --new начинает следующий профиль. «--comment» пропускает слова после себя до следующего параметра. Пример:"
+
+msgid "all ports"
+msgstr "все порты"
+
+msgid "applied"
+msgstr "применены"
+
+msgid "built into the package"
+msgstr "входит в пакет"
+
+msgid "cancelled"
+msgstr "отменена"
+
+msgid "change"
+msgstr "изменить"
+
+msgid "check error on the router"
+msgstr "ошибка проверки на роутере"
+
+msgid "could not connect"
+msgstr "не удалось подключиться"
+
+msgid "default"
+msgstr "по умолчанию"
+
+msgid "disabled in the firewall"
+msgstr "в межсетевом экране выключено"
+
+msgid "does not help"
+msgstr "не помогает"
+
+msgid "domains: %d, domain exclusions: %d, IP networks: %d, IP exclusions: %d"
+msgstr "доменов: %d, исключений доменов: %d, IP-сетей: %d, исключений IP: %d"
+
+msgid "enabled"
+msgstr "включено"
+
+msgid "enabled in the firewall"
+msgstr "в межсетевом экране включено"
+
+msgid "encryption error"
+msgstr "ошибка шифрования"
+
+msgid "error: %s"
+msgstr "ошибка: %s"
+
+msgid "failed"
+msgstr "ошибка"
+
+msgid "finished"
+msgstr "завершена"
+
+msgid "in use"
+msgstr "используется"
+
+msgid "installed"
+msgstr "установлено"
+
+msgid "lists"
+msgstr "списки"
+
+msgid "lists are not installed"
+msgstr "списки не установлены"
+
+msgid "never"
+msgstr "никогда"
+
+msgid "nfqws is the main engine: all repository strategies are written for it. nfqws2 is the new engine with Lua scripts; choose it only if you have strategies for it and the zaprett-nfqws2 package is installed."
+msgstr "nfqws — основной движок: под него написаны все стратегии репозитория. nfqws2 — новый движок со скриптами на Lua; выбирайте его, только если у вас есть стратегии для него и установлен пакет zaprett-nfqws2."
+
+msgid "nfqws strategy"
+msgstr "Стратегия nfqws"
+
+msgid "nfqws2 strategy"
+msgstr "Стратегия nfqws2"
+
+msgid "no"
+msgstr "нет"
+
+msgid "no answer (timeout)"
+msgstr "нет ответа (таймаут)"
+
+msgid "none"
+msgstr "нет"
+
+msgid "not a valid IPv4/IPv6 address or network"
+msgstr "это не IPv4/IPv6-адрес и не сеть"
+
+msgid "not a valid domain name (use Latin letters; write Cyrillic domains in punycode, xn--…)"
+msgstr "это не доменное имя (латиница; кириллические домены пишите в punycode, xn--…)"
+
+msgid "not applied"
+msgstr "не применены"
+
+msgid "not checked"
+msgstr "не проверялась"
+
+msgid "not detected"
+msgstr "не определены"
+
+msgid "not downloaded yet"
+msgstr "ещё не загружалась"
+
+msgid "not installed"
+msgstr "не установлено"
+
+msgid "not selected"
+msgstr "не выбрана"
+
+msgid "not supported on the router"
+msgstr "на роутере не поддерживается"
+
+msgid "part %d (%s)"
+msgstr "часть %d (%s)"
+
+msgid "partially enabled"
+msgstr "включено частично"
+
+msgid "rejected by the engine"
+msgstr "движок не принял"
+
+msgid "running"
+msgstr "выполняется"
+
+msgid "saving…"
+msgstr "сохраняем…"
+
+msgid "the answer was cut off"
+msgstr "ответ оборвался"
+
+msgid "the connection was reset"
+msgstr "соединение сброшено"
+
+msgid "the data is not text"
+msgstr "данные не являются текстом"
+
+msgid "the engine did not start"
+msgstr "движок не запустился"
+
+msgid "the line is too long or contains forbidden characters"
+msgstr "строка слишком длинная или содержит недопустимые символы"
+
+msgid "the list is larger than 1 MiB"
+msgstr "список больше 1 МиБ"
+
+msgid "the server returned an HTTP error"
+msgstr "сервер вернул ошибку HTTP"
+
+msgid "the subscription settings are invalid"
+msgstr "настройки подписки неверны"
+
+msgid "too much for this router"
+msgstr "слишком много для этого роутера"
+
+msgid "unknown"
+msgstr "неизвестно"
+
+msgid "update available"
+msgstr "есть обновление"
+
+msgid "version %s"
+msgstr "версия %s"
+
+msgid "works"
+msgstr "работает"
+
+msgid "works partially"
+msgstr "работает частично"
+
+msgid "wrong certificate (substituted answer)"
+msgstr "чужой сертификат (ответ подменён)"
+
+msgid "yes"
+msgstr "да"
+
+msgid "zaprett"
+msgstr "zaprett"
+
+msgid "zaprett cannot help"
+msgstr "zaprett не поможет"
+
+msgid "zaprett checks strategies one by one: it restarts the engine with each of them and tries to open the sites of the enabled services and lists. The result shows how many of the checked sites opened. First the sites are checked without the bypass, to see what is actually blocked."
+msgstr "zaprett проверяет стратегии по очереди: перезапускает движок с каждой из них и пробует открыть сайты включённых сервисов и списков. Итог показывает, сколько проверенных сайтов открылось. Сначала сайты проверяются без обхода — чтобы понять, что на самом деле заблокировано."
+
+msgid "zaprett did not find an interface with a default route, so its firewall rules are not bound to anything. Check the internet connection or choose the interface manually in \"Settings\"."
+msgstr "zaprett не нашёл интерфейс с маршрутом по умолчанию, поэтому его правила межсетевого экрана ни к чему не привязаны. Проверьте подключение к интернету или выберите интерфейс вручную в «Настройках»."
+
+msgid "zaprett does not change it"
+msgstr "zaprett его не меняет"
+
+msgid "zaprett has applied the new lists."
+msgstr "zaprett применил новые списки."
+
+msgid "zaprett helps to open sites and services that the internet provider slows down or blocks with deep packet inspection (DPI). It changes only the first packets of connections to the selected sites, so the rest of the traffic goes as usual and no VPN or proxy is needed."
+msgstr "zaprett помогает открывать сайты и сервисы, которые провайдер замедляет или блокирует с помощью глубокого анализа трафика (DPI). Он меняет только первые пакеты соединений с выбранными сайтами, поэтому остальной трафик идёт как обычно, а VPN и прокси не нужны."
+
+msgid "zaprett is checking strategies now; the previous state is restored when the check ends."
+msgstr "zaprett сейчас проверяет стратегии; после проверки всё вернётся как было."
+
+msgid "zaprett is enabled but not running"
+msgstr "zaprett включён, но не работает"
+
+msgid "zaprett is not running yet. Start it to make the bypass work."
+msgstr "zaprett пока не запущен. Запустите его, чтобы обход заработал."
+
+msgid "zaprett is restarted."
+msgstr "zaprett перезапущен."
+
+msgid "zaprett is started."
+msgstr "zaprett запущен."
+
+msgid "zaprett is stopped."
+msgstr "zaprett остановлен."
+
+msgid "zaprett needs the kmod-nft-queue and kmod-nfnetlink-queue kernel modules. Install them in \"System → Software\" and restart zaprett."
+msgstr "Для работы zaprett нужны модули ядра kmod-nft-queue и kmod-nfnetlink-queue. Установите их в «Система → Пакеты» и перезапустите zaprett."
+
+msgid "zaprett never changes connections to these addresses, in both modes. This is the only way to exclude a service that connects by address without a site name."
+msgstr "zaprett никогда не меняет соединения с этими адресами, в обоих режимах. Только так можно исключить сервис, который подключается по адресу, без имени сайта."
+
+msgid "zaprett settings"
+msgstr "Настройки zaprett"
+
+msgid "zaprett turns it off while running"
+msgstr "zaprett выключает его на время работы"
+
+msgid "zaprett version"
+msgstr "Версия zaprett"
+
+msgid "≈ %d MiB"
+msgstr "≈ %d МиБ"

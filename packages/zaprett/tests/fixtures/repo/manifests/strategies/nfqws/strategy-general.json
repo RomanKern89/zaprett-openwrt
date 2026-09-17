@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "strategy-general",
+  "name": "strategy-general",
+  "version": "1.0.0",
+  "author": "flowseal",
+  "description": "Стратегия general из репозитория zapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-general.txt",
+    "sha256": "71b9579832e19a6fad4db267cab25f67228ad12dcf4b9b71c4a7dc38955572f6"
+  }
+}

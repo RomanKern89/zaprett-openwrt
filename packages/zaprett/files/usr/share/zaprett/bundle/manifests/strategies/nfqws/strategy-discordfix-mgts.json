@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-discordfix-mgts",
+  "type": "nfqws",
+  "name": "strategy-discordfix-mgts",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-discordfix-mgts.txt",
+  "source": "bundle",
+  "sha256": "f8f7e045527d2b14a41a53c869a79ddb152299b1f2f5a2a8b0ba6fddf369d5f7",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discordfix-mgts.json"
+}

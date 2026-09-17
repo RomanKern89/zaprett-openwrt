@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-shizapret-alt-port",
+  "type": "nfqws",
+  "name": "strategy-shizapret-alt-port",
+  "version": "1.0.0",
+  "author": "sch-izo (Портировал dotFelixan)",
+  "description": "Стратегия shizapret из репозитория sch-izo/shizapret",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-shizapret-alt-port.txt",
+  "source": "bundle",
+  "sha256": "331871c10cd9d916f10464122bce3880b4f411c42f749d80e10a5b8a07390585",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-alt-port.json"
+}

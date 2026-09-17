@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "list-youtube",
+  "name": "YouTube (repo)",
+  "version": "1.0.1",
+  "author": "test",
+  "description": "installed copy overriding the bundle",
+  "dependencies": [],
+  "file": "list-youtube.txt",
+  "source": "repo",
+  "sha256": "f568a3f14c29ab676d2576bf2681240b43ea8053396ae86c6d90e29d9c72ee03",
+  "installed_at": 1758100001,
+  "manifest_url": "https://example.org/manifests/lists/include/list-youtube.json"
+}

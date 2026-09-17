@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-fake-tls-auto-alt3-roblox",
+  "name": "strategy-fake-tls-auto-alt3-roblox",
+  "version": "1.1.0",
+  "author": "flowseal, модифицировал Danil7726",
+  "description": "Стратегия fake-tls-auto-alt3 из репозитория zapret для Windows, модифицированная для обхода блокировки Roblox",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-fake-tls-auto-alt3-roblox.txt",
+    "sha256": "5d17cfadc40727881fcd38f2305b75a103b8451504ab777462ac146f70322627"
+  }
+}

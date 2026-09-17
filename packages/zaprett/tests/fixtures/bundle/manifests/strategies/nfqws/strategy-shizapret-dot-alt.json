@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-shizapret-dot-alt",
+  "name": "strategy-shizapret-dot-alt",
+  "version": "1.0.0",
+  "author": "sch-izo (Модифицировал dotFelixan)",
+  "description": "Стратегия shizapret из репозитория sch-izo/shizapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-shizapret-dot-alt.txt",
+  "source": "bundle",
+  "sha256": "f6dcda38ea4ed246f932c0a3b4fef2f6b575f383082a55266537ba4801274529",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot-alt.json"
+}

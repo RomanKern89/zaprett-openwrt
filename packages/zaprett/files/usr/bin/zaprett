@@ -1,0 +1,3 @@
+#!/bin/sh
+# zaprett CLI wrapper: all logic lives in ucode (/usr/share/zaprett/cli.uc, /usr/share/ucode/zaprett/).
+exec /usr/bin/ucode -S -- /usr/share/zaprett/cli.uc "$@"

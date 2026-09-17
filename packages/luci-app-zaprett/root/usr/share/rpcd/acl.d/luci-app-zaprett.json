@@ -1,0 +1,49 @@
+{
+	"luci-app-zaprett": {
+		"description": "Grant access to zaprett",
+		"read": {
+			"ubus": {
+				"luci.zaprett": [
+					"status",
+					"items",
+					"strategy_show",
+					"user_get",
+					"check",
+					"repo_list",
+					"presets",
+					"sources_list",
+					"test_status",
+					"job_status",
+					"job_log",
+					"diag"
+				]
+			},
+			"uci": [ "zaprett" ]
+		},
+		"write": {
+			"ubus": {
+				"luci.zaprett": [
+					"service",
+					"toggle_item",
+					"set_strategy",
+					"strategy_save",
+					"strategy_delete",
+					"user_set",
+					"repo_fetch",
+					"repo_install",
+					"repo_remove",
+					"repo_upgrade",
+					"wizard_apply",
+					"sources_update",
+					"source_save",
+					"source_delete",
+					"test_start",
+					"test_stop",
+					"test_apply",
+					"job_cancel"
+				]
+			},
+			"uci": [ "zaprett" ]
+		}
+	}
+}

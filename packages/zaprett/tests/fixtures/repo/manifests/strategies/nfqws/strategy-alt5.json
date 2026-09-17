@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "strategy-alt5",
+  "name": "strategy-alt5",
+  "version": "1.0.0",
+  "author": "flowseal",
+  "description": "Стратегия alt5 из репозитория zapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-alt5.txt",
+    "sha256": "91833f28f7bfcce5d7c49e791ff400cacbb156afb6bcbc8795ed3a5c05995e79"
+  }
+}

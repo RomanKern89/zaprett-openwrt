@@ -1,0 +1,13 @@
+#!/bin/sh
+# zaprett: refresh WAN interface sets of table inet zaprett when an interface goes up or down.
+# Runs after 20-firewall. Only acts while the table is applied (zaprett.nft exists; stop removes it).
+
+[ "$ACTION" = ifup ] || [ "$ACTION" = ifdown ] || [ "$ACTION" = ifupdate ] || exit 0
+[ -n "$INTERFACE" ] && [ "$INTERFACE" != loopback ] || exit 0
+[ -x /usr/bin/zaprett ] && [ -s /var/run/zaprett/zaprett.nft ] || exit 0
+
+logger -t zaprett "обновление WAN-интерфейсов: $ACTION $INTERFACE"
+# --if-applied instead of --if-running: during start_service the engine is not yet registered in procd,
+# but the table is already applied and must get the new WAN set
+/usr/bin/zaprett fw apply --if-applied --quiet >/dev/null 2>&1
+exit 0

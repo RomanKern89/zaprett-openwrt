@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-exclude-ipset",
+  "type": "ipset_exclude",
+  "name": "Исключения: локальные сети",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "Локальные и служебные сети (11 шт.), которые обход не трогает: частные сети, loopback, link-local, CGNAT, multicast и их IPv6-аналоги. Основа — список исключений bol-van/zapret и ipset-exclude из Flowseal/zapret-discord-youtube.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+  "source": "bundle",
+  "sha256": "803d59b62d125220dfff3b5da7fac0c2b0f01ccb5a537bbe28f547c47703d53b",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

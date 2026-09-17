@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-shizapret-dot",
+  "type": "nfqws",
+  "name": "strategy-shizapret-dot",
+  "version": "1.0.0",
+  "author": "sch-izo (Модифицировал dotFelixan)",
+  "description": "Модифицированная стратегия shizapret",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-shizapret-dot.txt",
+  "source": "bundle",
+  "sha256": "9d4c5fe1547e072d15de4da6683a38309872f9705cddd69b97f1b8696d10c640",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot.json"
+}

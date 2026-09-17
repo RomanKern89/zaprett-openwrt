@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-alt3",
+  "name": "strategy-alt3",
+  "version": "1.0.0",
+  "author": "flowseal",
+  "description": "Стратегия alt3 из репозитория zapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json"
+  ],
+  "file": "strategy-alt3.txt",
+  "source": "bundle",
+  "sha256": "49ad99e7b52bdf56310fe7b1e21e38b1203f8f896a9414d48d336b2978b68e77",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt3.json"
+}

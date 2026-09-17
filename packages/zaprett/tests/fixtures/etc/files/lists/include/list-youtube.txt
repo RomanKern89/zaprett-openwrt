@@ -1,0 +1,6 @@
+youtube.com
+googlevideo.com
+ytimg.com
+# comment
+
+youtu.be

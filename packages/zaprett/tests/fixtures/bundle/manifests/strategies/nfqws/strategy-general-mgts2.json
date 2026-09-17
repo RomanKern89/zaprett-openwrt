@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-general-mgts2",
+  "name": "strategy-general-mgts2",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-general-mgts2.txt",
+  "source": "bundle",
+  "sha256": "4450af6f73962319016822f3346834bb26f22f8aad6eb5a5d56ed2680def3a7e",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-general-mgts2.json"
+}

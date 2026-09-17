@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-fix-v1",
+  "type": "nfqws",
+  "name": "strategy-fix-v1",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-fix-v1.txt",
+  "source": "bundle",
+  "sha256": "ae7037bc6557909fe9ab869b210c91a892e7b7db005acefd365c089246079b61",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fix-v1.json"
+}

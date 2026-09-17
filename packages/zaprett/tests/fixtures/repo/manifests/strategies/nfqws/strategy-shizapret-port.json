@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-shizapret-port",
+  "name": "strategy-shizapret-port",
+  "version": "1.0.0",
+  "author": "sch-izo (Портировал dotFelixan)",
+  "description": "Стратегия shizapret из репозитория sch-izo/shizapret",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-shizapret-port.txt",
+    "sha256": "6a40213eadaf648dcf31249a9b391c835e03d0e8e8115551bdd24240215f600a"
+  }
+}

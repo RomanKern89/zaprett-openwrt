@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-generalfix-alt4",
+  "name": "strategy-generalfix-alt4",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-generalfix-alt4.txt",
+    "sha256": "55e10782a4acca424a399676fe38bf846248d45f6384100b009b971a631c8786"
+  }
+}

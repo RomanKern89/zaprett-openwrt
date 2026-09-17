@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-general-fake-tls-auto-alt-2",
+  "name": "strategy-general-fake-tls-auto-alt-2",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-general-fake-tls-auto-alt-2.txt",
+  "source": "bundle",
+  "sha256": "180311b2565e74276c17998db4f36b6c89b13d605d47405b3fb41ffc53cee42e",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt-2.json"
+}

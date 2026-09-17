@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "ipset-roblox",
+  "name": "ipset-roblox",
+  "version": "1.0.0",
+  "author": "@mewmrow",
+  "description": "Ipset Roblox",
+  "dependencies": [],
+  "file": "ipset-roblox.txt",
+  "source": "bundle",
+  "sha256": "9b35fd1eef1cce9ef3fe264f90a904c39b469f43b883a6c509a87039b1d39394",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/ipset/include/ipset-roblox.json"
+}

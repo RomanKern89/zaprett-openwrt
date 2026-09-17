@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-discordfix-mgts",
+  "name": "strategy-discordfix-mgts",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-discordfix-mgts.txt",
+    "sha256": "f8f7e045527d2b14a41a53c869a79ddb152299b1f2f5a2a8b0ba6fddf369d5f7"
+  }
+}

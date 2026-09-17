@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-exclude",
+  "type": "list_exclude",
+  "name": "Исключения: сайты",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "Сайты, которые обход не трогает (379 доменов): госуслуги и госсайты, банки, Яндекс, VK, маркетплейсы, игровые и софтверные сервисы. Объединение списков Flowseal list-exclude, CherretGit/zaprett-repo list-exclude-general (плюс gosuslugi.ru и x5.ru) и remittor zapret-hosts-user-exclude; домены, которых нет в DNS, убраны.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+  "source": "bundle",
+  "sha256": "6bb040ee55b4dd8131c2e0d23b6d48d3558a7dce53621f3219e3c90969eab4fe",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

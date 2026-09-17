@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "list-youtube",
+  "name": "list-youtube",
+  "version": "1.0.0",
+  "author": "zaprett-devs",
+  "description": "Домены YouTube",
+  "dependencies": [],
+  "file": "list-youtube.txt",
+  "source": "bundle",
+  "sha256": "c23327c320866a95db797603d2ab4a60e4f4f750c2f0f9d0568314327941418f",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/lists/include/list-youtube.json"
+}

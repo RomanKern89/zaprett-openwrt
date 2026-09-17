@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-discord",
+  "type": "list",
+  "name": "zaprett-discord",
+  "version": "2026.09.17",
+  "author": "test",
+  "description": "fixture",
+  "dependencies": [],
+  "file": "zaprett-discord.txt",
+  "source": "bundle",
+  "sha256": "cdfd1c8dcac588a0ac12310273edb6d817a27cbf28bc5e9d43e4731206ea4bee",
+  "installed_at": 1758100000,
+  "manifest_url": null
+}

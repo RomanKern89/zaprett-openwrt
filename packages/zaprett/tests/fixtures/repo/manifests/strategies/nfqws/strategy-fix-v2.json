@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-fix-v2",
+  "name": "strategy-fix-v2",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-fix-v2.txt",
+    "sha256": "cef08516fc680b150c9990edfcbef9263dd18fd1722c9caf31683acf6d4286f7"
+  }
+}

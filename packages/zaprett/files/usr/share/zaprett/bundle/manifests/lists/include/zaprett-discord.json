@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-discord",
+  "type": "list",
+  "name": "Discord",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "Домены Discord (19 шт.): сайт, приложение, вложения и голосовые серверы discord.media. Отбор как у YouTube (источники: Flowseal/zapret-discord-youtube, itdoginfo/allow-domains, CherretGit/zaprett-repo, remittor/zapret-openwrt), discordstatus.com добавлен по списку Flowseal. Голосовые звонки обрабатывает отдельный профиль стратегии по портам.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+  "source": "bundle",
+  "sha256": "5e3073dfef475ff001e204cc439aa96b44052071e01239ad3824d2801f026194",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

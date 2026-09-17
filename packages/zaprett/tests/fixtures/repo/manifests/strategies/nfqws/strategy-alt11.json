@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-alt11",
+  "name": "strategy-alt11",
+  "version": "1.0.0",
+  "author": "flowsel(портировал Adwhweu)",
+  "description": "Alt11 из zapret-discord-youtube",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_max_ru.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-alt11.txt",
+    "sha256": "d7968aabbdbcc4b8d86c3c10112ce601d411caef9a38b8c3ed9b43cda5a11fa1"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "strategy-ds",
+  "name": "strategy-ds",
+  "version": "1.0.0",
+  "author": "Crazry Chel",
+  "description": "Порт стратегии Crazy Chel (портировал HelloGames_.)",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/byedpi/strategy-ds.txt",
+    "sha256": "50f845055681ae278ad352a90f9fd3eaaf23f1ab9ec39e980caaa117f017308f"
+  }
+}

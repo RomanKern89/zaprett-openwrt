@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "id": "strategy-discord",
+  "name": "strategy-discord",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "file": "strategy-discord.txt",
+  "source": "bundle",
+  "sha256": "af7c6432a24dd7b3c3ca6e0ad3b9753d24fd7d7b11baeba0a13255b1bd02f4f3",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discord.json"
+}

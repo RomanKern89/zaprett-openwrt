@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-ultimatefix-alt-v4",
+  "type": "nfqws",
+  "name": "strategy-ultimatefix-alt-v4",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-ultimatefix-alt-v4.txt",
+  "source": "bundle",
+  "sha256": "79d1383e46d579b7de8dbb90bc0b33e291f977fca2edfe9c294ef222a188c7db",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-ultimatefix-alt-v4.json"
+}

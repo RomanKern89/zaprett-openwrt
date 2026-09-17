@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-telegram-ipset",
+  "type": "ipset",
+  "name": "Telegram: IP-сети",
+  "version": "2026.09.17",
+  "author": "zaprett для OpenWrt",
+  "description": "IP-сети Telegram (12 шт., адресов IPv4: 15 104): официальный список core.telegram.org/resources/cidr.txt и сети, которые анонсируют автономные системы Telegram Messenger Inc (AS62041, AS59930, AS44907, AS211157, AS62014) по данным RIPEstat на 2026-09-17. Нужны приложению Telegram, которое соединяется с серверами по IP.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/ipset/include/zaprett-telegram-ipset.txt",
+  "source": "bundle",
+  "sha256": "53437464eec1ac4396b00e8b6ad427ed0cf54bfac6339575a2cef48d8753e961",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

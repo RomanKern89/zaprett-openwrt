@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "services": [
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "description": "Сайт и приложение YouTube: страницы, видео и превью.",
+      "lists": [
+        "zaprett-youtube"
+      ],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://www.youtube.com/",
+          "min_bytes": 131072
+        },
+        {
+          "url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+          "min_bytes": 17000
+        },
+        {
+          "url": "https://redirector.googlevideo.com/report_mapping?di=no",
+          "min_bytes": 0
+        }
+      ],
+      "works": "yes",
+      "note": "Замедление YouTube устроено через анализ имени сайта в зашифрованном соединении (DPI) — именно это обходит zaprett. Если видео всё равно тормозит, запустите автоподбор стратегии: у разных провайдеров срабатывают разные."
+    },
+    {
+      "id": "discord",
+      "name": "Discord",
+      "description": "Сайт и приложение Discord: чаты, картинки и голосовые звонки.",
+      "lists": [
+        "zaprett-discord"
+      ],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://discord.com/",
+          "min_bytes": 65536
+        },
+        {
+          "url": "https://gateway.discord.gg/",
+          "min_bytes": 0
+        }
+      ],
+      "works": "yes",
+      "note": "Сайт и чаты обрабатываются по именам сайтов. Голосовые звонки идут без имени сайта, их обрабатывает отдельное правило стратегии по портам UDP 19294–19344 и 50000–50100 (значения из набора Flowseal, официального списка портов у Discord нет). Если чат работает, а голос нет, попробуйте другую стратегию через автоподбор."
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "description": "Сайт telegram.org, ссылки t.me и приложение Telegram.",
+      "lists": [
+        "zaprett-telegram"
+      ],
+      "ipsets": [
+        "zaprett-telegram-ipset"
+      ],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://telegram.org/",
+          "min_bytes": 17000
+        }
+      ],
+      "works": "partial",
+      "note": "Сайты Telegram обрабатываются по именам. Приложение соединяется с серверами напрямую по IP-адресам, без имени сайта, поэтому для него включается список IP-сетей Telegram. Помогает ли обход против текущего замедления медиа и звонков в Telegram — не проверено. Автоподбор проверяет только сайт telegram.org, работу самого приложения он не проверяет."
+    },
+    {
+      "id": "rutracker",
+      "name": "RuTracker",
+      "description": "Торрент-трекер RuTracker.",
+      "lists": [
+        "zaprett-rutracker"
+      ],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://rutracker.org/forum/index.php",
+          "min_bytes": 32768
+        }
+      ],
+      "works": "partial",
+      "note": "Помогает, если провайдер блокирует RuTracker анализом трафика. Если же он подменяет ответ DNS, одного zaprett мало: включите на роутере шифрованный DNS (например, пакет https-dns-proxy). Работает ли обход у вашего провайдера, покажет автоподбор."
+    },
+    {
+      "id": "cloudflare",
+      "name": "Сайты за Cloudflare",
+      "description": "Зарубежные сайты, у которых грузится только начало страницы, а дальше загрузка зависает.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [
+        "cloudflare_v4",
+        "cloudflare_v6"
+      ],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://speed.cloudflare.com/__down?bytes=102400",
+          "min_bytes": 65536
+        }
+      ],
+      "works": "partial",
+      "note": "С июня 2025 года у сайтов за Cloudflare в России загружаются только первые 16 КБ данных, после чего соединение замирает. Мастер подключит официальные диапазоны IP-адресов Cloudflare: 22 сети, памяти почти не занимают. Насколько обход помогает против этого ограничения — не проверено. Правило действует на все сайты за Cloudflare, в том числе российские: если какой-то сайт перестал открываться, выключите этот пункт. Сайты на Hetzner, DigitalOcean и OVH ограничены так же, но этим пунктом не покрываются."
+    },
+    {
+      "id": "rkn_full",
+      "name": "Прочие заблокированные сайты",
+      "description": "Большой список заблокированных в России сайтов (около 81 тыс. доменов и 17 тыс. IP-сетей) с автообновлением.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [
+        "refilter_domains",
+        "antifilter_allyouneed"
+      ],
+      "tier": "full",
+      "test_targets": [],
+      "works": "partial",
+      "note": "Списки загружаются из интернета (Re:filter и antifilter.download) и обновляются раз в несколько дней. Для работы nfqws им нужно около 10 МиБ оперативной памяти (замер на 64-битной системе; на 32-битных роутерах ожидается меньше, но это не проверено) и около 1,6 МБ свободного места во флеш-памяти. Не включайте на роутерах, где меньше 200 МБ оперативной памяти. Многие сайты из этих списков заблокированы по IP-адресу или через DNS — против таких блокировок zaprett не поможет. При автоподборе проверяются несколько доменов из самого списка."
+    },
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp",
+      "description": "Мессенджер WhatsApp: сообщения и звонки.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [],
+      "works": "no",
+      "note": "zaprett здесь не поможет. В феврале 2026 года домены WhatsApp исключили из национальной системы доменных имён (НСДИ) — это блокировка на уровне DNS, а не анализа трафика. Нужен шифрованный DNS на роутере или VPN. Помогает ли обход против ограничения звонков — не проверено."
+    },
+    {
+      "id": "instagram_facebook",
+      "name": "Instagram и Facebook",
+      "description": "Социальные сети Instagram и Facebook.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [],
+      "works": "no",
+      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси."
+    },
+    {
+      "id": "twitter",
+      "name": "X (Twitter)",
+      "description": "Социальная сеть X, бывший Twitter.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [],
+      "works": "no",
+      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси."
+    },
+    {
+      "id": "chatgpt_claude",
+      "name": "ChatGPT и Claude",
+      "description": "Нейросети ChatGPT (OpenAI) и Claude (Anthropic).",
+      "lists": [],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [],
+      "works": "no",
+      "note": "zaprett здесь не поможет: доступ из России закрывают сами сервисы — России нет в списке поддерживаемых стран OpenAI и Anthropic. Нужен VPN."
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "description": "Музыкальный сервис Spotify.",
+      "lists": [],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [],
+      "works": "no",
+      "note": "zaprett здесь не поможет: Spotify сам прекратил работу в России в апреле 2022 года. Нужен VPN."
+    }
+  ],
+  "always": {
+    "exclude_lists": [
+      "zaprett-exclude"
+    ],
+    "exclude_ipsets": [
+      "zaprett-exclude-ipset"
+    ]
+  },
+  "tiers": {
+    "light": {
+      "min_ram_mib": 0
+    },
+    "full": {
+      "min_ram_mib": 200
+    }
+  },
+  "defaults": {
+    "services": [
+      "youtube",
+      "discord"
+    ],
+    "strategy": "strategy-general",
+    "quick_test_strategies": [
+      "strategy-general",
+      "strategy-alt",
+      "strategy-alt2",
+      "strategy-alt3",
+      "strategy-alt4",
+      "strategy-alt8",
+      "strategy-alt11",
+      "strategy-fake-tls-auto-alt",
+      "strategy-fake-tls-auto-alt3",
+      "strategy-simple-fake",
+      "strategy-discord-fix",
+      "strategy-youtubefix-alt"
+    ]
+  }
+}

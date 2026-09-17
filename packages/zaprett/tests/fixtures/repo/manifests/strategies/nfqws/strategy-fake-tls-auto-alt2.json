@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-fake-tls-auto-alt2",
+  "name": "strategy-fake-tls-auto-alt2",
+  "version": "1.0.0",
+  "author": "flowseal",
+  "description": "Стратегия fake-tls-auto-alt2 из репозитория zapret для Windows",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-fake-tls-auto-alt2.txt",
+    "sha256": "f2015987940c040e181c8aaa21e0ff3a3318d1534b5619f3b40e630b6be2f838"
+  }
+}

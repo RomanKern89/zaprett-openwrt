@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "strategy-yt-ds-r34",
+  "name": "strategy-yt-ds-r34",
+  "version": "1.0.0",
+  "author": "Tomon one",
+  "description": "Порт стратегии Tomon one (портировал HelloGames_.)",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/byedpi/strategy-yt-ds-r34.txt",
+    "sha256": "e9c0fad6d15a5f32e12079fcfb3898f0e53b27a8f318def4d38f9848a52442f3"
+  }
+}

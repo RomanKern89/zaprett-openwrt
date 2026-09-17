@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "strategy-generalfix-alt3",
+  "name": "strategy-generalfix-alt3",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+    "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  ],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/strategies/nfqws/strategy-generalfix-alt3.txt",
+    "sha256": "5ecf98c35f189b266a44003626315d70eee8b3dd7bc908e9d7e6ad5d4d9f2fa6"
+  }
+}

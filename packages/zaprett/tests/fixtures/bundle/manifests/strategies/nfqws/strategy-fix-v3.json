@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "strategy-fix-v3",
+  "name": "strategy-fix-v3",
+  "version": "1.0.0",
+  "author": "Snowy-Fluffy",
+  "description": "Порт стратегии из репозитория Snowy-Fluffy (портировал HelloGames)",
+  "dependencies": [],
+  "file": "strategy-fix-v3.txt",
+  "source": "bundle",
+  "sha256": "00956a7e422d2ae46e93fe0fd4350de2ee9f3b2e92416388a75654f458a8e16f",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fix-v3.json"
+}

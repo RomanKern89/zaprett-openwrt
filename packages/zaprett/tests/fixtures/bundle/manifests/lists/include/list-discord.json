@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "list-discord",
+  "name": "list-discord",
+  "version": "1.0.0",
+  "author": "zaprett-devs",
+  "description": "Домены Discord",
+  "dependencies": [],
+  "file": "list-discord.txt",
+  "source": "bundle",
+  "sha256": "13a60977a4b6fe0fd053bab4a8f3c73790ce20ea5eedc6eb788b56d8431a0e9a",
+  "installed_at": 1758100000,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/lists/include/list-discord.json"
+}

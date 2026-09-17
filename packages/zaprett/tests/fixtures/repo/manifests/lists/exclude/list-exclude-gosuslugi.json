@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "list-exclude-gosuslugi",
+  "name": "list-exclude-gosuslugi",
+  "version": "1.0.0",
+  "author": "@mewmrow",
+  "description": "Домены госуслуг для черного списка",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/exclude/list-exclude-gosuslugi.txt",
+    "sha256": "a85a41d665baf2a9a589ec987338fd3985dfe3e1be195d1da032052d9494beae"
+  }
+}

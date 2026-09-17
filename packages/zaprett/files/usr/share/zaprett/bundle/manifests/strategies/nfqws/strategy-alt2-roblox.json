@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "strategy-alt2-roblox",
+  "type": "nfqws",
+  "name": "strategy-alt2-roblox",
+  "version": "1.0.0",
+  "author": "Hellogames_.",
+  "description": "ALT 2 с обходом для роблокса",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws/strategy-alt2-roblox.txt",
+  "source": "bundle",
+  "sha256": "aa6fa6a7f75a4ad91e2a0cfc78ceefaa5eb23241c33abb6f7497433f3cdb406f",
+  "installed_at": 1789603200,
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt2-roblox.json"
+}

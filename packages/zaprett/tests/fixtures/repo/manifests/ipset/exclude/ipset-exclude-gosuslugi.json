@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "ipset-exclude-gosuslugi",
+  "name": "ipset-exclude-gosuslugi",
+  "version": "1.0.0",
+  "author": "@mewmrow",
+  "description": "Ipset'ы для чёрного списка",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/ipset/exclude/ipset-exclude-gosuslugi.txt",
+    "sha256": "351e4c069ffb7a92e570589eba85a314a62d6895ee22ca4f40d80183ed8fdfe1"
+  }
+}

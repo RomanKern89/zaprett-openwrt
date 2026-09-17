@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-exclude",
+  "type": "list_exclude",
+  "name": "zaprett-exclude",
+  "version": "2026.09.17",
+  "author": "test",
+  "description": "fixture",
+  "dependencies": [],
+  "file": "zaprett-exclude.txt",
+  "source": "bundle",
+  "sha256": "23d194084cf1bb4441cb110760ec486c3f2d01f4510cdf727d2ebb985507a9b9",
+  "installed_at": 1758100000,
+  "manifest_url": null
+}

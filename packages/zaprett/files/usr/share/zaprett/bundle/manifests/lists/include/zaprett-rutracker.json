@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "zaprett-rutracker",
+  "type": "list",
+  "name": "RuTracker",
+  "version": "2026.09.17",
+  "author": "zaprett-devs",
+  "description": "Домены RuTracker (5 шт.) из списка list-rutracker репозитория CherretGit/zaprett-repo (автор zaprett-devs, версия 1.0.0) без изменений.",
+  "dependencies": [],
+  "file": "/usr/share/zaprett/bundle/files/lists/include/zaprett-rutracker.txt",
+  "source": "bundle",
+  "sha256": "82f953b44eda73bf3319c99e8cfab572ce498d68dc7692ad0bcdae3b8256c9ed",
+  "installed_at": 1789603200,
+  "manifest_url": null
+}

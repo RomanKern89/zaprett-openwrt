@@ -1,0 +1,1758 @@
+{
+  "schema": 1,
+  "snapshot": "2026.09.17",
+  "strategies": [
+    {
+      "id": "strategy-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 8,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt10",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_4pda_to}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt11",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_max_ru}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 6,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 8,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt2-roblox",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 11,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [
+        "#9 udp=49152-65535",
+        "#11 udp=49152-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt4",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt5",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 6,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [
+        "#4 tcp=443,2053,2083,2087,2096,8443"
+      ],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": true,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt6",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt7",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-alt8",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-default",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 6,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [
+        "#4 udp=50000-50100"
+      ],
+      "profiles_l7_only": [],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": true,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-discord",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-discord-fix",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-discordfix-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#3 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": true,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-discordfix-alt2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 6,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-discordfix-mgts",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fake-tls-auto-alt3-roblox",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 9,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [
+        "#8 udp=49152-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fix-v1",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 5,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535",
+        "#3 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fix-v2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 5,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535",
+        "#3 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-fix-v3",
+      "placeholders": [
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#3 udp=50000-50099 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-fake-tls-auto",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt-2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-fake-tls-auto-alt-3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-mgts",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-mgts2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-old",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-simple-fake",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-general-simple-fake-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-generalfix",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-generalfix-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-generalfix-alt3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit",
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-generalfix-alt4",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-preset-russia",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 10,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-russiafix",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 10,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-shizapret-alt-port",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 14,
+      "comment_junk_tokens": 31,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 14,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#1 udp=1400 l7:stun",
+        "#2 udp=3478-3482,3484,3488,3489,3491-3493,3495-3497 l7:stun",
+        "#3 udp=19294-19344,50000-50032 l7:discord,stun",
+        "#11 udp=0-65535 l7:wireguard"
+      ],
+      "wide_udp": [
+        "#11 udp=0-65535"
+      ],
+      "syndata": true,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-shizapret-dot",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 14,
+      "comment_junk_tokens": 31,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 14,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#1 udp=1400 l7:stun",
+        "#2 udp=3478-3482,3484,3488,3489,3491-3493,3495-3497 l7:stun",
+        "#3 udp=19294-19344,50000-50100 l7:discord,stun",
+        "#11 udp=0-65535 l7:wireguard"
+      ],
+      "wide_udp": [
+        "#11 udp=0-65535"
+      ],
+      "syndata": true,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-shizapret-dot-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 14,
+      "comment_junk_tokens": 31,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 14,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#1 udp=1400 l7:stun",
+        "#2 udp=3478-3482,3484,3488,3489,3491-3493,3495-3497 l7:stun",
+        "#3 udp=19294-19344,50000-50100 l7:discord,stun",
+        "#11 udp=0-65535 l7:wireguard"
+      ],
+      "wide_udp": [
+        "#11 udp=0-65535"
+      ],
+      "syndata": true,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-shizapret-md5sig-port",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 14,
+      "comment_junk_tokens": 31,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 14,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#1 udp=1400 l7:stun",
+        "#2 udp=3478-3482,3484,3488,3489,3491-3493,3495-3497 l7:stun",
+        "#3 udp=19294-19344,50000-50100 l7:discord,stun",
+        "#11 udp=0-65535 l7:wireguard"
+      ],
+      "wide_udp": [
+        "#11 udp=0-65535"
+      ],
+      "syndata": true,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-shizapret-port",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 14,
+      "comment_junk_tokens": 31,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 14,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#1 udp=1400 l7:stun",
+        "#2 udp=3478-3482,3484,3488,3489,3491-3493,3495-3497 l7:stun",
+        "#3 udp=19294-19344,50000-50100 l7:discord,stun",
+        "#11 udp=0-65535 l7:wireguard"
+      ],
+      "wide_udp": [
+        "#11 udp=0-65535"
+      ],
+      "syndata": true,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-simple-fake",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-simple-fake-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-extended",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v10",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v4",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 3,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v5",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": true,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v6",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v7",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v8",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-alt-v9",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-mgts",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-universal",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-universal-v2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-ultimatefix-universal-v3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "disorder2": "multidisorder",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 5,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535",
+        "#3 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "strategy-youtubefix-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {
+        "split2": "multisplit",
+        "split": "fakedsplit"
+      },
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": true,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    }
+  ]
+}

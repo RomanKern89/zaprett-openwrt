@@ -1,0 +1,78 @@
+#!/bin/sh /etc/rc.common
+# zaprett: DPI bypass with nfqws/nfqws2 (procd service, ARCHITECTURE §7).
+# Nothing but declarations at the top level: Image Builder executes this file with IPKG_INSTROOT.
+
+USE_PROCD=1
+START=95
+STOP=10
+
+ZAPRETT_CLI=/usr/bin/zaprett
+ZAPRETT_RUN=/var/run/zaprett
+
+zaprett_enabled() {
+	local enabled
+	config_load zaprett
+	config_get_bool enabled main enabled 0
+	[ "$enabled" = 1 ]
+}
+
+start_service() {
+	local engine a test_mode=0
+
+	[ -f "$ZAPRETT_RUN/test-override" ] && test_mode=1
+	if [ "$test_mode" != 1 ] && ! zaprett_enabled; then
+		"$ZAPRETT_CLI" fw remove --quiet >/dev/null 2>&1
+		"$ZAPRETT_CLI" offload restore --quiet >/dev/null 2>&1
+		return 0
+	fi
+
+	if ! "$ZAPRETT_CLI" gen-args --quiet >/dev/null 2>&1; then
+		logger -t zaprett -p daemon.err "движок не запущен: ошибка в настройках или стратегии (подробности: zaprett check)"
+		"$ZAPRETT_CLI" fw remove --quiet >/dev/null 2>&1
+		return 1
+	fi
+
+	read -r engine < "$ZAPRETT_RUN/engine"
+	case "$engine" in
+		nfqws|nfqws2) ;;
+		*) return 1 ;;
+	esac
+	[ -x "/usr/libexec/zaprett/$engine" ] || {
+		logger -t zaprett -p daemon.err "не найден /usr/libexec/zaprett/$engine"
+		return 1
+	}
+
+	set --
+	while IFS= read -r a; do
+		set -- "$@" "$a"
+	done < "$ZAPRETT_RUN/args"
+
+	procd_open_instance engine
+	procd_set_param command "/usr/libexec/zaprett/$engine" "$@"
+	procd_set_param respawn 3600 5 5
+	procd_set_param file "$ZAPRETT_RUN/args"
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+
+	"$ZAPRETT_CLI" fw apply --quiet >/dev/null 2>&1 || \
+		logger -t zaprett -p daemon.err "правила nftables не установлены (подробности: zaprett fw apply)"
+	[ "$test_mode" = 1 ] || "$ZAPRETT_CLI" offload apply --quiet >/dev/null 2>&1
+	return 0
+}
+
+stop_service() {
+	"$ZAPRETT_CLI" fw remove --quiet >/dev/null 2>&1
+	zaprett_enabled || "$ZAPRETT_CLI" offload restore --quiet >/dev/null 2>&1
+	return 0
+}
+
+reload_service() {
+	start
+	"$ZAPRETT_CLI" cron sync --quiet >/dev/null 2>&1
+	return 0
+}
+
+service_triggers() {
+	procd_add_reload_trigger zaprett
+}

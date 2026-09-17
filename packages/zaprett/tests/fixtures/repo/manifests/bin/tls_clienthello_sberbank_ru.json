@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "tls_clienthello_sberbank_ru",
+  "name": "tls_clienthello_sberbank_ru",
+  "version": "1.0.0",
+  "author": "zaprett-devs",
+  "description": "Фейк sberbank.ru",
+  "dependencies": [],
+  "artifact": {
+    "url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/bin/tls_clienthello_sberbank_ru.bin",
+    "sha256": "d10110e695ec16cdbed292cfbba3e779b8f08acb92bfa1023ad56a8cccd3aae6"
+  }
+}
