@@ -5,8 +5,8 @@ Connection settings come only from the environment (nothing secret is stored her
     ZAPRETT_BUILD_USER  (fallback SSH_USER)   login
     ZAPRETT_BUILD_KEY   (fallback SSH_KEY)    path to the SSH private key
     ZAPRETT_BUILD_PORT  (optional, default 22)
-    ZAPRETT_SECRETS     (optional) directory with signing keys,
-                        default ~/.claude/projects/C--Zapret/secrets
+    ZAPRETT_SECRETS     (optional) directory with the signing keys,
+                        default ~/.zaprett-keys (never inside the repository)
 
 Commands:
     remote.py run "<command>" [--timeout SEC]
@@ -57,7 +57,7 @@ def env(name: str, fallback: str = "", required: bool = True) -> str:
 
 
 def secrets_dir() -> str:
-    default = os.path.join(os.path.expanduser("~"), ".claude", "projects", "C--Zapret", "secrets")
+    default = os.path.join(os.path.expanduser("~"), ".zaprett-keys")
     return os.environ.get("ZAPRETT_SECRETS") or default
 
 

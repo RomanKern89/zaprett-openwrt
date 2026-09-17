@@ -1,8 +1,8 @@
 """Генератор встроенного снимка (bundle) и presets.json для пакета zaprett (OpenWrt).
 
 Запуск:
-    PYTHONUTF8=1 python C:/Zapret/tools/data/build_bundle.py              сборка + проверки + установка в пакет
-    PYTHONUTF8=1 python C:/Zapret/tools/data/build_bundle.py --check-only только проверка того, что лежит в пакете
+    PYTHONUTF8=1 python tools/data/build_bundle.py              сборка + проверки + установка в пакет
+    PYTHONUTF8=1 python tools/data/build_bundle.py --check-only только проверка того, что лежит в пакете
 
 Входы (зафиксированы sha256, при расхождении генератор останавливается):
   upstream/lists-refs/curated/*.txt   очищенные листы (research/03-lists.md §10)

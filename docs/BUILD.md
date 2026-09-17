@@ -12,7 +12,7 @@
 | `zaprett-nfqws` | по arch | статический `nfqws` из релиза bol-van/zapret `v72.13` (`openwrt-embedded`) | `72.13-r1` |
 | `zaprett-nfqws2` | по arch | статический `nfqws2` + `lua/*.lua.gz` из релиза bol-van/zapret2 `v1.0.5.2` | `1.0.5.2-r1` |
 
-Результат сборки (`C:\Zapret\dist\`, в git не попадает):
+Результат сборки (каталог `dist/`, в git не попадает):
 
 ```
 dist/
@@ -71,10 +71,10 @@ dist/
 
 | Ключ | Приватная часть | Открытая часть |
 |---|---|---|
-| apk (ECDSA prime256v1) | `~/.claude/projects/C--Zapret/secrets/zaprett-apk-private.pem` | `build/keys/zaprett-apk.pub` → на роутере `/etc/apk/keys/zaprett.pem` |
-| usign (Ed25519) | `~/.claude/projects/C--Zapret/secrets/zaprett-usign.key` | `build/keys/zaprett-usign.pub` → на роутере `/etc/opkg/keys/<отпечаток>` |
+| apk (ECDSA prime256v1) | `$ZAPRETT_SECRETS/zaprett-apk-private.pem` (по умолчанию `~/.zaprett-keys`) | `build/keys/zaprett-apk.pub` → на роутере `/etc/apk/keys/zaprett.pem` |
+| usign (Ed25519) | `$ZAPRETT_SECRETS/zaprett-usign.key` (по умолчанию `~/.zaprett-keys`) | `build/keys/zaprett-usign.pub` → на роутере `/etc/opkg/keys/<отпечаток>` |
 
-- В репозиторий и в `C:\Zapret` приватные ключи не попадают. На VM они лежат в `~/zaprett-build/keys/`
+- В репозиторий и в рабочее дерево приватные ключи не попадают. На сборочной машине они лежат в `~/zaprett-build/keys/`
   (каталог 700, файлы 600); `remote.py` сверяет их sha256 с локальными перед каждой сборкой и перезаливает при расхождении.
 - Ключи созданы один раз командой `python build/remote.py keys-init` (генерация в контейнере SDK без сети).
   Повторный `keys-init` откажется перезаписывать существующие ключи.
@@ -102,7 +102,7 @@ python build/remote.py build --extra-feed build/work/stub   # отладка к�
 
 Что происходит: исходники (`packages/`, `build/` без `build/work/`, `tools/elfcheck.py`) → tar.gz → VM →
 `bash ~/zaprett-build/src/build/build.sh` в фоне (`setsid nohup`, лог `~/zaprett-build/logs/build-<время>.log`,
-код возврата — в `.rc`) → `~/zaprett-build/out/dist.tar` → `C:\Zapret\dist\` после сверки каждого файла с `SHA256SUMS`.
+код возврата — в `.rc`) → `~/zaprett-build/out/dist.tar` → каталог `dist/` после сверки каждого файла с `SHA256SUMS`.
 
 Время (сборочная машина, 4 ядра): полная сборка обеих серий (71 arch, 55 бандлов, 2673 проверки) — **~7 минут**;
 пакет nfqws для одной arch — 4–8 с, noarch-пакеты — ~5 с. Первый запуск дольше: копирование SDK (~40 с на серию)

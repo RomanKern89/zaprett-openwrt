@@ -1,6 +1,6 @@
 """Положительные и отрицательные контроли генератора bundle (build_bundle.py, bundle_checks.py).
 
-Запуск (после сборки):  PYTHONUTF8=1 python C:/Zapret/tools/data/test_build_bundle.py
+Запуск (после сборки):  PYTHONUTF8=1 python tools/data/test_build_bundle.py
 
 Каждый отрицательный контроль портит КОПИЮ собранного bundle или presets ровно в одном месте и требует
 конкретный код ошибки. Для порчи содержимого sha256 в манифесте пересчитывается — иначе сработала бы
