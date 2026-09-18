@@ -1,5 +1,7 @@
 # zaprett для OpenWrt
 
+[English version / Описание на английском →](README.en.md)
+
 Обход замедлений и блокировок по DPI на роутере с OpenWrt: порт Android-менеджера
 [zaprett](https://github.com/CherretGit/zaprett-app) на движке
 [nfqws](https://github.com/bol-van/zapret) с веб-интерфейсом LuCI на русском языке.
