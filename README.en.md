@@ -168,10 +168,9 @@ Tested on x86 virtual machines running OpenWrt 25.12.5 and 24.10.8, through a re
 - the published bundle was downloaded from this repository onto a router, checksum verified,
   installed from scratch and started successfully.
 
-**Not verified:** real MIPS/ARM hardware (packages are built but untested); a full sweep of all 64
-strategies (the result file lived in tmpfs and was lost); live downloads of the external list
-subscriptions; package upgrades in place (r1 → r2) on a router; coexistence with a VPN or
-policy-based routing on the same router; browsers other than Chromium. The complete list is in
+**Not verified:** a full sweep of all 64 strategies (the result file lived in tmpfs and was lost);
+live downloads of the external list subscriptions; package upgrades in place (r1 → r2) on a
+router; browsers other than Chromium. The complete list is in
 [tests/RESULTS.md](tests/RESULTS.md) (Russian).
 
 ## Documentation
