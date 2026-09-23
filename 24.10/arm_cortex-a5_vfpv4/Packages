@@ -1,0 +1,70 @@
+Package: luci-app-zaprett
+Version: 1.1.0-r1
+Depends: libc, luci-base, rpcd-mod-ucode, zaprett
+License: MIT
+Section: luci
+URL: https://github.com/openwrt/luci
+Architecture: all
+Installed-Size: 194560
+Filename: luci-app-zaprett_1.1.0-r1_all.ipk
+Size: 50497
+SHA256sum: 24255c8ac76b4742fb87dbbfc48bf7e40e1c24664a1f00f52d68c34f2beb2413
+Description:  Web interface for zaprett: service control, strategies, domain and IP network lists, repository, automatic strategy selection and diagnostics.
+
+Package: luci-i18n-zaprett-ru
+Version: 0.260922.84841
+Depends: libc, luci-app-zaprett
+License: MIT
+Section: luci
+Architecture: all
+Installed-Size: 102400
+Filename: luci-i18n-zaprett-ru_0.260922.84841_all.ipk
+Size: 26550
+SHA256sum: a52a88fae207407f6090b995d234e0b1eeedcc1fe758a87577e29a097cae38cd
+Description:  Translation for luci-app-zaprett - Русский (Russian)
+
+Package: zaprett
+Version: 1.1.0-r1
+Depends: libc, ucode, ucode-mod-fs, ucode-mod-uci, ucode-mod-ubus, nftables, kmod-nft-queue, uclient-fetch, ca-bundle, zaprett-nfqws
+License: MIT
+Section: net
+URL: https://github.com/CherretGit/zaprett-app
+Architecture: all
+Installed-Size: 808960
+Filename: zaprett_1.1.0-r1_all.ipk
+Size: 144736
+SHA256sum: 534e5c11edac05c12eefae5df23872d79ade050543fe65630cba48f67458f6fd
+Description:  Port of the Android DPI bypass manager zaprett to OpenWrt 24.10 and 25.12:
+ nfqws strategies with hostlists and ipsets, table inet zaprett for nftables,
+ zaprett-repo client with sha256 checks and automatic strategy selection.
+
+Package: zaprett-nfqws2
+Version: 1.0.5.2-r1
+Depends: libc
+License: MIT
+Section: net
+URL: https://github.com/bol-van/zapret2
+Architecture: arm_cortex-a5_vfpv4
+Installed-Size: 358400
+Filename: zaprett-nfqws2_1.0.5.2-r1_arm_cortex-a5_vfpv4.ipk
+Size: 349538
+SHA256sum: 3f9421e9059e74a7fbb2a3f10335ede1b9e526280316cec170da0b8d85a35a54
+Description:  Static nfqws2 binary from the bol-van/zapret2 v1.0.5.2 release
+ (openwrt-embedded archive, directory binaries/linux-arm) and its gzip-compressed
+ Lua libraries: /usr/libexec/zaprett/nfqws2, /usr/share/zaprett/lua/*.lua.gz.
+
+Package: zaprett-nfqws
+Version: 72.13-r1
+Depends: libc
+License: MIT
+Section: net
+URL: https://github.com/bol-van/zapret
+Architecture: arm_cortex-a5_vfpv4
+Installed-Size: 133120
+Filename: zaprett-nfqws_72.13-r1_arm_cortex-a5_vfpv4.ipk
+Size: 122193
+SHA256sum: 99e4173b3951a8727963a747d336ffde75372e0800d257032a6d369baf233e95
+Description:  Static nfqws binary from the bol-van/zapret v72.13 release
+ (openwrt-embedded archive, directory binaries/linux-arm),
+ installed as /usr/libexec/zaprett/nfqws for the zaprett service.
+
