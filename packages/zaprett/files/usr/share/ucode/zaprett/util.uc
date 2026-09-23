@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 // All filesystem locations used by the backend. Tests redirect them with set_paths().
 export const P = {
@@ -29,6 +29,17 @@ export const P = {
 	crontab: '/etc/crontabs/root',
 	firewall_init: '/etc/init.d/firewall',
 	cron_init: '/etc/init.d/cron',
+	meminfo: '/proc/meminfo',
+	nfqueue: '/proc/net/netfilter/nfnetlink_queue',
+	fw4_state: '/var/run/fw4.state',	// zones and their devices as fw4 resolved them (own flowtable, v1.4 §15.1)
+	sys_net: '/sys/class/net',
+	opkg: '/bin/opkg',
+	apk: '/usr/bin/apk',
+	initd: '/etc/init.d',
+	luci: '/www/luci-static/resources/luci.js',
+	logread: 'logread',
+	passwd: '/etc/passwd',	// user of the isolated automatic selection (contract v1.6 §17)
+	ssd: 'start-stop-daemon',
 	syslog: true,
 	uci_confdir: null,	// null = /etc/config (tests use a sandbox directory)
 	uci_savedir: null
@@ -277,6 +288,23 @@ export function tail_lines(text, n) {
 export function is_id(s) {
 	return type(s) == 'string' && length(s) >= 1 && length(s) <= 96 && substr(s, 0, 1) != '.' &&
 		match(s, /^[A-Za-z0-9._-]+$/) != null;
+};
+
+// A /proc/meminfo value (MemTotal, MemAvailable...) in MiB, or null when unknown.
+export function meminfo_mib(key) {
+	let head = key + ':';
+	for (let l in split(fs.readfile(P.meminfo, 16384) ?? '', '\n')) {
+		if (substr(l, 0, length(head)) != head)
+			continue;
+		let m = match(l, /([0-9]+) kB/);
+		return m ? int(int(m[1]) / 1024) : null;
+	}
+	return null;
+};
+
+// Pure: parallel downloads — `normal`, or one at a time when little memory is available (unknown = normal).
+export function download_concurrency(normal, low_mib, avail_mib) {
+	return (avail_mib != null && avail_mib < low_mib) ? 1 : normal;
 };
 
 export function file_size(path) {

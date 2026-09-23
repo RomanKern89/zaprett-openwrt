@@ -10,10 +10,11 @@ import * as O from 'zaprett.offload';
 import * as CMD from 'zaprett.commands';
 import * as SRC from 'zaprett.sources';
 
-// contract v1.2 §6.2: the closed list of warning codes
+// contract v1.2 §6.2 + v1.3 §14.4: the closed list of warning codes
 const CONTRACT_WARNINGS = [ 'no_active_lists', 'no_wan', 'flow_offload_enabled', 'nft_queue_missing', 'engine_missing', 'strategy_missing',
 	'no_strategy', 'generate_failed', 'bad_config', 'config_was_invalid', 'list_missing', 'source_not_downloaded', 'profile_unfiltered',
-	'wide_port_range', 'empty_profile_removed', 'strategy_option_ignored', 'test_running', 'not_running', 'nft_not_applied' ];
+	'wide_port_range', 'empty_profile_removed', 'strategy_option_ignored', 'test_running', 'not_running', 'nft_not_applied',
+	'ipv6_wan_unhandled', 'low_memory', 'monitor_degraded', 'flowtable_failed', 'game_filter_no_ipsets', 'dns_plain' ];
 let enabled_of = (name) => filter(C.load_sources(), (s) => s.name == name)[0]?.enabled;
 
 T.begin('uci');

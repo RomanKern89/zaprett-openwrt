@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "603d8a16ccfa3009f6bac887802d82a00154c98836ba9e8660c8f0839884094f",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discordfix-alt.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discordfix-alt.json",
+  "name_en": "strategy-discordfix-alt",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-discordfix-alt",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

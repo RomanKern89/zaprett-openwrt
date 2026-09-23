@@ -49,7 +49,7 @@ opkg print-architecture           # OpenWrt 24.10: строка с наибол�
    С Windows 10/11 или Linux/macOS в терминале:
 
    ```sh
-   scp -O zaprett-1.0.0-r1-25.12-aarch64_cortex-a53.tar.gz root@192.168.1.1:/tmp/
+   scp -O zaprett-1.1.0-r1-25.12-aarch64_cortex-a53.tar.gz root@192.168.1.1:/tmp/
    ```
 
    Ключ `-O` нужен, потому что на OpenWrt нет sftp-сервера. Вместо `scp` можно использовать WinSCP
@@ -59,8 +59,8 @@ opkg print-architecture           # OpenWrt 24.10: строка с наибол�
 
    ```sh
    cd /tmp
-   tar -xzf zaprett-1.0.0-r1-25.12-aarch64_cortex-a53.tar.gz
-   cd zaprett-1.0.0-r1-25.12-aarch64_cortex-a53
+   tar -xzf zaprett-1.1.0-r1-25.12-aarch64_cortex-a53.tar.gz
+   cd zaprett-1.1.0-r1-25.12-aarch64_cortex-a53
    sh install.sh
    ```
 
@@ -128,10 +128,55 @@ ls -l /usr/libexec/zaprett/nfqws
 
 ## 6. Обновление
 
+### Из нового бандла
+
 Скачайте новый бандл и выполните `sh install.sh` из него — так же, как при установке. Установленные пакеты
 zaprett обновятся, настройки сохранятся.
 
-`apk upgrade` / `opkg upgrade` сами zaprett не обновят: фид бандла подключается только на время установки.
+### Штатно, через онлайн-фид (`--feed`)
+
+Если при установке добавить ключ `--feed`, фид zaprett останется подключённым постоянно, и дальше zaprett
+обновляется обычными командами пакетного менеджера — как пакеты самой OpenWrt:
+
+```sh
+sh install.sh --feed                    # установить из бандла и подключить онлайн-фид
+                                        # (можно и позже: повторный запуск с --feed ничего не ломает)
+```
+
+Фид — это сайт `https://romankern89.github.io/zaprett-openwrt/<версия OpenWrt>/<архитектура>/` с теми же
+подписанными индексами, что в бандле. Подключается он так:
+
+| OpenWrt | Куда записывается | Строка |
+|---|---|---|
+| 25.12 (apk) | `/etc/apk/repositories.d/zaprett.list` | `https://romankern89.github.io/zaprett-openwrt/25.12/<arch>/packages.adb` |
+| 24.10 (opkg) | строка в `/etc/opkg/customfeeds.conf` | `src/gz zaprett https://romankern89.github.io/zaprett-openwrt/24.10/<arch>` |
+
+Ключ zaprett ставится тот же, что при обычной установке, поэтому пакетный менеджер принимает только индекс,
+подписанный ключом zaprett: подменённый или повреждённый фид он отвергнет.
+
+Обновление после этого:
+
+```sh
+# OpenWrt 25.12
+apk update && apk upgrade
+# OpenWrt 24.10
+opkg update && opkg upgrade zaprett zaprett-nfqws luci-app-zaprett luci-i18n-zaprett-ru
+```
+
+(Через LuCI: Система → Программное обеспечение → «Обновить списки…», затем вкладка «Обновления».)
+
+**Если сайт фида недоступен** (нет интернета, github.io не открывается): на 24.10 `opkg update` только
+сообщит об ошибке загрузки. На 25.12 apk строже — пока фид недоступен, `apk add` и `apk upgrade` **любых**
+пакетов останавливаются с «Not continuing due to stale/unavailable repositories». Выход: подождать, временно
+убрать файл `/etc/apk/repositories.d/zaprett.list` или добавить к команде ключ `--force-missing-repositories`,
+который предлагает сам apk. Установщик из бандла это учитывает: на время установки он отключает онлайн-фид и
+ставит пакеты только из бандла, а затем возвращает строку фида.
+
+Отключить онлайн-фид: `sh install.sh --uninstall` (удаляет и пакеты), либо вручную удалить файл
+`/etc/apk/repositories.d/zaprett.list` (25.12) или строку `src/gz zaprett …` из `/etc/opkg/customfeeds.conf` (24.10).
+
+Без `--feed` установщик фид не подключает: фид бандла живёт только на время установки, и `apk upgrade` /
+`opkg upgrade` zaprett не обновляют — только новый бандл.
 
 ## 7. Удаление
 
@@ -141,14 +186,17 @@ sh install.sh --uninstall           # удалить пакеты, настро�
 sh install.sh --uninstall --purge   # удалить пакеты, /etc/config/zaprett, /etc/zaprett и ключ zaprett
 ```
 
+`--uninstall` также отключает онлайн-фид zaprett, если он был подключён ключом `--feed`.
+
 Без бандла:
 
 ```sh
 # OpenWrt 25.12
 apk del luci-i18n-zaprett-ru luci-app-zaprett zaprett zaprett-nfqws zaprett-nfqws2
-rm -f /etc/apk/keys/zaprett.pem
+rm -f /etc/apk/keys/zaprett.pem /etc/apk/repositories.d/zaprett.list
 # OpenWrt 24.10
 opkg remove luci-i18n-zaprett-ru luci-app-zaprett zaprett zaprett-nfqws2 zaprett-nfqws
+sed -i '/^src\/gz zaprett /d' /etc/opkg/customfeeds.conf
 ```
 
 (`zaprett-nfqws2` указывайте, только если ставили его; `opkg`/`apk` сообщат об отсутствующем пакете.)
@@ -166,6 +214,8 @@ opkg remove luci-i18n-zaprett-ru luci-app-zaprett zaprett zaprett-nfqws2 zaprett
    бандл и выполните `sh install.sh`. Настройки подхватятся.
 2. Если ветка сменилась (24.10 → 25.12) — возьмите бандл для новой ветки: у 25.12 другой менеджер пакетов.
 3. Ключ zaprett тоже может пропасть — установщик добавит его заново.
+4. Если был подключён онлайн-фид (`--feed`), запустите установщик снова с `--feed`: строка фида будет
+   записана заново, даже если прошивка её не сохранила.
 
 **Обновление через Attended Sysupgrade** (LuCI «Обновление прошивки», `owut`) собирает образ на сервере
 OpenWrt только из официальных пакетов. Пакетов zaprett там нет — перед таким обновлением удалите zaprett
@@ -181,4 +231,5 @@ OpenWrt только из официальных пакетов. Пакетов 
 | «apk add / opkg install завершился с ошибкой», в выводе нет пакета `kmod-nft-queue`, `ucode` и т.п. | На роутере нет интернета или не обновлены списки. Проверьте `ping downloads.openwrt.org`, повторите. |
 | «UNTRUSTED signature» / «подпись фида не прошла проверку» | Бандл повреждён или подменён. Скачайте заново из официального релиза. |
 | «на роутере уже есть другой ключ» | Бандл подписан не тем ключом, что стоял раньше. Если вы уверены в источнике — `sh install.sh --force`. |
+| `apk update`: «wget: exited with error 8» / `opkg update`: «Failed to download … zaprett-openwrt …» | Онлайн-фид недоступен (нет интернета или сайт фида ещё не опубликован). Остальные репозитории это не затрагивает; пакеты zaprett остаются установленными. |
 | «No space left on device» | Мало места во flash: удалите ненужные пакеты или используйте extroot. |

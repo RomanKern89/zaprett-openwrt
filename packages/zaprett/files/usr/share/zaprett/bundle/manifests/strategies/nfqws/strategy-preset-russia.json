@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "e62231808bc8d5307a4de7d709494cf2462c878c3ddf60f76138246fdc78ebb1",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-preset-russia.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-preset-russia.json",
+  "name_en": "strategy-preset-russia",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-preset-russia",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

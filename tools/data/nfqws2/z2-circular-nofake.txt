@@ -1,0 +1,16 @@
+--blob=quic_google:@${bin:quic_initial_www_google_com}
+--blob=tls_google:@${bin:tls_clienthello_www_google_com}
+--filter-udp=443 --filter-l7=quic ${hostlists} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-tcp=80,443 ${hostlists}
+ --in-range=-s34228 --lua-desync=circular:fails=3:retrans=2:maxseq=16384
+ --in-range=x --payload=tls_client_hello,http_req
+ --lua-desync=multisplit:pos=2:seqovl=652:seqovl_pattern=tls_google:strategy=1
+ --lua-desync=multidisorder:pos=midsld:seqovl=midsld-1:seqovl_pattern=tls_google:strategy=2
+ --lua-desync=multisplit:pos=1,midsld:strategy=3 --new
+--filter-udp=443 --filter-l7=quic ${ipsets} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-tcp=80,443 ${ipsets}
+ --in-range=-s34228 --lua-desync=circular:fails=3:retrans=2:maxseq=16384
+ --in-range=x --payload=tls_client_hello,http_req
+ --lua-desync=multisplit:pos=2:seqovl=652:seqovl_pattern=tls_google:strategy=1
+ --lua-desync=multidisorder:pos=midsld:seqovl=midsld-1:seqovl_pattern=tls_google:strategy=2
+ --lua-desync=multisplit:pos=1,midsld:strategy=3

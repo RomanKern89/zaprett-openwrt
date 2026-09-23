@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "803d59b62d125220dfff3b5da7fac0c2b0f01ccb5a537bbe28f547c47703d53b",
   "installed_at": 1789603200,
-  "manifest_url": null
+  "manifest_url": null,
+  "name_en": "Exclusions: local networks",
+  "description_en": "Local and special-purpose networks (11) the bypass leaves alone: private networks, loopback, link-local, CGNAT, multicast and their IPv6 counterparts. Based on the bol-van/zapret exclusion list and ipset-exclude from Flowseal/zapret-discord-youtube.",
+  "name_zh": "排除项：本地网络",
+  "description_zh": "绕过不处理的本地和特殊用途网络（11 个）：私有网络、回环、链路本地、CGNAT、组播及其 IPv6 对应网段。基于 bol-van/zapret 的排除列表和 Flowseal/zapret-discord-youtube 的 ipset-exclude。"
 }

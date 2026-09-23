@@ -1,0 +1,67 @@
+{
+ "anchor": "telegram.org",
+ "fetched": "2026-09-22",
+ "san_sets": [
+  [
+   "*.telegram.org",
+   "telegram.org"
+  ],
+  [
+   "*.web.telegram.org",
+   "web.telegram.org"
+  ],
+  [
+   "api.telegram.org",
+   "www.api.telegram.org"
+  ],
+  [
+   "cloud.telegram.org",
+   "www.cloud.telegram.org"
+  ],
+  [
+   "gbot.integrations.telegram.org"
+  ],
+  [
+   "gbot.integrations.telegram.org",
+   "www.gbot.integrations.telegram.org"
+  ],
+  [
+   "macupdates.telegram.org",
+   "www.macupdates.telegram.org"
+  ],
+  [
+   "mail.telegram.org",
+   "mx1.telegram.org",
+   "mx10.telegram.org",
+   "mx2.telegram.org",
+   "www.mail.telegram.org"
+  ],
+  [
+   "mail.telegram.org",
+   "mx101.telegram.org",
+   "mx110.telegram.org",
+   "www.mail.telegram.org"
+  ],
+  [
+   "osx.telegram.org",
+   "www.osx.telegram.org"
+  ],
+  [
+   "tonbridge.telegram.org",
+   "www.tonbridge.telegram.org"
+  ]
+ ],
+ "since": "2025-09-22",
+ "sources": {
+  "certspotter": {
+   "certs": 0,
+   "error": "HTTP Error 429: Too Many Requests",
+   "ok": false,
+   "pages": 0
+  },
+  "crt.sh": {
+   "certs": 61,
+   "ok": true
+  }
+ }
+}

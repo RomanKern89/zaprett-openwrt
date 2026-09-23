@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "590379e0989974af183e432ab38d4ef28b700cb7d37568a63b8a72c71aad1a8f",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-default.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-default.json",
+  "name_en": "strategy-default",
+  "description_en": "The standard strategy",
+  "name_zh": "strategy-default",
+  "description_zh": "标准策略"
 }

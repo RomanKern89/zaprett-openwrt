@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "9d4c5fe1547e072d15de4da6683a38309872f9705cddd69b97f1b8696d10c640",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot.json",
+  "name_en": "strategy-shizapret-dot",
+  "description_en": "A modified shizapret strategy",
+  "name_zh": "strategy-shizapret-dot",
+  "description_zh": "修改版 shizapret 策略"
 }

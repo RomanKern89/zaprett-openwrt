@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-hostfakesplit",
+  "type": "nfqws2",
+  "name": "nfqws2: hostfakesplit",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Приём, которого нет в nfqws1. TLS и HTTP: запрос режется по границам имени сайта, имя дополнительно режется посередине домена, а рядом с настоящими частями отправляются фейки со случайным именем, фулингом MD5 и неверными номерами последовательности (2 повтора). QUIC и голос Discord — как в general.",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-hostfakesplit.txt",
+  "source": "bundle",
+  "sha256": "3b57e62fddda9d60f56219a9da91ef33b01a92f8805058d94e265ac36352de27",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: hostfakesplit",
+  "description_en": "A technique nfqws1 does not have. TLS and HTTP: the request is cut at the boundaries of the site name, the name is also cut in the middle of the domain, and fakes with a random name with MD5 fooling and bad sequence numbers are sent next to the real parts (2 repeats). QUIC and Discord voice as in general.",
+  "name_zh": "nfqws2：hostfakesplit",
+  "description_zh": "nfqws1 没有的手法。TLS 和 HTTP：请求在网站名称的边界处切开，名称本身也从域名中间切开，并在真实部分旁边发送带随机名称、MD5 干扰和错误序列号的伪造包（重复 2 次）。QUIC 和 Discord 语音与 general 相同。"
+}

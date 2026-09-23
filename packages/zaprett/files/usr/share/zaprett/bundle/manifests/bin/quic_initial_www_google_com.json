@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "f4589c57749f956bb30538197a521d7005f8b0a8723b4707e72405e51ddac50a",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/quic_initial_www_google_com.json",
+  "name_en": "quic_initial_www_google_com",
+  "description_en": "Fake packet file: quic_initial_www_google_com",
+  "name_zh": "quic_initial_www_google_com",
+  "description_zh": "伪造数据包文件：quic_initial_www_google_com"
 }

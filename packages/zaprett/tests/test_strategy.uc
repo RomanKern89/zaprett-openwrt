@@ -6,6 +6,7 @@ import { P } from 'zaprett.util';
 import * as C from 'zaprett.config';
 import * as S from 'zaprett.store';
 import * as G from 'zaprett.strategy';
+import { ENGINE_OPTIONS } from 'zaprett.engine_options';
 
 T.begin('strategy');
 T.selfcheck();
@@ -41,6 +42,41 @@ T.eq(G.normalize_modes([ '--dpi-desync=fake,split2', '--dpi-desync-fooling=split
 let sr = G.strip_reserved([ '--qnum=5', '--user=root', '-uid=0', '--dpi-desync=fake', '--daemon', '--debug=@/tmp/x', '--fwmark=1', '--pidfile=/x', '--filter-tcp=443' ]);
 T.eq(sr.tokens, [ '--dpi-desync=fake', '--filter-tcp=443' ], 'strip reserved options');
 T.eq(sr.ignored, [ 'qnum', 'user', 'uid', 'daemon', 'debug', 'fwmark', 'pidfile' ], 'reserved options reported');
+
+/* ---- options as getopt_long_only sees them (ZERR-033) ---- */
+let cz = (toks, engine) => G.canonicalize(toks, engine ?? 'nfqws');
+T.eq(cz([ '-dpi-desync=fake', '--dpi-desync-fake-qu=0x00', '--debu=@/tmp/x', '--qnum', '5', '-hostlist', '/etc/zaprettX/f', '${hostlists}', '--ne', '--new', '--dpi-desync-any' ]).tokens,
+	[ '--dpi-desync=fake', '--dpi-desync-fake-quic=0x00', '--debug=@/tmp/x', '--qnum=5', '--hostlist=/etc/zaprettX/f', '${hostlists}', '--new', '--new', '--dpi-desync-any-protocol' ],
+	'canonicalize: single dash, unique prefix, separate value of a required option, placeholders kept');
+T.eq(cz([ '--dpi-desync-fake-tls=a', '--dpi-desync-fake-tls-mod=rnd', '--hostlist-auto=/x', '--hostlist=/y' ]).tokens,
+	[ '--dpi-desync-fake-tls=a', '--dpi-desync-fake-tls-mod=rnd', '--hostlist-auto=/x', '--hostlist=/y' ], 'canonicalize: an exact name wins over longer ones');
+T.eq(cz([ '--dpi-desync-fooling', '-x' ]).tokens, [ '--dpi-desync-fooling=-x' ], 'canonicalize: a required option takes the next word even when it starts with -');
+T.eq(cz([ '--lua-ini', '@/x.lua', '-new=n1', '--templ', '--blo=a:0x00' ], 'nfqws2').tokens, [ '--lua-init=@/x.lua', '--new=n1', '--template', '--blob=a:0x00' ],
+	'canonicalize nfqws2: own table, --new takes a name');
+for (let c in [
+	[ [ '--hostl=/etc/zaprettX/f' ], 'nfqws', 'ambiguous prefix' ], [ [ '--dpi-desync-fake-t=/etc/zaprettX/f' ], 'nfqws', 'ambiguous prefix (tls, tls-mod, tcp-mod)' ],
+	[ [ '--foo=1' ], 'nfqws', 'unknown option' ], [ [ '--lua-init=@/x' ], 'nfqws', 'nfqws2 option in nfqws' ], [ [ '--dpi-desync=fake' ], 'nfqws2', 'nfqws option in nfqws2' ],
+	[ [ 'stray' ], 'nfqws', 'a word that is not an option' ], [ [ '--' ], 'nfqws', 'end of options' ], [ [ '-' ], 'nfqws', 'lone dash' ],
+	[ [ '---qnum=1' ], 'nfqws', 'three dashes' ], [ [ '--=x' ], 'nfqws', 'empty name' ], [ [ '--new=x' ], 'nfqws', 'no-argument option with a value' ],
+	[ [ '--hostlist' ], 'nfqws', 'required option at the end' ], [ [ '--hostlist', '${hostlists}' ], 'nfqws', 'placeholder as a separate value' ],
+	[ [ '-h' ], 'nfqws', 'one-letter ambiguous prefix' ] ])
+	T.eq(cz(c[0], c[1]).error, 'bad_option', 'canonicalize rejects: ' + c[2]);
+T.eq(G.resolve_option('dpi-desync', ENGINE_OPTIONS.nfqws), { name: 'dpi-desync' }, 'resolve: exact');
+T.eq(G.resolve_option('dpi-desync-fake-t', ENGINE_OPTIONS.nfqws).ambiguous,
+	[ 'dpi-desync-fake-tcp-mod', 'dpi-desync-fake-tls', 'dpi-desync-fake-tls-mod' ], 'resolve: ambiguous names listed');
+// every name the checks look for exists in the engine tables (a typo in a list would silently disable its check)
+let all_known = {};
+for (let e in [ 'nfqws', 'nfqws2' ])
+	for (let n in keys(ENGINE_OPTIONS[e]))
+		all_known[n] = true;
+T.eq(filter([ ...G.RESERVED_OPTIONS, ...G.FILE_OPTIONS, ...G.AUTOHOSTLIST_OPTIONS, ...G.INCLUDE_FILTERS ], (n) => !all_known[n]), [],
+	'reserved, file and filter option names are engine options');
+T.eq([ length(keys(ENGINE_OPTIONS.nfqws)), length(keys(ENGINE_OPTIONS.nfqws2)) ], [ 111, 63 ], 'engine tables: 111 nfqws and 63 nfqws2 options');
+// nfqws2 profiles named by --new=<name>
+T.eq(G.split_profiles([ '--filter-tcp=443', '--new=b', '--filter-udp=443', '--new', '--filter-tcp=80' ]),
+	[ [ '--filter-tcp=443' ], [ '--new=b', '--filter-udp=443' ], [ '--filter-tcp=80' ] ], 'split_profiles: --new=<name> starts a profile');
+T.eq(G.join_profiles(G.split_profiles([ '--a', '--new=b', '--c', '--new', '--d' ])), [ '--a', '--new=b', '--c', '--new', '--d' ], 'join_profiles keeps --new=<name>');
+T.eq(G.extract_ports([ '--filter-udp=443', '--new=b', '--dpi-desync=fake' ]).tcp, [ '80', '443' ], 'ports: a named profile is a separate profile (defaults)');
 
 /* ---- ports ---- */
 T.eq(G.extract_ports([]).tcp, [ '80', '443' ], 'no filters -> tcp defaults');
@@ -122,7 +158,8 @@ T.eq(G.base_options(cfg, 'nfqws', []), [ '--qnum=200', '--user=daemon', '--dpi-d
 let dcfg = C.normalize({ debug: '1', qnum: '300', user: 'nobody' }, null, null);
 T.eq(G.base_options(dcfg, 'nfqws', []), [ '--debug=syslog', '--qnum=300', '--user=nobody', '--dpi-desync-fwmark=0x40000000' ], 'debug first');
 T.eq(G.base_options(cfg, 'nfqws2', [ '--lua-desync=fake' ]), [ '--qnum=200', '--user=daemon', '--fwmark=0x40000000',
-	'--lua-init=@' + P.share + '/lua/zapret-lib.lua', '--lua-init=@' + P.share + '/lua/zapret-antidpi.lua' ], 'nfqws2 base options with default lua');
+	'--lua-init=@' + P.share + '/lua/zapret-lib.lua', '--lua-init=@' + P.share + '/lua/zapret-antidpi.lua',
+	'--lua-init=@' + P.share + '/lua/zapret-auto.lua' ], 'nfqws2 base options with default lua (lib, antidpi, auto)');
 T.eq(G.base_options(cfg, 'nfqws2', [ '--lua-init=@/x.lua' ]), [ '--qnum=200', '--user=daemon', '--fwmark=0x40000000' ], 'nfqws2 own lua-init');
 
 /* ---- build over the fixture store ---- */
@@ -241,6 +278,65 @@ T.has(b.args, '--dpi-desync-fake-tls=' + W + '/bundle/files/bin/tls_clienthello_
 T.ok(idx.items.nfqws['not-user'] == null, 'user strategy without user- prefix ignored');
 T.eq(G.build(cfg, { index: idx, text: '--filter-tcp=443 --dpi-desync=fake --dpi-desync-fake-tls=/etc/shadow', item: { id: 'user-x', source: 'user', dependencies: [] } }).error,
 	'path_not_allowed', 'build rejects a strategy reading /etc/shadow');
+// ZERR-033: every file and reserved option is checked the same in its full and in any other form the engine accepts
+let ux = { id: 'user-x', source: 'user', dependencies: [] };
+let bt = (text, engine) => G.build(cfg, { index: idx, engine: engine, text: text, item: ux });
+// shortest prefix that the engine resolves to this name only (null when the name is a prefix of another option)
+function short_form(name, known) {
+	for (let n = 1; n < length(name); n++)
+		if (G.resolve_option(substr(name, 0, n), known).name == name)
+			return substr(name, 0, n);
+	return null;
+}
+const OUTSIDE = '/etc/zaprettX/f';
+let file_value = (name) => (name == 'blob') ? 'x:@' + OUTSIDE : (name == 'lua-init') ? '@' + OUTSIDE : OUTSIDE;
+let forms_checked = 0;
+for (let engine in [ 'nfqws', 'nfqws2' ]) {
+	let known = ENGINE_OPTIONS[engine];
+	let tail = (engine == 'nfqws') ? ' --dpi-desync=fake' : ' --lua-desync=fake';
+	for (let name in G.FILE_OPTIONS) {
+		if (known[name] == null)
+			continue;
+		let v = file_value(name);
+		let sf = short_form(name, known);
+		let forms = [ '--' + name + '=' + v, '-' + name + '=' + v, '--' + name + ' ' + v ];
+		if (sf)
+			push(forms, '--' + sf + '=' + v, '-' + sf + ' ' + v);
+		for (let f in forms) {
+			T.eq(bt('--filter-tcp=443 ' + f + tail, engine).error, 'path_not_allowed', sprintf('%s: file option outside zaprett directories rejected: %s', engine, f));
+			forms_checked++;
+		}
+	}
+	for (let name in G.RESERVED_OPTIONS) {
+		if (known[name] == null)
+			continue;
+		let v = (known[name] == 'no') ? '' : '=1';
+		let sf = short_form(name, known);
+		for (let f in [ '--' + name + v, '-' + name + v, ...(sf ? [ '--' + sf + v ] : []), ...((known[name] == 'required') ? [ '--' + name + ' 1' ] : []) ]) {
+			let r = bt('--filter-tcp=443 ' + f + tail, engine);
+			// after the base options (nfqws: 3, nfqws2: 3 + 3 default --lua-init) only the strategy itself is left
+			T.eq([ r.ok, r.details?.ignored_options, slice(r.args ?? [], (engine == 'nfqws') ? 3 : 6) ], [ true, [ name ], [ '--filter-tcp=443', trim(tail) ] ],
+				sprintf('%s: reserved option removed and reported: %s', engine, f));
+			forms_checked++;
+		}
+	}
+}
+T.ok(forms_checked > 150, sprintf('option forms checked: %d', forms_checked));
+T.eq(bt('--filter-tcp=443 --dpi-desync=fake --dpi-desync-fake-tls=' + W + '/bundle/files/bin/tls_clienthello_www_google_com.bin', 'nfqws').ok, true,
+	'negative control: a file option inside zaprett directories passes');
+b = bt('--filter-tcp=443 --dpi-desync=fake --debu=@/tmp/log --qnum 7 -us root --dpi-desync-fw 0x1', 'nfqws');
+T.ok(b.ok, 'build with abbreviated reserved options: ' + (b.message ?? ''));
+T.eq(slice(b.args, 3), [ '--filter-tcp=443', '--dpi-desync=fake' ], 'reserved options removed with their separate values');
+T.eq(b.details?.ignored_options, [ 'debug', 'qnum', 'user', 'dpi-desync-fwmark' ], 'abbreviated reserved options reported by full name');
+b = bt('--filter-tcp=443 --lua-desync=fake --fwm 0x1 --wri --chdi=/ --fuz=1', 'nfqws2');
+T.eq([ b.ok, slice(b.args ?? [], 3), b.details?.ignored_options ], [ true, [ '--lua-init=@' + P.share + '/lua/zapret-lib.lua', '--lua-init=@' + P.share + '/lua/zapret-antidpi.lua',
+	'--lua-init=@' + P.share + '/lua/zapret-auto.lua', '--filter-tcp=443', '--lua-desync=fake' ], [ 'fwmark', 'writable', 'chdir', 'fuzz' ] ], 'nfqws2 reserved options by prefix');
+T.eq(bt('--filter-tcp=443 --dpi-desync=fake stray', 'nfqws').error, 'bad_option', 'build rejects a word that is not an option');
+T.eq(bt('--filter-tcp=443 --hostl=/etc/zaprett/x --dpi-desync=fake', 'nfqws').error, 'bad_option', 'build rejects an ambiguous prefix');
+b = bt('-filter-tcp 443 ${hostlists} -dpi-desync fake,split2 --dpi-desync-rep 6', 'nfqws');
+T.ok(b.ok, 'abbreviated legit strategy builds: ' + (b.message ?? ''));
+T.eq([ b.ports.tcp, slice(b.args, -2) ], [ [ '443' ], [ '--dpi-desync=fake,multisplit', '--dpi-desync-repeats=6' ] ],
+	'abbreviated strategy: ports from the separate value, legacy mode normalized, full names');
 
 // all fixture strategies (64 from zaprett-repo)
 let ids = sort(filter(keys(idx.items.nfqws), (id) => idx.items.nfqws[id].source == 'bundle'));
@@ -280,6 +376,15 @@ if (T.NFQWS) {
 	T.eq(G.generate(wl, { index: idx, ignore_override: true }).dry_run?.rc, 0, 'generate() runs dry-run');
 	let crlf_build = G.generate(wl, { index: idx, ignore_override: true, text: crlf_text, item: { id: 'user-crlf', source: 'user', dependencies: [] } });
 	T.ok(crlf_build.ok && crlf_build.dry_run.rc == 0, 'CRLF user strategy passes nfqws --dry-run: ' + (crlf_build.message ?? ''));
+	// the table agrees with the engine: what resolve_option() resolves the engine parses, what it calls ambiguous the engine refuses
+	let rd = G.dry_run('nfqws', [ '--qnum=200', '--filter-tcp=443', '-dpi-desync', 'fake', '--dpi-desync-fake-qu', QUIC, '-hostlist=' + YT ]);
+	T.ok(rd.rc == 0 && index(rd.output, 'command line parameters verified') >= 0, 'nfqws parses the forms canonicalize() resolves: ' + rd.output);
+	T.ok(G.dry_run('nfqws', [ '--qnum=200', '--hostl=' + YT ]).rc != 0, 'nfqws refuses a prefix that resolve_option() calls ambiguous');
+	T.ok(G.dry_run('nfqws', [ '--qnum=200', '--dpi-desync-fake-qu', W + '/does-not-exist.bin' ]).rc != 0,
+		'nfqws takes the next word as the value of a required option (as canonicalize() does)');
+	let cb = G.generate(wl, { index: idx, ignore_override: true, item: ux,
+		text: '-filter-tcp 443 ${hostlists} -dpi-desync fake,split2 --dpi-desync-fake-qu ' + QUIC });
+	T.ok(cb.ok && cb.dry_run.rc == 0 && index(cb.args, '--dpi-desync-fake-quic=' + QUIC) >= 0, 'canonical arguments pass nfqws --dry-run: ' + (cb.message ?? ''));
 }
 else
 	print('SKIP [strategy] nfqws binary not given: dry-run checks skipped\n');

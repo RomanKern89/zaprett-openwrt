@@ -176,6 +176,77 @@ if (T.ok(sz?.ok, 'shizapret-port built')) {
 	T.eq(pr[14], p14, 'shizapret profile 14 (last, ipsets only: no domain exclusions)');
 }
 
+/* ---- nfqws2 strategies (contract v1.4 §15.6) ---- */
+// `nfqws2 --intercept=0` needs root, the binary and the Lua libraries of the zaprett-nfqws2 package (only *.lua.gz
+// are installed; nfqws2 finds file.lua.gz by @file.lua). Without them only the generator is checked.
+const NFQWS2 = getenv('ZTEST_NFQWS2') ?? (T.NFQWS ? fs.dirname(T.NFQWS) + '/nfqws2' : null);
+const LUA_DIR = getenv('ZTEST_LUA') ?? '/usr/share/zaprett/lua';
+let z2 = sort(filter(keys(idx.items.nfqws2 ?? {}), (id) => idx.items.nfqws2[id].source == 'bundle'));
+T.ok(length(z2) >= 10, sprintf('bundle has nfqws2 strategies: %d', length(z2)));
+T.eq(filter(z2, (id) => substr(id, 0, 3) != 'z2-'), [], 'every nfqws2 strategy id starts with z2-');
+let bad_sha = [];
+for (let id in z2) {
+	let it = idx.items.nfqws2[id];
+	let p = fs.popen('sha256sum ' + REAL + substr(it.file, length(W + '/bundle')));
+	let sum = p ? split(trim(p.read('all') ?? ''), ' ')[0] : '';
+	if (p) p.close();
+	if (sum != it.sha256)
+		push(bad_sha, id);
+}
+T.eq(bad_sha, [], 'nfqws2 manifests: sha256 of every file matches');
+let has_z2 = !!(NFQWS2 && fs.stat(NFQWS2)?.type == 'file' && fs.stat(LUA_DIR + '/zapret-lib.lua.gz')?.type == 'file');
+// strategies with their own --lua-init name the router Lua directory; in the sandbox it lives under P.share
+for (let id in z2) {
+	let f = idx.items.nfqws2[id].file, text = fs.readfile(f);
+	if (index(text, '/usr/share/zaprett/lua/') >= 0)
+		fs.writefile(f, replace(text, '/usr/share/zaprett/lua/', P.share + '/lua/'));
+}
+if (has_z2) {
+	system([ 'cp', NFQWS2, P.libexec + '/nfqws2' ]);
+	fs.chmod(P.libexec + '/nfqws2', 493);
+	system([ 'sh', '-c', 'cp "$0"/*.lua.gz "$1"/', LUA_DIR, P.share + '/lua' ]);
+}
+let z2_built = 0, z2_ok = 0, z2_fail = [], z2_res = {};
+for (let id in z2) {
+	let g = G.generate(cfg, { engine: 'nfqws2', strategy: id, index: idx, ignore_override: true, skip_dry_run: !has_z2,
+		force_dry_run: true });
+	z2_res[id] = g;
+	if (!g.ok) {
+		push(z2_fail, id + ': ' + g.error + ' ' + g.message);
+		continue;
+	}
+	z2_built++;
+	if (length(filter(g.args, (a) => index(a, '${') >= 0 || substr(a, 0, 12) == '--dpi-desync')))
+		push(z2_fail, id + ': placeholder or nfqws option left in args');
+	if (!length(filter(g.args, (a) => substr(a, 0, 11) == '--lua-init=')))
+		push(z2_fail, id + ': no --lua-init');
+	if (g.dry_run?.rc == 0)
+		z2_ok++;
+	else if (has_z2)
+		push(z2_fail, id + ': intercept rc=' + g.dry_run?.rc + ' ' + g.dry_run?.output);
+}
+T.eq(z2_fail, [], 'no nfqws2 strategy failed');
+T.eq(z2_built, length(z2), sprintf('all %d nfqws2 strategies built', length(z2)));
+if (has_z2) {
+	T.eq(z2_ok, length(z2), sprintf('all %d nfqws2 strategies pass nfqws2 --intercept=0', length(z2)));
+	// negative controls with the real engine: the same arguments broken in one place must be rejected
+	let gen = z2_res['z2-general'];
+	if (T.ok(gen?.ok, 'z2-general built for the negative controls')) {
+		let broken = map(gen.args, (a) => replace(a, '--lua-desync=multidisorder:', '--lua-desync=no_such_fn_xyz:'));
+		T.ok(join(' ', broken) != join(' ', gen.args), 'negative control: a desync function was replaced');
+		T.ok(G.dry_run('nfqws2', broken).rc != 0, 'negative control: nfqws2 rejects an unknown Lua function');
+		let badpl = map(gen.args, (a) => (a == '--payload=quic_initial') ? '--payload=quic_initiall' : a);
+		T.ok(G.dry_run('nfqws2', badpl).rc != 0, 'negative control: nfqws2 rejects an unknown payload type');
+		// a blob referenced by a name that was never defined is NOT caught by --intercept=0 (only when a packet comes);
+		// tools/data/bundle_checks.py checks blob names offline (E_BLOB_UNDEFINED)
+		let noblob = map(gen.args, (a) => replace(a, 'blob=quic_google:', 'blob=quic_nope:'));
+		print(sprintf('NOTE [bundle] nfqws2 --intercept=0 with an undefined blob name: rc=%d (runtime-only error)\n',
+			G.dry_run('nfqws2', noblob).rc));
+	}
+}
+else
+	print(sprintf('SKIP [bundle] nfqws2 binary (%s) or %s/zapret-lib.lua.gz missing: nfqws2 --intercept=0 not checked\n', NFQWS2, LUA_DIR));
+
 /* ---- cost of scanning the real bundle (LuCI calls status on every page load) ---- */
 // Порог намеренно с запасом к измеренным на x86-VM стенда значениям (scan ~50 мс, status ~45 мс):
 // регрессия вроде интервала `{1,96}` в регулярке возвращала scan к 1,5 с и падала бы здесь.
@@ -215,10 +286,50 @@ for (let id in presets?.defaults?.quick_test_strategies ?? [])
 	if (!idx.items.nfqws[id]) push(missing, 'quick_test ' + id);
 if (!idx.items.nfqws[presets?.defaults?.strategy])
 	push(missing, 'defaults.strategy');
+// contract v1.4 §15.6: both keys or none
+if (presets?.defaults?.strategy_nfqws2 != null || presets?.defaults?.quick_test_strategies_nfqws2 != null) {
+	if (!idx.items.nfqws2?.[presets.defaults.strategy_nfqws2])
+		push(missing, 'defaults.strategy_nfqws2');
+	for (let id in presets.defaults.quick_test_strategies_nfqws2 ?? [ '(none)' ])
+		if (!idx.items.nfqws2?.[id]) push(missing, 'quick_test_nfqws2 ' + id);
+}
 for (let id in presets?.defaults?.services ?? [])
 	if (!length(filter(presets.services, (s) => s.id == id))) push(missing, 'defaults.services ' + id);
 T.eq(missing, [], 'every preset reference exists in the bundle and in the default UCI subscriptions');
 // negative control: the same check finds an unknown id
 T.ok(!idx.items.list['zaprett-no-such-list'], 'negative control: unknown list id is not found');
+
+/* ---- contract v1.5 §16: own per-service lists and preset variants ---- */
+let vmissing = [], nvariants = 0;
+for (let s in presets?.services ?? [])
+	for (let v in s.variants ?? []) {
+		nvariants++;
+		for (let l in v.lists ?? [])
+			if (!idx.items.list[l]) push(vmissing, s.id + '/' + v.id + ' list ' + l);
+		for (let l in v.ipsets ?? [])
+			if (!idx.items.ipset[l]) push(vmissing, s.id + '/' + v.id + ' ipset ' + l);
+	}
+T.ok(nvariants >= 6, sprintf('presets carry service variants: %d', nvariants));
+T.eq(vmissing, [], 'every preset variant reference exists in the bundle');
+let own = [];
+for (let t in [ 'list', 'ipset' ])
+	for (let id in sort(keys(idx.items[t] ?? {})))
+		if (idx.items[t][id].source == 'bundle' && idx.items[t][id].author == 'zaprett-openwrt')
+			push(own, [ t, id ]);
+T.ok(length(own) >= 12, sprintf('bundle has own per-service lists: %d', length(own)));
+if (T.NFQWS) {
+	let bad = [];
+	for (let o in own) {
+		let opt = (o[0] == 'list') ? '--hostlist=' : '--ipset=';
+		let rc = system([ 'sh', '-c', '"$0" --dry-run --qnum=200 "$1" >/dev/null 2>&1', T.NFQWS, opt + idx.items[o[0]][o[1]].file ]);
+		if (rc != 0)
+			push(bad, o[1] + ' rc=' + rc);
+	}
+	T.eq(bad, [], sprintf('every own list loads in nfqws --dry-run (%d lists)', length(own)));
+	let nrc = system([ 'sh', '-c', '"$0" --dry-run --qnum=200 "$1" >/dev/null 2>&1', T.NFQWS, '--hostlist=' + W + '/no-such-list.txt' ]);
+	T.ok(nrc != 0, 'negative control: nfqws --dry-run fails on a missing list file');
+}
+else
+	print('SKIP [bundle] nfqws binary not given: own lists not loaded by nfqws\n');
 
 exit(T.finish());

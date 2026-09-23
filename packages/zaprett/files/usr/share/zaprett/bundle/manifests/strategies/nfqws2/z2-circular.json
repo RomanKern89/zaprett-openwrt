@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-circular",
+  "type": "nfqws2",
+  "name": "nfqws2: auto-switch (circular)",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Оркестратор circular из zapret2: для каждого сайта отдельно считает неудачи (повторные отправки ClientHello, сброс соединения) и после 3 неудач за минуту переключает сайт на следующий набор приёмов по кругу: 1 — как general (фейк MD5 + multidisorder), 2 — как alt2 (seqovl), 3 — как alt (фейк + fakedsplit), 4 — hostfakesplit. Действует на TLS (TCP 443) по спискам сайтов; QUIC, HTTP и голос Discord — как в general. Запоминание сбрасывается при перезапуске службы. Для учёта ответов сервера полезно поднять tcp_pkt_in до 10.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-circular.txt",
+  "source": "bundle",
+  "sha256": "1a924ef971def008dd071eece34ce5a3d867eb7e0e9d384ae5d1f5918c9ec297",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: auto-switch (circular)",
+  "description_en": "The zapret2 circular orchestrator: counts failures per site (ClientHello retransmissions, connection resets) and after 3 failures within a minute moves the site to the next set of techniques in a circle: 1 like general (MD5 fake + multidisorder), 2 like alt2 (seqovl), 3 like alt (fake + fakedsplit), 4 hostfakesplit. Applies to TLS (TCP 443) for site lists; QUIC, HTTP and Discord voice as in general. The state is lost when the service restarts. Raising tcp_pkt_in to 10 helps it see server replies.",
+  "name_zh": "nfqws2：自动切换（circular）",
+  "description_zh": "zapret2 的 circular 调度器：按网站统计失败（ClientHello 重传、连接重置），一分钟内失败 3 次后把该网站循环切换到下一组手法：1 类似 general（MD5 伪造包 + multidisorder），2 类似 alt2（seqovl），3 类似 alt（伪造包 + fakedsplit），4 hostfakesplit。作用于网站列表的 TLS（TCP 443）；QUIC、HTTP 和 Discord 语音与 general 相同。服务重启后状态会丢失。把 tcp_pkt_in 提高到 10 有助于它看到服务器的应答。"
+}

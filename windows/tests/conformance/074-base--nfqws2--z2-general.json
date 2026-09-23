@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "name": "base/nfqws2/z2-general",
+  "engine": "nfqws2",
+  "main": {
+    "list_mode": "whitelist",
+    "lists": [
+      "zaprett-youtube",
+      "zaprett-discord",
+      "user-hosts"
+    ],
+    "exclude_lists": [
+      "zaprett-exclude",
+      "user-hosts-exclude"
+    ],
+    "ipsets": [],
+    "exclude_ipsets": [
+      "zaprett-exclude-ipset",
+      "user-ipset-exclude"
+    ],
+    "ipv6": "0",
+    "debug": "0",
+    "game_filter": "0",
+    "game_ports_tcp": "1024-65535",
+    "game_ports_udp": "1024-65535"
+  },
+  "strategy": "z2-general",
+  "text": null,
+  "item_id": null,
+  "user_files": {},
+  "config_bad_options": [],
+  "generated_by": {
+    "openwrt": "OpenWrt 25.12.5 r33051-f5dae5ece4",
+    "zaprett": "1.1.0",
+    "generator": "repository strategy.uc 0e18745fdfde7834",
+    "path_rewrite": {
+      "/tmp/zaprett-conf/sbx/etc": "/etc/zaprett",
+      "/tmp/zaprett-conf/sbx/run": "/var/run/zaprett"
+    },
+    "at": "2026-09-23T07:53:59Z"
+  },
+  "expected": {
+    "ok": true,
+    "args": [
+      "--qnum=200",
+      "--user=daemon",
+      "--fwmark=0x40000000",
+      "--lua-init=@/usr/share/zaprett/lua/zapret-lib.lua",
+      "--lua-init=@/usr/share/zaprett/lua/zapret-antidpi.lua",
+      "--lua-init=@/usr/share/zaprett/lua/zapret-auto.lua",
+      "--blob=quic_google:@/usr/share/zaprett/bundle/files/bin/quic_initial_www_google_com.bin",
+      "--blob=z64:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "--filter-udp=443",
+      "--filter-l7=quic",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+      "--hostlist=/etc/zaprett/user/hosts-include.txt",
+      "--hostlist=/usr/share/zaprett/guard/hostlist-guard.txt",
+      "--hostlist-exclude=/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+      "--hostlist-exclude=/etc/zaprett/user/hosts-exclude.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--payload=quic_initial",
+      "--lua-desync=fake:blob=quic_google:repeats=6",
+      "--new",
+      "--filter-udp=19294-19344,50000-50100",
+      "--filter-l7=discord,stun",
+      "--payload=discord_ip_discovery,stun",
+      "--lua-desync=fake:blob=z64:repeats=6",
+      "--new",
+      "--filter-tcp=80",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+      "--hostlist=/etc/zaprett/user/hosts-include.txt",
+      "--hostlist=/usr/share/zaprett/guard/hostlist-guard.txt",
+      "--hostlist-exclude=/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+      "--hostlist-exclude=/etc/zaprett/user/hosts-exclude.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--payload=http_req",
+      "--lua-desync=fake:blob=fake_default_http:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20",
+      "--lua-desync=multisplit",
+      "--new",
+      "--filter-tcp=2053,2083,2087,2096,8443",
+      "--hostlist-domains=discord.media",
+      "--payload=tls_client_hello",
+      "--lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000:tcp_ack=-66000:repeats=8",
+      "--lua-desync=multidisorder:pos=midsld",
+      "--new",
+      "--filter-tcp=443",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+      "--hostlist=/etc/zaprett/user/hosts-include.txt",
+      "--hostlist=/usr/share/zaprett/guard/hostlist-guard.txt",
+      "--hostlist-exclude=/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+      "--hostlist-exclude=/etc/zaprett/user/hosts-exclude.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--payload=tls_client_hello",
+      "--lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000:tcp_ack=-66000:repeats=8",
+      "--lua-desync=multidisorder:pos=midsld",
+      "--new",
+      "--filter-udp=443",
+      "--filter-l7=quic",
+      "--ipset=/usr/share/zaprett/guard/ipset-guard.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--payload=quic_initial",
+      "--lua-desync=fake:blob=quic_google:repeats=6",
+      "--new",
+      "--filter-tcp=80",
+      "--ipset=/usr/share/zaprett/guard/ipset-guard.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--payload=http_req",
+      "--lua-desync=fake:blob=fake_default_http:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20",
+      "--lua-desync=multisplit"
+    ],
+    "ports": {
+      "tcp": [
+        "80",
+        "443",
+        "2053",
+        "2083",
+        "2087",
+        "2096",
+        "8443"
+      ],
+      "udp": [
+        "443",
+        "19294-19344",
+        "50000-50100"
+      ]
+    },
+    "warnings": [
+      "profile_unfiltered"
+    ],
+    "details": {
+      "unfiltered_profiles": [
+        {
+          "profile": 2,
+          "tcp": [],
+          "udp": [
+            "19294-19344",
+            "50000-50100"
+          ]
+        }
+      ]
+    }
+  }
+}

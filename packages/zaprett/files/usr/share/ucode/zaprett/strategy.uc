@@ -5,12 +5,13 @@ import * as fs from 'fs';
 import { P, run, is_file, is_id, mkdir_p, atomic_write, write_json, read_json, fail, MODE_FILE } from 'zaprett.util';
 import * as V from 'zaprett.validate';
 import * as S from 'zaprett.store';
+import { ENGINE_OPTIONS } from 'zaprett.engine_options';
 
 export const LEGACY_MODES = { split: 'fakedsplit', split2: 'multisplit', disorder: 'fakeddisorder', disorder2: 'multidisorder' };
 
 // Options owned by zaprett (queue, privileges, logging, process control): removed from strategy text.
 export const RESERVED_OPTIONS = [ 'qnum', 'user', 'uid', 'daemon', 'pidfile', 'debug', 'dry-run', 'version',
-	'dpi-desync-fwmark', 'fwmark', 'intercept', 'chdir', 'writable' ];
+	'dpi-desync-fwmark', 'fwmark', 'intercept', 'chdir', 'writable', 'fuzz' ];
 
 export const PLACEHOLDER_TYPES = {
 	hostlist: 'list', hostlist_exclude: 'list_exclude', ipset: 'ipset', ipset_exclude: 'ipset_exclude',
@@ -63,6 +64,60 @@ export function normalize_modes(tokens) {
 	});
 };
 
+// Pure: the full option name as getopt_long_only resolves it — exact name, else the only option starting with it.
+// { name } on success, { ambiguous: [names] } or { unknown: true } otherwise.
+export function resolve_option(name, known) {
+	if (name == '')
+		return { unknown: true };
+	if (known[name] != null)
+		return { name: name };
+	let hits = filter(sort(keys(known)), (k) => substr(k, 0, length(name)) == name);
+	if (length(hits) == 1)
+		return { name: hits[0] };
+	return length(hits) ? { ambiguous: hits } : { unknown: true };
+};
+
+// Step 1b: the engines parse argv with getopt_long_only (musl): "-name" works like "--name", a name may be cut to any
+// unambiguous prefix, and an option with a required argument takes the next word when there is no "=". Every option
+// is rewritten to "--<full name>[=value]" by the table of the engine (engine_options.uc, generated from the engine
+// sources by tools/data/gen_engine_options.py), so the checks below see exactly what the engine sees; words that are
+// not options, unknown and ambiguous names are refused.
+// ${hostlists} and ${ipsets} stay as they are.
+export function canonicalize(tokens, engine) {
+	let known = ENGINE_OPTIONS[engine];
+	if (!known)
+		return fail('bad_option', sprintf('Неизвестный движок «%s»', engine));
+	let out = [];
+	for (let i = 0; i < length(tokens); i++) {
+		let t = tokens[i];
+		if (t == '${hostlists}' || t == '${ipsets}') {
+			push(out, t);
+			continue;
+		}
+		let m = match(t, /^--?([^=]*)(=.*)?$/);
+		if (!m)
+			return fail('bad_option', sprintf('«%s» не является опцией движка %s (значение пишется через «=»: --опция=значение)', t, engine), { option: t });
+		let r = resolve_option(m[1], known);
+		if (r.ambiguous)
+			return fail('bad_option', sprintf('Сокращённая опция «%s» подходит к нескольким опциям %s: %s', t, engine,
+				join(', ', map(r.ambiguous, (n) => '--' + n))), { option: t });
+		if (!r.name)
+			return fail('bad_option', sprintf('Движок %s не знает опцию «%s»', engine, t), { option: t });
+		let value = m[2];
+		if (known[r.name] == 'no' && value != null)
+			return fail('bad_option', sprintf('Опция --%s не принимает значения: «%s»', r.name, t), { option: t });
+		if (known[r.name] == 'required' && value == null) {
+			let next = tokens[i + 1];
+			if (next == null || next == '${hostlists}' || next == '${ipsets}')
+				return fail('bad_option', sprintf('Опции --%s нужно значение: --%s=значение', r.name, r.name), { option: t });
+			value = '=' + next;
+			i++;
+		}
+		push(out, '--' + r.name + (value ?? ''));
+	}
+	return { ok: true, tokens: out };
+};
+
 export function strip_reserved(tokens) {
 	let out = [], ignored = [];
 	for (let t in tokens) {
@@ -77,11 +132,18 @@ export function strip_reserved(tokens) {
 	return { tokens: out, ignored: ignored };
 };
 
+// nfqws2 also starts a profile with --new=<name>: that token is kept as the first one of its profile.
+function is_named_new(t) {
+	return substr(t, 0, 6) == '--new=';
+}
+
 export function split_profiles(tokens) {
 	let profiles = [ [] ];
 	for (let t in tokens) {
 		if (t == '--new')
 			push(profiles, []);
+		else if (is_named_new(t))
+			push(profiles, [ t ]);
 		else
 			push(profiles[length(profiles) - 1], t);
 	}
@@ -91,7 +153,7 @@ export function split_profiles(tokens) {
 export function join_profiles(profiles) {
 	let out = [];
 	for (let p in profiles) {
-		if (length(out))
+		if (length(out) && !(length(p) && is_named_new(p[0])))
 			push(out, '--new');
 		for (let t in p)
 			push(out, t);
@@ -207,6 +269,55 @@ export function expand_profile(tokens, env) {
 	return { ok: true, tokens: out };
 };
 
+// Game filter (contract v1.4 §15.2), after the Game Filter of Flowseal zapret-discord-youtube (general.bat,
+// 2026-02-23…2026-08-30): profiles for the game ports, matched only by the active include ipsets. TCP — multisplit
+// with seqovl 568 and a TLS ClientHello pattern, UDP — fake x12 with a QUIC Initial as the unknown-protocol fake;
+// both for any protocol and only for the first packets of a connection (cutoff). nfqws2 gets the same attack
+// written in its own syntax.
+export const GAME_BIN_TCP = 'tls_clienthello_4pda_to';
+export const GAME_BIN_UDP = 'quic_initial_www_google_com';
+
+export function game_profiles(cfg, engine, env) {
+	if (!list_nonempty(env.ipsets))
+		return { ok: true, profiles: null };
+	let filt = [];
+	for (let l in env.ipsets)
+		push(filt, '--ipset=' + l.file);
+	push(filt, '--ipset=' + env.guard_ipset);
+	for (let l in env.exclude_ipsets)
+		push(filt, '--ipset-exclude=' + l.file);
+	let bin = (id) => env.resolve('bin', id)?.file;
+	let out = [];
+	for (let proto in [ 'tcp', 'udp' ]) {
+		let ports = cfg['game_ports_' + proto];
+		if (!ports)
+			continue;
+		let id = (proto == 'tcp') ? GAME_BIN_TCP : GAME_BIN_UDP;
+		let f = bin(id);
+		if (!f)
+			return fail('item_not_installed', sprintf('Игровому фильтру нужен элемент «%s» (bin), но он не установлен', id), { item: id });
+		let p = [ '--filter-' + proto + '=' + ports ];
+		for (let t in filt)
+			push(p, t);
+		if (engine == 'nfqws2') {
+			if (proto == 'tcp')
+				push(p, '--blob=zaprett_game_tcp:@' + f, '--out-range=<n3', '--payload=all',
+					'--lua-desync=multisplit:pos=1:seqovl=568:seqovl_pattern=zaprett_game_tcp');
+			else
+				push(p, '--blob=zaprett_game_udp:@' + f, '--out-range=<n2', '--payload=all',
+					'--lua-desync=fake:blob=zaprett_game_udp:repeats=12');
+		}
+		else if (proto == 'tcp')
+			push(p, '--dpi-desync=multisplit', '--dpi-desync-any-protocol=1', '--dpi-desync-cutoff=n3',
+				'--dpi-desync-split-seqovl=568', '--dpi-desync-split-pos=1', '--dpi-desync-split-seqovl-pattern=' + f);
+		else
+			push(p, '--dpi-desync=fake', '--dpi-desync-repeats=12', '--dpi-desync-any-protocol=1',
+				'--dpi-desync-fake-unknown-udp=' + f, '--dpi-desync-cutoff=n2');
+		push(out, p);
+	}
+	return { ok: true, profiles: out };
+};
+
 // Step 4.
 export function base_options(cfg, engine, strategy_tokens) {
 	let b = [];
@@ -217,7 +328,9 @@ export function base_options(cfg, engine, strategy_tokens) {
 		push(b, sprintf('--fwmark=0x%x', cfg.desync_mark));
 		let own = filter(strategy_tokens, (t) => substr(t, 0, 11) == '--lua-init=');
 		if (!length(own))
-			push(b, '--lua-init=@' + P.share + '/lua/zapret-lib.lua', '--lua-init=@' + P.share + '/lua/zapret-antidpi.lua');
+			// as zapret2 init.d/openwrt/zapret2: zapret-auto.lua holds the orchestrators (circular)
+			push(b, '--lua-init=@' + P.share + '/lua/zapret-lib.lua', '--lua-init=@' + P.share + '/lua/zapret-antidpi.lua',
+				'--lua-init=@' + P.share + '/lua/zapret-auto.lua');
 	}
 	else {
 		push(b, sprintf('--dpi-desync-fwmark=0x%x', cfg.desync_mark));
@@ -403,7 +516,10 @@ export function build(cfg, opts) {
 	item = item ?? { id: sid, name: sid, source: 'user', dependencies: [] };
 
 	let tk = tokenize(text);
-	let tokens = tk.tokens;
+	let cn = canonicalize(tk.tokens, engine);
+	if (!cn.ok)
+		return cn;
+	let tokens = cn.tokens;
 	if (engine == 'nfqws')
 		tokens = normalize_modes(tokens);
 	let sr = strip_reserved(tokens);
@@ -456,6 +572,17 @@ export function build(cfg, opts) {
 	}
 	if (uses_hostlists && cfg.list_mode != 'blacklist' && !list_nonempty(env.lists))
 		push(warnings, 'no_active_lists');
+	// the game filter goes to the end: the strategy's own profiles keep priority for their ports
+	if (cfg.game_filter) {
+		let gp = game_profiles(cfg, engine, env);
+		if (!gp.ok)
+			return gp;
+		if (gp.profiles == null)
+			push(warnings, 'game_filter_no_ipsets');
+		else
+			for (let p in gp.profiles)
+				push(profiles, p);
+	}
 
 	let strat_tokens = join_profiles(profiles);
 	let fc = check_file_options(strat_tokens, allowed_roots());
@@ -520,7 +647,33 @@ export function ensure_user_files(cfg) {
 	}
 };
 
+export function dry_run_cache_path() {
+	return P.run + '/dryrun-ok.json';
+};
+
+// Everything a dry-run checks: engine binary (size, mtime), the arguments and every file they name (size, mtime;
+// a missing file is part of the key too). null when the binary is missing — then the dry-run always runs.
+export function dry_run_key(engine, args) {
+	let bin = fs.stat(P.libexec + '/' + engine);
+	if (!bin)
+		return null;
+	let parts = [ sprintf('%s %d %d', engine, bin.size, bin.mtime) ];
+	for (let a in args) {
+		push(parts, a);
+		let eq = index(a, '=');
+		let v = (eq >= 0) ? substr(a, eq + 1) : a;
+		if (substr(v, 0, 1) == '@')
+			v = substr(v, 1);
+		if (substr(v, 0, 1) != '/')
+			continue;
+		let st = fs.stat(v);
+		push(parts, st ? sprintf('  %d %d', st.size, st.mtime) : '  missing');
+	}
+	return join('\n', parts);
+};
+
 // Runs build + dry-run. Returns the build result extended with dry_run { rc, output }.
+// opts.force_dry_run: run the engine check even when the same arguments passed it before (`zaprett check`).
 export function generate(cfg, opts) {
 	opts = opts ?? {};
 	let ov = opts.ignore_override ? null : read_override();
@@ -542,8 +695,23 @@ export function generate(cfg, opts) {
 	}
 	if (opts.skip_dry_run)
 		return b;
+	// `zaprett start` checks the arguments and then init runs gen-args with the same arguments: the second
+	// dry-run (hundreds of ms on a weak router) is skipped when nothing it checks has changed
+	let key = dry_run_key(b.engine, b.args);
+	if (!opts.force_dry_run && key != null && read_json(dry_run_cache_path(), 1048576)?.key == key) {
+		b.dry_run = { rc: 0, output: '', cached: true };
+		return b;
+	}
 	let d = dry_run(b.engine, b.args);
 	b.dry_run = { rc: d.rc, output: d.output };
+	// opts.keep_dry_run_cache: the candidate of an isolated automatic selection must not evict the key of the main
+	// engine (every restart of instance `test` runs gen-args of the main one as well)
+	if (!opts.keep_dry_run_cache) {
+		if (d.rc == 0 && key != null && mkdir_p(P.run))
+			write_json(dry_run_cache_path(), { key: key });
+		else if (d.rc != 0)
+			fs.unlink(dry_run_cache_path());
+	}
 	if (d.rc != 0) {
 		let r = fail(d.missing ? 'engine_missing' : 'dry_run_failed',
 			d.missing ? d.output : 'Движок отклонил аргументы стратегии: ' + d.output, {

@@ -9,7 +9,7 @@ T.selfcheck();
 let d = C.normalize(null, null, null);
 T.eq([ d.enabled, d.engine, d.strategy, d.list_mode, d.qnum, d.desync_mark, d.postnat_mark, d.ipv6, d.user, d.debug ],
 	[ false, 'nfqws', 'strategy-general', 'whitelist', 200, 0x40000000, 0x20000000, false, 'daemon', false ], 'defaults');
-T.eq([ d.tcp_pkt_out, d.tcp_pkt_in, d.udp_pkt_out, d.udp_pkt_in, d.flow_offload, d.clients_mode ], [ 9, 3, 9, 0, 'auto', 'all' ], 'default packet limits');
+T.eq([ d.tcp_pkt_out, d.tcp_pkt_in, d.udp_pkt_out, d.udp_pkt_in, d.flow_offload, d.clients_mode ], [ 9, 3, 9, 0, 'own', 'all' ], 'default packet limits (flow_offload own since v1.4)');
 T.eq(d.repo, { url: 'https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json', autoupdate: true, autoupdate_hour: 4 }, 'repo defaults');
 T.eq(d.test, { timeout: 5, concurrency: 6, max_domains: 20, settle: 2 }, 'test defaults');
 T.eq(d.warnings, [], 'no warnings for defaults');
@@ -34,7 +34,7 @@ let b = C.normalize({ engine: 'tpws', list_mode: 'all', qnum: '70000', desync_ma
 	strategy: '../../etc/passwd', ipv6: 'maybe', wan: [ 'eth0; rm' ] }, { url: 'file:///etc/passwd', autoupdate_hour: '24' }, { concurrency: '0' });
 T.has(b.warnings, 'bad_config', 'bad_config warning');
 T.eq([ b.engine, b.list_mode, b.qnum, b.desync_mark, b.postnat_mark, b.tcp_pkt_out, b.flow_offload, b.clients_mode, b.user ],
-	[ 'nfqws', 'whitelist', 200, 0x40000000, 0x20000000, 9, 'auto', 'all', 'daemon' ], 'invalid values replaced by defaults');
+	[ 'nfqws', 'whitelist', 200, 0x40000000, 0x20000000, 9, 'own', 'all', 'daemon' ], 'invalid values replaced by defaults');
 T.eq([ b.lists, b.strategy, b.ipv6, b.wan ], [ [ 'ok' ], '', false, [] ], 'invalid ids, strategy, bool and wan dropped');
 T.eq([ b.repo.url, b.repo.autoupdate_hour, b.test.concurrency ], [ C.DEFAULTS.repo.url, 4, 6 ], 'invalid repo/test values');
 for (let o in [ 'engine', 'list_mode', 'qnum', 'desync_mark', 'postnat_mark', 'tcp_pkt_out', 'flow_offload', 'clients_mode', 'user', 'lists', 'strategy', 'ipv6', 'wan', 'url', 'autoupdate_hour', 'concurrency' ])

@@ -1,0 +1,67 @@
+<UserControl
+    x:Class="Zaprett.Ui.Controls.ServiceCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels">
+
+    <!-- A service with an honest mark whether zaprett helps, the choice of the list set and what it contains. -->
+    <Grid CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Opacity="{x:Bind ui:Conv.Opacity(Choice.IsSelectable), Mode=OneWay}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <CheckBox Margin="20,18,0,0" VerticalAlignment="Top" MinWidth="0"
+                  IsChecked="{x:Bind Choice.IsSelected, Mode=TwoWay}" IsEnabled="{x:Bind Choice.IsSelectable, Mode=OneWay}"
+                  AutomationProperties.Name="{x:Bind Choice.Name, Mode=OneWay}" />
+
+        <StackPanel Grid.Column="1" Padding="4,16,12,16" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{x:Bind Choice.Name, Mode=OneWay}" Style="{StaticResource CardTitle}" FontSize="16" VerticalAlignment="Center" />
+                <Grid VerticalAlignment="Center">
+                    <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Choice.WorksKind), Mode=OneWay}" CornerRadius="10" />
+                    <TextBlock Text="{x:Bind Choice.WorksLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Margin="10,2"
+                               ui:StateColor.Foreground="{x:Bind Choice.WorksKind, Mode=OneWay}" />
+                </Grid>
+            </StackPanel>
+            <TextBlock Text="{x:Bind Choice.Description, Mode=OneWay}" Style="{StaticResource Body}" />
+
+            <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ui:Conv.ShowBoth(Choice.HasVariants, Choice.IsSelectable), Mode=OneWay}">
+                <TextBlock Text="{x:Bind loc:L.T('Service.ListSet')}" Style="{StaticResource Secondary}" VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{x:Bind Choice.Variants, Mode=OneWay}" SelectedItem="{x:Bind Choice.SelectedVariant, Mode=TwoWay}"
+                          MinWidth="220" AutomationProperties.Name="{x:Bind loc:L.T('Service.ListSet')}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:VariantOption">
+                            <StackPanel Padding="0,2" MaxWidth="420">
+                                <TextBlock Text="{x:Bind Name}" />
+                                <TextBlock Text="{x:Bind Description}" Style="{StaticResource Secondary}" FontSize="12" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <TextBlock Text="{x:Bind Choice.Contents, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind Choice.ContentsIds, Mode=OneWay}" Style="{StaticResource Secondary}" FontSize="12"
+                       Visibility="{x:Bind Choice.IsSelectable, Mode=OneWay}" IsTextSelectionEnabled="True" />
+            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Visibility="{x:Bind Choice.IsSelectable, Mode=OneWay}">
+                <Run Text="{x:Bind Choice.HeavyText, Mode=OneWay}" /><Run Text="{x:Bind loc:L.T('Fmt.Gap')}" /><Run Text="{x:Bind Choice.SourcesText, Mode=OneWay}" />
+            </TextBlock>
+            <Expander Visibility="{x:Bind Choice.HasNote, Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                      IsExpanded="{x:Bind Choice.IsHelpless, Mode=OneWay}" Padding="16,10">
+                <Expander.Header>
+                    <TextBlock Text="{x:Bind loc:L.T('Service.WhatToExpect')}" FontSize="13" />
+                </Expander.Header>
+                <TextBlock Text="{x:Bind Choice.Note, Mode=OneWay}" Style="{StaticResource Body}" FontSize="13" IsTextSelectionEnabled="True" />
+            </Expander>
+        </StackPanel>
+
+        <Grid Grid.Column="2" Margin="0,18,20,0" VerticalAlignment="Top" Visibility="{x:Bind Choice.HasStateLabel, Mode=OneWay}">
+            <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Choice.StateKind), Mode=OneWay}" CornerRadius="10" />
+            <TextBlock Text="{x:Bind Choice.StateLabel, Mode=OneWay}" FontSize="12" Margin="10,3"
+                       ui:StateColor.Foreground="{x:Bind Choice.StateKind, Mode=OneWay}" />
+        </Grid>
+    </Grid>
+</UserControl>

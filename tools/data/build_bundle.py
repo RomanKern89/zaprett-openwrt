@@ -5,9 +5,13 @@
     PYTHONUTF8=1 python tools/data/build_bundle.py --check-only только проверка того, что лежит в пакете
 
 Входы (зафиксированы sha256, при расхождении генератор останавливается):
-  upstream/lists-refs/curated/*.txt   очищенные листы (research/03-lists.md §10)
+  tools/lists/out/                    собственные списки проекта по сервисам (§16): генератор tools/lists/generate.py
+                                      пишет файлы и lists.json с sha256 каждого; здесь sha256 сверяется
+  upstream/lists-refs/curated/*.txt   исключения zaprett-exclude и zaprett-exclude-ipset (research/03-lists.md §10)
   upstream/zaprett-repo/              стратегии nfqws и фейки (bin), index.json CherretGit/zaprett-repo
   upstream/zapret/nfq/*.c             имена опций и режимов nfqws v72.13 для проверки стратегий
+  tools/data/nfqws2/*.txt             стратегии nfqws2 (свои, §15.6), метаданные — nfqws2_strategies.py
+  upstream/zapret2/nfq2/*.c, lua/     опции, пейлоады, протоколы, маркеры и Lua-функции nfqws2 для их проверки
 Выходы:
   packages/zaprett/files/usr/share/zaprett/bundle/{files,manifests}/<dir>/..., bundle/index.json
   packages/zaprett/files/usr/share/zaprett/presets.json
@@ -31,6 +35,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.dont_write_bytecode = True  # не оставлять __pycache__ в репозитории
 import bundle_checks as bc  # noqa: E402
+import i18n_zh  # noqa: E402
+import nfqws2_strategies  # noqa: E402
 import presets_data  # noqa: E402
 
 PROJECT = os.path.dirname(os.path.dirname(HERE))
@@ -38,6 +44,10 @@ UPSTREAM = os.path.join(PROJECT, 'upstream')
 CURATED_DIR = os.path.join(UPSTREAM, 'lists-refs', 'curated')
 ZREPO_DIR = os.path.join(UPSTREAM, 'zaprett-repo')
 NFQ_DIR = os.path.join(UPSTREAM, 'zapret', 'nfq')
+NFQ2_DIR = os.path.join(UPSTREAM, 'zapret2', 'nfq2')
+LUA2_DIR = os.path.join(UPSTREAM, 'zapret2', 'lua')
+NFQWS2_SRC_DIR = os.path.join(HERE, 'nfqws2')
+OWN_LISTS_DIR = os.path.join(PROJECT, 'tools', 'lists', 'out')
 SHARE_DIR = os.path.join(PROJECT, 'packages', 'zaprett', 'files', 'usr', 'share', 'zaprett')
 BUNDLE_DIR = os.path.join(SHARE_DIR, 'bundle')
 PRESETS_PATH = os.path.join(SHARE_DIR, 'presets.json')
@@ -55,37 +65,10 @@ COPY_TYPES = ('nfqws', 'bin')
 ARTIFACT_EXT = {'nfqws': '.txt', 'bin': '.bin'}
 
 LIST_AUTHOR = 'zaprett для OpenWrt'
-CROSS_SOURCES = ('Flowseal/zapret-discord-youtube, itdoginfo/allow-domains, CherretGit/zaprett-repo, '
-                 'remittor/zapret-openwrt')
 
-# Встроенные листы (id фиксированы контрактом §3). sha256 — из research/03-lists.md §10 и манифеста zaprett-repo.
+# Исключения (id фиксированы контрактом §3). sha256 — из research/03-lists.md §10. Остальные встроенные листы —
+# собственные списки проекта (§16), их собирает tools/lists/generate.py.
 LIST_ITEMS = [
-    {'id': 'zaprett-youtube', 'type': 'list', 'curated': 'youtube.txt',
-     'sha256': '82adaddbb7f4a91b284444c2ac1f68b726bca4feb08780e63d3524a1f83d7967', 'name': 'YouTube',
-     'description': 'Домены YouTube ({n} шт.): сайт, видео (googlevideo.com), превью и API. Очищенный набор '
-                    'от 2026-09-17: домен взят, если он есть минимум в двух независимых источниках (%s) '
-                    'и существует в DNS. Поддомены учитываются автоматически.' % CROSS_SOURCES},
-    {'id': 'zaprett-discord', 'type': 'list', 'curated': 'discord.txt',
-     'sha256': '5e3073dfef475ff001e204cc439aa96b44052071e01239ad3824d2801f026194', 'name': 'Discord',
-     'description': 'Домены Discord ({n} шт.): сайт, приложение, вложения и голосовые серверы discord.media. '
-                    'Отбор как у YouTube (источники: %s), discordstatus.com добавлен по списку Flowseal. '
-                    'Голосовые звонки обрабатывает отдельный профиль стратегии по портам.' % CROSS_SOURCES},
-    {'id': 'zaprett-telegram', 'type': 'list', 'curated': 'telegram.txt',
-     'sha256': '966dc007f4bfb378c460ccae8b5c7f0397d73876060741bca363603e4e0ab460', 'name': 'Telegram',
-     'description': 'Домены Telegram ({n} шт.): telegram.org, t.me, telesco.pe и другие сайты Telegram. Взяты '
-                    'домены, которые есть и в CherretGit/zaprett-repo, и в itdoginfo/allow-domains и существуют '
-                    'в DNS. Приложение Telegram ходит по IP-адресам — для него нужен лист «Telegram: IP-сети».'},
-    {'id': 'zaprett-rutracker', 'type': 'list', 'repo_manifest': 'manifests/lists/include/list-rutracker.json',
-     'sha256': '82f953b44eda73bf3319c99e8cfab572ce498d68dc7692ad0bcdae3b8256c9ed', 'name': 'RuTracker',
-     'author': 'zaprett-devs',
-     'description': 'Домены RuTracker ({n} шт.) из списка list-rutracker репозитория CherretGit/zaprett-repo '
-                    '(автор zaprett-devs, версия 1.0.0) без изменений.'},
-    {'id': 'zaprett-telegram-ipset', 'type': 'ipset', 'curated': 'telegram-ipset.txt',
-     'sha256': '53437464eec1ac4396b00e8b6ad427ed0cf54bfac6339575a2cef48d8753e961', 'name': 'Telegram: IP-сети',
-     'description': 'IP-сети Telegram ({n} шт., адресов IPv4: {v4}): официальный список '
-                    'core.telegram.org/resources/cidr.txt и сети, которые анонсируют автономные системы '
-                    'Telegram Messenger Inc (AS62041, AS59930, AS44907, AS211157, AS62014) по данным RIPEstat '
-                    'на 2026-09-17. Нужны приложению Telegram, которое соединяется с серверами по IP.'},
     {'id': 'zaprett-exclude', 'type': 'list_exclude', 'curated': 'exclude.txt',
      'sha256': '6bb040ee55b4dd8131c2e0d23b6d48d3558a7dce53621f3219e3c90969eab4fe', 'name': 'Исключения: сайты',
      'description': 'Сайты, которые обход не трогает ({n} доменов): госуслуги и госсайты, банки, Яндекс, VK, '
@@ -99,6 +82,22 @@ LIST_ITEMS = [
                     'link-local, CGNAT, multicast и их IPv6-аналоги. Основа — список исключений bol-van/zapret '
                     'и ipset-exclude из Flowseal/zapret-discord-youtube.'},
 ]
+
+
+# Английские name_en/description_en манифестов листов (§14.6): {n} и {v4} — как в русском описании.
+LIST_ITEMS_EN = {
+    'zaprett-exclude': (
+        'Exclusions: websites',
+        'Websites the bypass leaves alone ({n} domains): Gosuslugi and government sites, banks, Yandex, VK, '
+        'marketplaces, gaming and software services. A merge of the Flowseal list-exclude, CherretGit/zaprett-repo '
+        'list-exclude-general (plus gosuslugi.ru and x5.ru) and remittor zapret-hosts-user-exclude lists; domains '
+        'missing from DNS were removed.'),
+    'zaprett-exclude-ipset': (
+        'Exclusions: local networks',
+        'Local and special-purpose networks ({n}) the bypass leaves alone: private networks, loopback, link-local, '
+        'CGNAT, multicast and their IPv6 counterparts. Based on the bol-van/zapret exclusion list and ipset-exclude '
+        'from Flowseal/zapret-discord-youtube.'),
+}
 
 
 class SourceError(Exception):
@@ -128,8 +127,34 @@ def local_from_raw(zrepo_dir, url):
 
 # ---------------------------------------------------------------- входные данные
 
-def load_list_items(curated_dir, zrepo_dir):
+def load_own_lists(lists_dir=OWN_LISTS_DIR):
+    """Собственные списки (§16) из tools/lists/out: sha256 каждого файла сверяется с lists.json."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('zaprett_lists_generate',
+                                                  os.path.join(PROJECT, 'tools', 'lists', 'generate.py'))
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    try:
+        index = gen.load_index(lists_dir)
+    except gen.GenError as exc:
+        raise SourceError(str(exc))
+    if index.get('author') != bc.OWN_LIST_AUTHOR or index.get('license') != 'MIT':
+        raise SourceError('lists.json: author/license не zaprett-openwrt/MIT')
     out = []
+    for e in index['lists']:
+        out.append({
+            'id': e['id'], 'type': e['type'], 'name': e['name'], 'version': e['generated'].replace('-', '.'),
+            'author': bc.OWN_LIST_AUTHOR, 'description': e['description'], 'dependencies': [], 'data': e['data'],
+            'fname': e['id'] + '.txt', 'manifest_url': None, 'name_en': e['name_en'],
+            'description_en': e['description_en'], 'name_zh': e['name_zh'], 'description_zh': e['description_zh'],
+            'service': e['service'], 'variant': e['variant'],
+            'generated': e['generated'], 'method': e['method'], 'license': 'MIT',
+        })
+    return out
+
+
+def load_list_items(curated_dir, zrepo_dir, lists_dir=OWN_LISTS_DIR):
+    out = load_own_lists(lists_dir)
     for spec in LIST_ITEMS:
         if 'curated' in spec:
             path = os.path.join(curated_dir, spec['curated'])
@@ -146,11 +171,41 @@ def load_list_items(curated_dir, zrepo_dir):
         v4 = 0
         if spec['type'] in bc.IPSET_TYPES:
             v4 = sum(ipaddress.ip_network(x).num_addresses for x in lines if ':' not in x)
+        counts = {'n': len(lines), 'v4': '{:,}'.format(v4).replace(',', ' ')}
+        name_en, description_en = LIST_ITEMS_EN[spec['id']]
+        name_zh, description_zh = i18n_zh.EXCLUDE_LISTS_ZH[spec['id']]
         out.append({
             'id': spec['id'], 'type': spec['type'], 'name': spec['name'], 'version': SNAPSHOT_VERSION,
             'author': spec.get('author', LIST_AUTHOR),
-            'description': spec['description'].format(n=len(lines), v4='{:,}'.format(v4).replace(',', ' ')),
+            'description': spec['description'].format(**counts),
             'dependencies': [], 'data': data, 'fname': spec['id'] + '.txt', 'manifest_url': None,
+            'name_en': name_en, 'description_en': description_en.format(**counts),
+            'name_zh': name_zh, 'description_zh': description_zh.format(**counts),
+        })
+    return out
+
+
+def load_nfqws2_items(src_dir, available):
+    """Стратегии nfqws2 из tools/data/nfqws2/<id>.txt с метаданными nfqws2_strategies.STRATEGIES (§15.6).
+
+    available — id элементов, которые уже есть в bundle (зависимости обязаны быть среди них)."""
+    known = {s['id'] for s in nfqws2_strategies.STRATEGIES}
+    on_disk = {f[:-4] for f in os.listdir(src_dir) if f.endswith('.txt')}
+    if known != on_disk:
+        raise SourceError('nfqws2: файлы и метаданные расходятся: %s' % sorted(known ^ on_disk))
+    out = []
+    for spec in nfqws2_strategies.STRATEGIES:
+        if not spec['id'].startswith('z2-'):
+            raise SourceError('%s: id стратегии nfqws2 должен начинаться с z2-' % spec['id'])
+        missing = [d for d in spec['deps'] if d not in available]
+        if missing:
+            raise SourceError('%s: зависимостей нет в bundle: %s' % (spec['id'], missing))
+        out.append({
+            'id': spec['id'], 'type': 'nfqws2', 'name': spec['name'], 'version': nfqws2_strategies.VERSION,
+            'author': nfqws2_strategies.AUTHOR, 'description': spec['description'], 'dependencies': list(spec['deps']),
+            'data': bc.read_bytes(os.path.join(src_dir, spec['id'] + '.txt')), 'fname': spec['id'] + '.txt',
+            'manifest_url': None, 'name_en': spec['name_en'], 'description_en': spec['description_en'],
+            'name_zh': i18n_zh.NFQWS2_ZH[spec['id']][0], 'description_zh': i18n_zh.NFQWS2_ZH[spec['id']][1],
         })
     return out
 
@@ -187,10 +242,16 @@ def load_repo_items(zrepo_dir, index_sha256=ZREPO_INDEX_SHA256):
             if dep['type'] not in COPY_TYPES:
                 raise SourceError('%s: зависимость %s типа %s в bundle не входит' % (it['id'], dep['id'], dep['type']))
             deps.append(dep['id'])
+        texts = i18n_zh.strategy_texts(m['description'])
+        if texts is None:
+            raise SourceError('%s: нет перевода описания %r (шаблон или ручной перевод в i18n_zh.py)'
+                              % (it['id'], m['description']))
         out.append({
             'id': it['id'], 'type': it['type'], 'name': m['name'], 'version': m['version'], 'author': m['author'],
             'description': m['description'], 'dependencies': deps, 'data': data, 'fname': fname,
             'manifest_url': it['manifest'],
+            # имя элемента — его id: одинаково на всех языках
+            'name_en': m['name'], 'description_en': texts[0], 'name_zh': m['name'], 'description_zh': texts[1],
         })
     return out, skipped
 
@@ -205,7 +266,11 @@ def make_manifest(item):
         'file': '%s/files/%s/%s' % (bc.ROUTER_BUNDLE_ROOT, rel_dir, item['fname']), 'source': 'bundle',
         'sha256': bc.sha256_bytes(item['data']), 'installed_at': SNAPSHOT_EPOCH, 'manifest_url': item['manifest_url'],
     }
-    return {k: values[k] for k in bc.MANIFEST_KEYS}
+    out = {k: values[k] for k in bc.MANIFEST_KEYS}
+    for k in bc.MANIFEST_OPTIONAL_KEYS:
+        if item.get(k):
+            out[k] = item[k]
+    return out
 
 
 def stage_bundle(bundle_dir, items):
@@ -251,7 +316,8 @@ def archive_sizes(root):
 def validate_all(bundle_dir, presets_bytes):
     rep = bc.Report()
     grammar = bc.load_nfqws_grammar(NFQ_DIR)
-    items, content, audits = bc.validate_bundle(bundle_dir, grammar, rep)
+    grammar2 = bc.load_nfqws2_grammar(NFQ2_DIR, LUA2_DIR)
+    items, content, audits = bc.validate_bundle(bundle_dir, grammar, rep, grammar2)
     try:
         presets = json.loads(presets_bytes.decode('utf-8'))
     except (UnicodeDecodeError, ValueError) as exc:
@@ -326,10 +392,12 @@ def build():
     list_items = load_list_items(CURATED_DIR, ZREPO_DIR)
     repo_items, skipped = load_repo_items(ZREPO_DIR)
     print('zaprett-repo: взято nfqws/bin %d, пропущено по типам %s' % (len(repo_items), skipped))
+    nfqws2_items = load_nfqws2_items(NFQWS2_SRC_DIR, {x['id'] for x in list_items + repo_items})
+    print('nfqws2: стратегий %d (tools/data/nfqws2)' % len(nfqws2_items))
     staging_bundle = os.path.join(STAGING_DIR, 'bundle')
     if os.path.isdir(STAGING_DIR):
         shutil.rmtree(STAGING_DIR)
-    stage_bundle(staging_bundle, list_items + repo_items)
+    stage_bundle(staging_bundle, list_items + repo_items + nfqws2_items)
     presets_bytes = json_bytes(presets_data.PRESETS)
     write_bytes(os.path.join(STAGING_DIR, 'presets.json'), presets_bytes)
 

@@ -19,9 +19,11 @@ sys.path.insert(0, HERE)
 sys.dont_write_bytecode = True
 import bundle_checks as bc  # noqa: E402
 import build_bundle as bb  # noqa: E402
+import nfqws2_strategies  # noqa: E402
 import presets_data  # noqa: E402
 
 GRAMMAR = bc.load_nfqws_grammar(bb.NFQ_DIR)
+GRAMMAR2 = bc.load_nfqws2_grammar(bb.NFQ2_DIR, bb.LUA2_DIR)
 NL = bytes([10])
 CRLF = bytes([13, 10])
 
@@ -70,9 +72,9 @@ class BundleCase(unittest.TestCase):
         self.assertIn(old.encode('utf-8'), data, 'в %s нет фрагмента для порчи' % item_id)
         self.rewrite(item_id, data.replace(old.encode('utf-8'), new.encode('utf-8'), 1))
 
-    def check(self, presets=None):
+    def check(self, presets=None, grammar2=GRAMMAR2):
         rep = bc.Report()
-        items, _content, audits = bc.validate_bundle(self.bundle, GRAMMAR, rep)
+        items, _content, audits = bc.validate_bundle(self.bundle, GRAMMAR, rep, grammar2)
         bc.validate_presets(self.presets if presets is None else presets, items, audits,
                             presets_data.REFERENCE_SIZES, rep)
         return rep
@@ -90,6 +92,7 @@ class PositiveControls(BundleCase):
 
     def test_installed_bundle_equals_fresh_build(self):
         items = bb.load_list_items(bb.CURATED_DIR, bb.ZREPO_DIR) + bb.load_repo_items(bb.ZREPO_DIR)[0]
+        items += bb.load_nfqws2_items(bb.NFQWS2_SRC_DIR, {x['id'] for x in items})
         a, b = os.path.join(self.tmp, 'a'), os.path.join(self.tmp, 'b')
         bb.stage_bundle(a, items)
         bb.stage_bundle(b, items)
@@ -416,6 +419,160 @@ class PresetControls(BundleCase):
         self.assertCaught('E_QUICK_DEFAULT', self.mutated(
             lambda p: p['defaults']['quick_test_strategies'].__setitem__(0, 'strategy-alt6')))
 
+    def test_service_optional_key_unknown(self):
+        self.assertCaught('E_PRESET_KEYS', self.mutated(lambda p: self.svc(p, 'youtube').__setitem__('note_de', 'x')))
+
+    def test_service_needs_dns_not_bool(self):
+        self.assertCaught('E_PRESET_FIELD', self.mutated(lambda p: self.svc(p, 'youtube').__setitem__('needs_dns', 'yes')))
+
+    def test_service_empty_english(self):
+        self.assertCaught('E_PRESET_FIELD', self.mutated(lambda p: self.svc(p, 'youtube').__setitem__('note_en', ' ')))
+
+
+def _with_nfqws2_defaults(p, strategy='z2-general', quick=None):
+    p['defaults']['strategy_nfqws2'] = strategy
+    p['defaults']['quick_test_strategies_nfqws2'] = list(quick or nfqws2_strategies.QUICK_TEST_STRATEGIES)
+
+
+class Nfqws2PresetControls(BundleCase):
+    mutated = PresetControls.mutated
+    def test_recommended_defaults_pass(self):
+        rep = self.check(self.mutated(_with_nfqws2_defaults))
+        self.assertEqual(rep.errors, [])
+
+    def test_package_presets_carry_recommended_defaults(self):
+        self.assertEqual(self.presets['defaults'].get('strategy_nfqws2'), nfqws2_strategies.DEFAULT_STRATEGY)
+        self.assertEqual(self.presets['defaults'].get('quick_test_strategies_nfqws2'), nfqws2_strategies.QUICK_TEST_STRATEGIES)
+
+    def test_only_one_key(self):
+        self.assertCaught('E_PRESET_KEYS', self.mutated(lambda p: p['defaults'].pop('quick_test_strategies_nfqws2')))
+
+    def test_no_nfqws2_keys_still_valid(self):
+        def drop(p):
+            p['defaults'].pop('strategy_nfqws2')
+            p['defaults'].pop('quick_test_strategies_nfqws2')
+        self.assertEqual(self.check(self.mutated(drop)).errors, [])
+
+    def test_default_is_nfqws_strategy(self):
+        self.assertCaught('E_PRESET_DEFAULTS', self.mutated(lambda p: _with_nfqws2_defaults(p, 'strategy-general')))
+
+    def test_default_not_in_quick(self):
+        self.assertCaught('E_QUICK_DEFAULT', self.mutated(lambda p: _with_nfqws2_defaults(p, 'z2-circular')))
+
+    def test_quick_too_few(self):
+        self.assertCaught('E_QUICK_COUNT', self.mutated(lambda p: _with_nfqws2_defaults(p, quick=['z2-general', 'z2-alt'])))
+
+    def test_quick_has_nfqws_id(self):
+        quick = list(nfqws2_strategies.QUICK_TEST_STRATEGIES)
+        quick[1] = 'strategy-alt'
+        self.assertCaught('E_QUICK_REF', self.mutated(lambda p: _with_nfqws2_defaults(p, quick=quick)))
+
+    def test_quick_broken_strategy(self):
+        self.replace_text('z2-alt', 'fakedsplit:pattern', 'fakedsplitt:pattern')
+        self.assertCaught('E_QUICK_BROKEN', self.mutated(_with_nfqws2_defaults))
+
+
+class Nfqws2Controls(BundleCase):
+    """Отрицательные контроли стратегий nfqws2. Часть ошибок (блоб по имени, маркер) `nfqws2 --intercept=0` не видит
+    вовсе — проверено на роутере 2026-09-22: неизвестный blob=... проходит с кодом 0."""
+
+    def test_unknown_lua_function(self):
+        self.replace_text('z2-general', '--lua-desync=multidisorder:', '--lua-desync=no_such_fn_xyz:')
+        self.assertCaught('E_LUA_FUNC')
+
+    def own_lua_init(self, item_id, libs):
+        """Свои --lua-init в начале стратегии: генератор тогда не добавляет базовые библиотеки."""
+        head = ''.join('--lua-init=@%s/%s.lua%s' % (bc.ROUTER_LUA_DIR, lib, chr(10)) for lib in libs)
+        self.rewrite(item_id, head.encode('utf-8') + self.content(item_id))
+
+    def test_circular_pristine_uses_base_libraries(self):
+        self.assertNotIn(b'--lua-init', self.content('z2-circular'))
+        self.assertEqual(self.check().errors, [])
+
+    def test_circular_own_lua_init_without_auto_library(self):
+        self.own_lua_init('z2-circular', ['zapret-lib', 'zapret-antidpi'])
+        self.assertCaught('E_LUA_FUNC')
+
+    def test_own_lua_init_without_antidpi(self):
+        self.own_lua_init('z2-circular', ['zapret-lib', 'zapret-auto'])
+        self.assertCaught('E_LUA_INIT')
+
+    def test_lua_init_outside_lua_dir(self):
+        self.own_lua_init('z2-circular', ['zapret-lib', 'zapret-antidpi', 'zapret-auto'])
+        self.replace_text('z2-circular', '@/usr/share/zaprett/lua/zapret-auto.lua', '@/tmp/evil.lua')
+        self.assertCaught('E_LUA_INIT')
+
+    def test_own_lua_init_complete_passes(self):
+        self.own_lua_init('z2-circular', ['zapret-lib', 'zapret-antidpi', 'zapret-auto'])
+        self.assertEqual(self.check().errors, [])
+
+    def test_undefined_blob(self):
+        self.replace_text('z2-general', 'blob=quic_google:repeats', 'blob=quic_nope:repeats')
+        self.assertCaught('E_BLOB_UNDEFINED')
+
+    def test_duplicate_blob(self):
+        self.replace_text('z2-general', '--blob=z64:', '--blob=quic_google:')
+        self.assertCaught('E_BLOB_DEF')
+
+    def test_bad_payload(self):
+        self.replace_text('z2-general', '--payload=quic_initial', '--payload=quic_initiall')
+        self.assertCaught('E_PAYLOAD')
+
+    def test_bad_l7(self):
+        self.replace_text('z2-general', '--filter-l7=quic', '--filter-l7=quick')
+        self.assertCaught('E_L7')
+
+    def test_bad_marker(self):
+        self.replace_text('z2-general', 'multidisorder:pos=midsld', 'multidisorder:pos=midsldd')
+        self.assertCaught('E_MARKER')
+
+    def test_bad_autottl(self):
+        self.replace_text('z2-general', 'ip_autottl=-2,3-20', 'ip_autottl=-2:3-20')
+        self.assertCaught('E_LUA_ARG')
+
+    def test_bad_range(self):
+        self.replace_text('z2-discord', '--out-range=<d3', '--out-range=q3')
+        self.assertCaught('E_RANGE')
+
+    def test_circular_gap(self):
+        self.replace_text('z2-circular', 'repeats=2:strategy=4', 'repeats=2:strategy=5')
+        self.assertCaught('E_CIRCULAR')
+
+    def test_strategy_without_circular(self):
+        self.replace_text('z2-general', 'multidisorder:pos=midsld --new', 'multidisorder:pos=midsld:strategy=1 --new')
+        self.assertCaught('E_CIRCULAR')
+
+    def test_nfqws1_option(self):
+        self.replace_text('z2-general', '--payload=quic_initial', '--dpi-desync=fake')
+        self.assertCaught('E_OPTION_UNKNOWN')
+
+    def test_placeholder_not_in_dependencies(self):
+        self.replace_text('z2-general', '--blob=z64:', '--blob=tls_google:@${bin:tls_clienthello_www_google_com} --blob=z64:')
+        self.assertCaught('E_PLACEHOLDER_NOT_DEP')
+
+    def test_no_grammar(self):
+        rep = self.check(grammar2=None)
+        self.assertIn('E_NO_GRAMMAR2', rep.codes())
+
+    def test_english_keys_wrong_order(self):
+        m = self.manifest('z2-general')
+        m = dict(list(m.items())[:13] + [('description_en', m['description_en']), ('name_en', m['name_en'])])
+        self.save_manifest('z2-general', m)
+        self.assertCaught('E_MANIFEST_KEYS')
+
+    def test_english_name_empty(self):
+        m = self.manifest('z2-general')
+        m['name_en'] = ''
+        self.save_manifest('z2-general', m)
+        self.assertCaught('E_MANIFEST_FIELD')
+
+    def test_every_strategy_is_checked(self):
+        rep = bc.Report()
+        _items, _content, audits = bc.validate_bundle(self.bundle, GRAMMAR, rep, GRAMMAR2)
+        ids = {s['id'] for s in nfqws2_strategies.STRATEGIES}
+        self.assertTrue(ids)
+        self.assertTrue(ids <= set(audits), sorted(ids - set(audits)))
+
 
 class TokenizerControls(unittest.TestCase):
     def test_comment_words_dropped(self):
@@ -456,6 +613,201 @@ class TokenizerControls(unittest.TestCase):
         self.assertNotIn('bogusmode', modes)
 
 
+class OwnListControls(BundleCase):
+    """Собственные списки проекта (§16): метаданные манифестов, сети, варианты в presets."""
+
+    def own_ids(self):
+        rep = bc.Report()
+        items, _c, _a = bc.validate_bundle(self.bundle, GRAMMAR, rep, GRAMMAR2)
+        return sorted(i for i, m in items.items() if m.get('author') == bc.OWN_LIST_AUTHOR)
+
+    def mutate_manifest(self, item_id, fn):
+        m = self.manifest(item_id)
+        fn(m)
+        self.save_manifest(item_id, m)
+
+    def test_every_service_has_two_own_lists(self):
+        per = {}
+        for i in self.own_ids():
+            per.setdefault(self.manifest(i)['service'], []).append(i)
+        self.assertGreaterEqual(len(per), 6)
+        for sid, lst in per.items():
+            self.assertGreaterEqual(len(lst), 2, sid)
+
+    def test_own_list_manifest_fields(self):
+        for i in self.own_ids():
+            m = self.manifest(i)
+            self.assertEqual((m['author'], m['license']), (bc.OWN_LIST_AUTHOR, 'MIT'), i)
+            self.assertEqual(list(m)[-len(bc.OWN_LIST_KEYS):], list(bc.OWN_LIST_KEYS), i)
+
+    def test_missing_license(self):
+        self.mutate_manifest('zaprett-discord', lambda m: m.pop('license'))
+        self.assertCaught('E_OWN_META')
+
+    def test_wrong_license(self):
+        self.mutate_manifest('zaprett-discord', lambda m: m.update(license='GPL-3.0'))
+        self.assertCaught('E_OWN_META')
+
+    def test_unknown_variant(self):
+        self.mutate_manifest('zaprett-youtube-full', lambda m: m.update(variant='huge'))
+        self.assertCaught('E_OWN_META')
+
+    def test_bad_generated_date(self):
+        self.mutate_manifest('zaprett-roblox', lambda m: m.update(generated='22.09.2026'))
+        self.assertCaught('E_OWN_META')
+
+    def test_id_not_of_service(self):
+        self.mutate_manifest('zaprett-signal-full', lambda m: m.update(service='roblox'))
+        self.assertCaught('E_OWN_META')
+
+    def test_service_not_in_presets(self):
+        self.mutate_manifest('zaprett-signal-full', lambda m: m.update(service='nosuch'))
+        rep = self.check()
+        self.assertIn('E_LIST_SERVICE', rep.codes())
+
+    def test_description_too_long(self):
+        self.mutate_manifest('zaprett-telegram', lambda m: m.update(description='Ы' * 600))
+        self.assertCaught('E_MANIFEST_LONG')
+
+    def test_special_net_v4(self):
+        self.append_line('zaprett-roblox-ipset', '192.0.2.0/24')
+        self.assertCaught('E_CIDR_SPECIAL')
+
+    def test_special_net_v6(self):
+        self.append_line('zaprett-cloudflare-ipset6', '2001:db8::/32')
+        self.assertCaught('E_CIDR_SPECIAL')
+
+    def test_wildcard_in_own_list(self):
+        self.append_line('zaprett-signal-full', '*.signal.org')
+        self.assertCaught('E_MASK')
+
+    # -- варианты в presets.json (§16.3)
+    def variants(self, p, sid):
+        return next(s for s in p['services'] if s['id'] == sid)['variants']
+
+    def mutated(self, fn):
+        p = copy.deepcopy(self.presets)
+        fn(p)
+        return p
+
+    def test_presets_have_variants(self):
+        with_variants = [s['id'] for s in self.presets['services'] if s.get('variants')]
+        self.assertEqual(sorted(with_variants),
+                         ['cloudflare', 'discord', 'roblox', 'rutracker', 'signal', 'youtube'])
+
+    def test_variant_list_missing(self):
+        self.assertCaught('E_PRESET_REF', self.mutated(
+            lambda p: self.variants(p, 'youtube')[0].update(lists=['zaprett-youtube-nope'])))
+
+    def test_variant_ipset_given_as_list(self):
+        self.assertCaught('E_PRESET_REF', self.mutated(
+            lambda p: self.variants(p, 'discord')[1].update(lists=['zaprett-discord-voice'])))
+
+    def test_variant_keys_order(self):
+        def swap(p):
+            v = self.variants(p, 'signal')[0]
+            items = list(v.items())
+            items[0], items[1] = items[1], items[0]
+            v.clear()
+            v.update(items)
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(swap))
+
+    def test_variant_same_as_main(self):
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(
+            lambda p: self.variants(p, 'rutracker')[0].update(lists=['zaprett-rutracker'])))
+
+    def test_variant_empty(self):
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(
+            lambda p: self.variants(p, 'cloudflare')[0].update(ipsets=[])))
+
+    def test_variant_duplicate_id(self):
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(
+            lambda p: self.variants(p, 'discord')[1].update(id='full')))
+
+    def test_variant_not_russian(self):
+        self.assertCaught('E_PRESET_NOT_RU', self.mutated(
+            lambda p: self.variants(p, 'roblox')[0].update(description='More domains')))
+
+    def test_variant_on_works_no(self):
+        def add(p):
+            svc = next(s for s in p['services'] if s['id'] == 'whatsapp')
+            svc['variants'] = copy.deepcopy(self.variants(p, 'signal'))
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(add))
+
+    def test_variant_unknown_tier(self):
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(
+            lambda p: self.variants(p, 'youtube')[0].update(tier='huge')))
+
+
+class ChineseControls(BundleCase):
+    """§14.6: у каждого поля *_en есть *_zh и наоборот; китайский текст — с иероглифами и без ASCII-кавычек."""
+
+    def mutate_manifest(self, item_id, fn):
+        m = self.manifest(item_id)
+        fn(m)
+        self.save_manifest(item_id, m)
+
+    def mutated(self, fn):
+        p = copy.deepcopy(self.presets)
+        fn(p)
+        return p
+
+    def svc(self, p, sid):
+        return next(x for x in p['services'] if x['id'] == sid)
+
+    def test_every_manifest_and_service_has_both_languages(self):
+        missing = []
+        for dirpath, _dirs, files in os.walk(os.path.join(self.bundle, 'manifests')):
+            for f in files:
+                m = json.loads(bc.read_bytes(os.path.join(dirpath, f)).decode('utf-8'))
+                missing += ['%s:%s' % (f, k) for k in ('name_en', 'description_en', 'name_zh', 'description_zh')
+                            if not m.get(k)]
+        for svc in self.presets['services']:
+            missing += ['%s:%s' % (svc['id'], k) for k in ('name_zh', 'description_zh', 'note_zh') if not svc.get(k)]
+            for v in svc.get('variants', []):
+                missing += ['%s/%s:%s' % (svc['id'], v['id'], k) for k in ('name_zh', 'description_zh') if not v.get(k)]
+        self.assertEqual(missing, [])
+
+    def test_manifest_zh_without_en(self):
+        self.mutate_manifest('strategy-general', lambda m: (m.pop('name_en'), m.pop('description_en')))
+        self.assertCaught('E_LANG_PAIR')
+
+    def test_manifest_en_without_zh(self):
+        self.mutate_manifest('z2-general', lambda m: m.pop('description_zh'))
+        self.assertCaught('E_LANG_PAIR')
+
+    def test_own_list_without_zh(self):
+        self.mutate_manifest('zaprett-youtube', lambda m: (m.pop('name_zh'), m.pop('description_zh')))
+        rep = self.assertCaught('E_LANG_PAIR')
+        self.assertIn('E_OWN_META', rep.codes())
+
+    def test_manifest_zh_not_chinese(self):
+        self.mutate_manifest('zaprett-discord', lambda m: m.update(description_zh='Discord domains'))
+        self.assertCaught('E_ZH_TEXT')
+
+    def test_manifest_zh_ascii_quotes(self):
+        self.mutate_manifest('zaprett-telegram', lambda m: m.update(description_zh='需要"Telegram：IP 网段"列表'))
+        self.assertCaught('E_ZH_TEXT')
+
+    def test_service_note_zh_missing(self):
+        self.assertCaught('E_LANG_PAIR', self.mutated(lambda p: self.svc(p, 'youtube').pop('note_zh')))
+
+    def test_service_zh_without_en(self):
+        self.assertCaught('E_LANG_PAIR', self.mutated(lambda p: self.svc(p, 'spotify').pop('description_en')))
+
+    def test_service_note_zh_english(self):
+        self.assertCaught('E_ZH_TEXT', self.mutated(
+            lambda p: self.svc(p, 'discord').update(note_zh='Voice calls carry no site name')))
+
+    def test_variant_zh_missing(self):
+        self.assertCaught('E_PRESET_VARIANT', self.mutated(
+            lambda p: self.svc(p, 'youtube')['variants'][0].pop('description_zh')))
+
+    def test_variant_zh_not_chinese(self):
+        self.assertCaught('E_ZH_TEXT', self.mutated(
+            lambda p: self.svc(p, 'signal')['variants'][0].update(description_zh='More domains')))
+
+
 class SourceControls(unittest.TestCase):
     """Входные данные: подмена хоть одного байта обязана остановить генератор."""
 
@@ -474,6 +826,8 @@ class SourceControls(unittest.TestCase):
         shutil.copy2(os.path.join(bb.ZREPO_DIR, 'index.json'), self.repo)
         self.curated = os.path.join(self.tmp, 'curated')
         shutil.copytree(bb.CURATED_DIR, self.curated)
+        self.own = os.path.join(self.tmp, 'own')
+        shutil.copytree(bb.OWN_LISTS_DIR, self.own)
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
@@ -484,20 +838,46 @@ class SourceControls(unittest.TestCase):
         data[-2] ^= 1
         bb.write_bytes(path, bytes(data))
 
+    def own_count(self):
+        return len(json.loads(bc.read_bytes(os.path.join(self.own, 'lists.json')).decode('utf-8'))['lists'])
+
     def test_positive_copy_loads(self):
         items, _skipped = bb.load_repo_items(self.repo)
         self.assertEqual(len(items), 70)
-        self.assertEqual(len(bb.load_list_items(self.curated, self.repo)), 7)
+        lists = bb.load_list_items(self.curated, self.repo, self.own)
+        self.assertEqual(len(lists), self.own_count() + 2)       # собственные + два исключения
+        self.assertGreaterEqual(self.own_count(), 10)
 
-    def test_curated_list_changed(self):
-        self.flip_last_byte(self.curated, 'youtube.txt')
+    def test_curated_exclude_changed(self):
+        self.flip_last_byte(self.curated, 'exclude.txt')
         with self.assertRaises(bb.SourceError):
-            bb.load_list_items(self.curated, self.repo)
+            bb.load_list_items(self.curated, self.repo, self.own)
 
-    def test_rutracker_changed(self):
-        self.flip_last_byte(self.repo, 'files', 'lists', 'include', 'list-rutracker.txt')
+    def test_own_list_changed(self):
+        self.flip_last_byte(self.own, 'zaprett-youtube.txt')
         with self.assertRaises(bb.SourceError):
-            bb.load_list_items(self.curated, self.repo)
+            bb.load_list_items(self.curated, self.repo, self.own)
+
+    def test_own_list_missing(self):
+        os.remove(os.path.join(self.own, 'zaprett-rutracker.txt'))
+        with self.assertRaises((bb.SourceError, OSError)):
+            bb.load_list_items(self.curated, self.repo, self.own)
+
+    def test_own_index_wrong_author(self):
+        path = os.path.join(self.own, 'lists.json')
+        idx = json.loads(bc.read_bytes(path).decode('utf-8'))
+        idx['author'] = 'someone-else'
+        bb.write_bytes(path, bb.json_bytes(idx))
+        with self.assertRaises(bb.SourceError):
+            bb.load_list_items(self.curated, self.repo, self.own)
+
+    def test_strategy_description_without_translation(self):
+        path = os.path.join(self.repo, 'manifests', 'strategies', 'nfqws', 'strategy-general.json')
+        m = json.loads(bc.read_bytes(path).decode('utf-8'))
+        m['description'] = 'Совершенно новое описание без шаблона'
+        bb.write_bytes(path, bb.json_bytes(m))
+        with self.assertRaises(bb.SourceError):
+            bb.load_repo_items(self.repo)
 
     def test_strategy_changed(self):
         self.flip_last_byte(self.repo, 'files', 'strategies', 'nfqws', 'strategy-general.txt')

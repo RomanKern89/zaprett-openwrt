@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-ultimatefix",
+  "type": "nfqws2",
+  "name": "nfqws2: ultimatefix",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-ultimatefix. TLS: фейк www.google.com с неверными номерами последовательности и autottl (6 повторов) и fakedsplit; HTTP: фейк с MD5 и разрезание; для адресов из IP-списков — фейк на первые 2 пакета любого UDP на портах 50000–65535 (голос и игры; широкий диапазон портов нагружает процессор).",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-ultimatefix.txt",
+  "source": "bundle",
+  "sha256": "6292be453b113555ffbdf316293a3b78a769a5053f3c2e1272982b4df253d37d",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: ultimatefix",
+  "description_en": "Port of strategy-ultimatefix. TLS: a www.google.com fake with bad sequence numbers and autottl (6 repeats) plus fakedsplit; HTTP: an MD5 fake and a split; for addresses from IP lists a fake on the first 2 packets of any UDP on ports 50000–65535 (voice and games; the wide port range costs CPU).",
+  "name_zh": "nfqws2：ultimatefix",
+  "description_zh": "strategy-ultimatefix 的移植版。TLS：带错误序列号和 autottl 的 www.google.com 伪造包（重复 6 次）加 fakedsplit；HTTP：MD5 伪造包加分段；对 IP 列表中的地址，在端口 50000–65535 上任何 UDP 的前 2 个数据包发送伪造包（语音和游戏；端口范围宽，会占用 CPU）。"
+}

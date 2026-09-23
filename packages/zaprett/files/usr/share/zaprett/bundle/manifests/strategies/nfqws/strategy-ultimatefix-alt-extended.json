@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "04674ddf9d04ae6f2670e1d9bbd56f43c344abe99b055593769b0140f9bf5163",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-ultimatefix-alt-extended.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-ultimatefix-alt-extended.json",
+  "name_en": "strategy-ultimatefix-alt-extended",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-ultimatefix-alt-extended",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

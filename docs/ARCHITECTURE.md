@@ -1,6 +1,9 @@
 # zaprett для OpenWrt — архитектура и контракты
 
-> Версия документа: 1.2 (2026-09-17): закрытый список warnings, `recommended_tier`, `reloaded`, лимиты LuCI; v1.1 — добавлены подписки по URL (§4, §6.2, §11), исключения в обоих режимах (§5), пресеты с уровнями и целями (§9). Это **контракт** между частями продукта: бэкенд (`packages/zaprett`),
+> Версия документа: 1.7 (2026-09-23): варианты в мастере — §16.4; 1.6 (2026-09-22): автоподбор без отключения обхода — §17; 1.5: собственные списки проекта по сервисам и вариантам — §16; 1.4 (2026-09-22): своя flowtable, блокировка QUIC, игровой фильтр, шифрованный DNS, диагностика
+> блокировок, nfqws2-стратегии — §15 (главнее §4–§14); 1.3 (2026-09-22): сторож движка, монитор доступности и авторемонт, живая проверка сервисов,
+> агрегирующие запросы страниц, журнал, ограничения загрузок, только https для каталога — всё в §14 (при расхождении
+> §14 главнее §4–§11); v1.2 (2026-09-17): закрытый список warnings, `recommended_tier`, `reloaded`, лимиты LuCI; v1.1 — добавлены подписки по URL (§4, §6.2, §11), исключения в обоих режимах (§5), пресеты с уровнями и целями (§9). Это **контракт** между частями продукта: бэкенд (`packages/zaprett`),
 > веб-интерфейс (`packages/luci-app-zaprett`), бинарные пакеты (`packages/zaprett-nfqws*`), сборка (`build/`),
 > данные по умолчанию (`packages/zaprett/files/usr/share/zaprett/bundle`). Меняя интерфейс, меняй этот файл.
 >
@@ -43,7 +46,7 @@
 | `luci-app-zaprett` | all/noarch | JS-страницы, menu.d, acl.d, rpcd ucode-плагин `luci.zaprett` | `+luci-base +rpcd-mod-ucode +zaprett` |
 | `luci-i18n-zaprett-ru` | all/noarch | перевод (генерирует luci.mk из `po/ru`) | — |
 
-Версии: `zaprett`, `luci-app-zaprett` — `1.0.0-r1`; `zaprett-nfqws` — `72.13-r1`; `zaprett-nfqws2` — `1.0.5.2-r1`
+Версии: `zaprett`, `luci-app-zaprett` — `1.1.0-r1` (с 2026-09-23; было `1.0.0-r1`); `zaprett-nfqws` — `72.13-r1`; `zaprett-nfqws2` — `1.0.5.2-r1`
 (формат допустим для apk: `<digits>(.<digits>)*-r<N>`).
 
 Соответствие OpenWrt arch → каталог статических бинарников релиза (research/01 §1.4):
@@ -190,6 +193,12 @@ CIDR v4/v6. Запись на flash — только если sha256 измен�
 1. Взять текст стратегии (файл из манифеста); удалить висячие `\` в концах строк; разбить на токены по
    пробельным символам (как `split_whitespace` оригинала). `--comment` без `=` и все следующие токены до
    ближайшего токена, начинающегося с `--`, — выбросить (research/01 §5.3.2).
+   Затем каждую опцию привести к виду `--<полное имя>[=значение]` так, как её разбирает движок
+   (`getopt_long_only`, musl): `-имя` равно `--имя`, имя можно сократить до однозначного префикса, опция с
+   обязательным значением без `=` берёт следующее слово. Таблица имён — `long_options` nfqws v72.13 и nfqws2
+   1.0.5.2 (ветка Linux). Неизвестное или неоднозначное имя, значение у опции без значения, слово, не являющееся
+   опцией, — ошибка `bad_option`. Все дальнейшие проверки (зарезервированные опции, опции-файлы, профили, порты)
+   видят только канонические токены (ZERR-033). У nfqws2 `--new=<имя>` тоже начинает профиль.
 2. Нормализовать устаревшие режимы в значении `--dpi-desync=`: `split`→`fakedsplit`, `split2`→`multisplit`,
    `disorder`→`fakeddisorder`, `disorder2`→`multidisorder` (только nfqws).
 3. Раскрыть плейсхолдеры **внутри токена** (токен может быть `--dpi-desync-fake-quic=${bin:x}`):
@@ -527,3 +536,269 @@ ACL `luci-app-zaprett`: read — `status, items, strategy_show, user_get, check,
 работа службы, живучесть правил, веб-интерфейс, реальный трафик через провайдера, удаление. К каждому
 ключевому пункту обязателен отрицательный контроль, который должен упасть. Результаты и список
 непроверенного — `../tests/RESULTS.md`.
+
+---
+
+## 14. Изменения контракта v1.3 (2026-09-22)
+
+Раздел главнее §4–§11 при расхождении. Каждое имя ниже пересекает границу компонентов — менять только правкой
+этого раздела и повышением версии.
+
+### 14.1. UCI
+
+```
+config main 'main'
+	option watchdog '1'                # сторож движка: cron раз в 5 минут вызывает `zaprett ensure`
+
+config repo 'repo'
+	option url 'https://…'             # ТОЛЬКО https:// (http:// → bad_config, берётся значение по умолчанию)
+
+config monitor 'monitor'              # монитор доступности (новая секция; uci-defaults создаёт при отсутствии)
+	option enabled '1'
+	option interval '30'               # минут: 10 | 15 | 20 | 30 | 60
+	option threshold '3'               # подряд неудачных проверок до состояния degraded (1..20)
+	option auto_repair '0'             # 1 = при degraded запускать быстрый автоподбор с --apply-if-better
+	option max_targets '5'             # целей за проверку (1..20)
+	option timeout '8'                 # секунд на цель (2..30)
+```
+
+Неудачная проверка — доступно меньше половины целей (`ok * 2 < total`); `total == 0` — проверка не засчитывается
+(состояние `unknown`). Авторемонт — не чаще одного раза в 6 часов.
+
+### 14.2. cron
+
+Строки в `/etc/crontabs/root`, каждая со своей меткой, ровно одна или ни одной на метку; всё ведёт `zaprett cron sync`
+(вызывается из uci-defaults, из `start`/`stop`/`reload` init-скрипта и после сохранения настроек):
+
+| Метка | Строка | Когда есть |
+|---|---|---|
+| `# zaprett-autoupdate` | как в §7 | как в §7 |
+| `# zaprett-watchdog` | `*/5 * * * * /usr/bin/zaprett ensure --quiet # zaprett-watchdog` | `main.enabled=1` и `main.watchdog=1` |
+| `# zaprett-monitor` | `*/<interval> * * * * /usr/bin/zaprett monitor run --quiet # zaprett-monitor` (для 60 — `<M> * * * *`) | `main.enabled=1` и `monitor.enabled=1` |
+
+### 14.3. Новые и изменённые команды CLI
+
+| Команда | Результат (`--json`) |
+|---|---|
+| `ensure [--quiet]` | `{ok, action}`; `action` ∈ `none` (выключено или всё работает), `started` (движок не работал → `init start`), `fw_applied` (движок работал, таблицы не было → `fw apply`), `skipped` (идёт задача `test`); при `started` поле `reason: "not_running"`. Каждое действие ≠ `none`/`skipped` пишется в syslog |
+| `probe [--services id,id] [--foreground]` | (задача, имя `probe`) проверка `test_targets` сервисов **без остановки и перезапуска движка**; по умолчанию — сервисы из пресетов, чьи листы/ipset активны. Результат в `/var/run/zaprett/probe.json` |
+| `probe status` | `{ok, probe: null \| {started, finished, engine_running, strategy, ok, total, services:[{id, name, ok, total, avg_ms, targets:[{url, ok, ms, bytes, error}]}]}}` |
+| `monitor run [--quiet]` | одна проверка монитора (для cron; синхронно, не больше `max_targets` целей). Если выключен монитор или сервис, движок не работает или занята очередь задач — `{ok, skipped: "<причина>"}` без записи в историю |
+| `monitor status` | `{ok, monitor: {enabled, auto_repair, interval, threshold, state, checked_at, ok, total, consecutive_failures, history:[{t, ok, total}], last_repair: null \| {t, job_id}}}`; `state` ∈ `unknown`, `ok`, `degraded`, `repairing`; история — последние 48 проверок; файл `/var/run/zaprett/monitor.json` |
+| `test start … --apply-if-better` | исходная стратегия всегда входит в перебор; по завершении, если лучшая стратегия по `ratio` строго лучше исходной, она применяется. В `result` задачи и в `test-results.json` поле `applied: <id> \| null` |
+| `test status --brief` | как `test status`, но у элементов `results` и у `baseline` нет поля `targets` |
+| `log [--tail N]` | `{ok, lines:[строка]}` — строки syslog с `zaprett` или `nfqws` (N по умолчанию 200, максимум 1000) |
+| `page <overview\|lists\|strategies\|diagnostics>` | один процесс вместо нескольких: `{ok, status, job, …}`, где каждое поле — ответ соответствующей команды целиком (с его `ok`). overview: `status, job, presets, monitor, probe`; lists: `status, job, items, sources, presets`; strategies: `status, job, items, test` (test = `test status --brief`); diagnostics: `status, job, monitor` |
+| `status` (дополнено) | новые поля: `job: null \| {id, name, state, progress}`, `monitor: null \| {state, consecutive_failures, checked_at}` (null, если секции нет или выключена), `queue: null \| {packets}` (накопительный счётчик очереди qnum, 8-й столбец `/proc/net/netfilter/nfnetlink_queue`; null, если очереди нет), `ipv6_wan: bool` (у WAN есть маршрут `::/0`) |
+| `fw apply` (дополнено) | `{ok, changed}`: если отрисованный текст совпадает с `/var/run/zaprett/zaprett.nft` и таблица в ядре есть — ничего не применяется, `changed: false` |
+| `wizard apply` (дополнено) | при выборе сервиса с `tier: "full"` на роутере с `ram_total_mib < tiers.full.min_ram_mib` — применяется, но в `warnings` есть `low_memory` |
+
+**Уточнения по реализации (2026-09-22, зафиксированы бэкендом):**
+- `probe.strategy` — строка id или `null` (не объект). Цель: `{url, ok, ms, bytes, error}`; `error` при `ok` — `null`,
+  иначе код из закрытого списка: `timeout`, `reset`, `tls_cert`, `tls_error`, `connect_failed`, `http_error`,
+  `too_small`, `local_error`, `failed`.
+- `monitor run` → `skipped` ∈ `monitor_disabled`, `service_disabled`, `stopped`, `not_running`, `job_busy`.
+- `ensure` → `reason` ∈ `disabled`, `stopped`, `test_running`, `not_running`; неудачный запуск —
+  `{ok:false, error:"engine_not_running", action:"started"}`.
+- Строки cron `watchdog`/`monitor` (§14.2) есть при `main.enabled=1` **и служба не остановлена командой `stop`**:
+  `stop` пишет маркер `/var/run/zaprett/stopped`, `start` его снимает; при маркере `ensure` → `action:none, reason:stopped`.
+- Неверные значения секции monitor в `details.bad_options` — с префиксом: `monitor.interval`, `monitor.timeout`, …
+- В `job.result` задачи `probe` и в ответе `monitor run` счётчики называются `reachable` и `total` (поле `ok` ответа —
+  признак успеха); в `probe status` и `monitor status` — `ok` и `total`, как выше.
+- `status.job` — последняя задача в любом состоянии `{id, name, state, progress}`, `null`, если задач не было.
+
+Имена задач (`job.name`) дополнены: `probe`. Авторемонт монитора запускает задачу `test` (с `--quick --apply-if-better`).
+
+### 14.4. Предупреждения (дополнение закрытого списка §6.2)
+
+`ipv6_wan_unhandled` — у WAN есть IPv6 (`ipv6_wan`), а `main.ipv6=0`: IPv6-соединения идут без обхода.
+`low_memory` — активные уровень/подписки тяжелы для этого роутера (сервис уровня `full` при ОЗУ < 200 МиБ или сумма
+`ram_mib` включённых подписок > половины `MemAvailable`).
+`monitor_degraded` — монитор в состоянии `degraded` или `repairing`.
+
+Уровень показа решает UI: `empty_profile_removed`, `strategy_option_ignored`, `test_running` — информационные
+(не тревога), остальные — предупреждения.
+
+### 14.5. Пределы загрузок
+
+Любая загрузка через `probe.sh` обязана иметь `max_bytes`: индекс репозитория 2 МиБ, манифест 64 КиБ, артефакт
+32 МиБ, подписка 16 МиБ (как было). Параллельность загрузок артефактов — 4, при `MemAvailable < 64 МиБ` — 1;
+подписок — 2, при `MemAvailable < 48 МиБ` — 1.
+
+### 14.6. Двуязычные метаданные
+
+`presets.json`: у сервиса необязательные `name_en`, `description_en`, `note_en`; у `tiers.*` — `name_en` при наличии
+`name`. Манифесты встроенных листов bundle — необязательные `name_en`, `description_en`; `items` отдаёт их как есть.
+UI при языке интерфейса не `ru*` берёт `*_en`, если поле есть, иначе исходное.
+Китайские `name_zh`, `description_zh`, `note_zh` (сервисы и их `variants`, манифесты bundle — листы и стратегии) —
+необязательные, всегда в паре с `*_en`, используются Windows-приложением (zh-CN: `*_zh`, иначе `*_en`); роутер их пропускает.
+
+### 14.7. LuCI / rpcd
+
+Новые методы `luci.zaprett`: `probe_start {services?: [id]}` → `probe`; `probe_status` → `probe status`;
+`monitor_status` → `monitor status`; `log {tail?}` → `log`; `page {name}` → `page <name>`; `test_status {brief?: bool}`;
+`test_start` дополнен `apply_if_better?: bool` → `--apply-if-better`.
+ACL: read — `probe_status, monitor_status, log, page`; write — `probe_start`.
+
+---
+
+## 15. Изменения контракта v1.4 (2026-09-22)
+
+Раздел главнее §4–§14 при расхождении.
+
+### 15.1. Собственная flowtable вместо отключения ускорения
+
+`main.flow_offload` принимает третье значение `own`: fw4-ускорение (`flow_offloading`, `flow_offloading_hw`) выключается
+как в `auto` (исходные значения сохраняются и возвращаются при остановке), а в таблице `inet zaprett` ставится своя
+`flowtable ft` и цепочка `forward_offload` (hook forward, priority filter+1), которая переносит соединение в flowtable
+только **после** того, как движок увидел его первые пакеты: `meta l4proto { tcp, udp } ct original packets > <max(tcp_pkt_out, udp_pkt_out)> flow add @ft`.
+Устройства flowtable — как у fw4 (`related_physdevs` зон с существующим `/sys/class/net/<dev>`); `flags offload` —
+только если исходно был включён `flow_offloading_hw`. Если устройств нет или `nft -c` отвергает flowtable — таблица
+ставится без неё, предупреждение `flowtable_failed`. `status.flow_offload` дополняется полем `own: bool` (своя
+flowtable в ядре). Умолчание для новых установок — решает бэкенд по результату проверки на стенде (фиксируется в
+§15 при приёмке); у существующих установок значение не меняется.
+
+### 15.2. Блокировка QUIC и игровой фильтр
+
+```
+config main 'main'
+	option quic_block '0'              # 1: UDP 443 из LAN в WAN отбрасывается (браузеры уходят на TCP, где работает обход)
+	option game_filter '0'             # 1: дополнительный профиль движка для игр
+	option game_ports_tcp '1024-65535'
+	option game_ports_udp '1024-65535'
+```
+
+`quic_block` — правило в `inet zaprett` (hook forward), с учётом фильтра клиентов (`clients_mode`); трафик самого роутера
+не трогается. `game_filter` — генератор добавляет в конец аргументов отдельный профиль (`--new`) с `--filter-tcp`/
+`--filter-udp` по этим портам и **только по активным include-ipset** (без ipset профиль не добавляется,
+предупреждение `game_filter_no_ipsets`); набор опций профиля — по образцу Game Filter Flowseal (бэкенд фиксирует
+его в BACKEND.md). Порты профиля попадают в nft как обычные порты стратегии.
+
+### 15.3. Шифрованный DNS
+
+`status.dns = {encrypted: bool, provider: "https-dns-proxy"|"stubby"|"dnscrypt-proxy"|null}` — провайдер считается
+включённым, если пакет установлен и его служба запущена. У сервиса в `presets.json` необязательное `needs_dns: true`.
+Предупреждение `dns_plain` (информационное) — активен сервис с `needs_dns` и `dns.encrypted=false`.
+Команда `dns setup` (задача `dns-setup`): установить `https-dns-proxy` (+ `luci-app-https-dns-proxy`, если стоит LuCI)
+штатным менеджером пакетов, запустить; повторный вызов при уже работающем — `{ok, changed:false}`. `dns status` →
+`{ok, dns:{…как в status}}`.
+
+### 15.4. Диагностика «чем блокирует провайдер»
+
+`diagnose [--services id,id] [--foreground]` (задача `diagnose`) и `diagnose status` →
+`{ok, diagnose: null | {started, finished, engine_running, targets:[{url, host, verdict, dns:{system:[ip], doh:[ip], spoofed}, detail}], summary:{verdict, counts:{<verdict>: N}}}}`.
+Цели — `test_targets` выбранных (по умолчанию активных) сервисов. `verdict` ∈ `ok`, `dns_spoof` (системный DNS дал адрес,
+которого нет в ответе DoH, или адрес-заглушку), `ip_block` (TCP-соединение до адреса из DoH не устанавливается),
+`tls_block` (соединение есть, TLS рвётся/зависает), `throttle` (данные идут и обрываются/замирают на 14–24 КБ),
+`http_block` (ответ-заглушка провайдера), `unknown`. Проверка идёт **с выключенным обходом для этих запросов** не
+требуется: результат описывает, что видит роутер сейчас, и в `engine_running` сказано, работал ли движок.
+`summary.verdict` — самый частый не-`ok` вердикт или `ok`.
+
+### 15.5. Предупреждения (дополнение закрытого списка)
+
+`flowtable_failed`, `game_filter_no_ipsets`, `dns_plain` (информационное).
+
+### 15.6. nfqws2-стратегии в bundle
+
+`bundle/manifests/strategies/nfqws2/*.json` + `bundle/files/strategies/nfqws2/*.txt` — стратегии движка zapret2 (id с
+префиксом `z2-`), каждая проходит `nfqws2 --intercept=0`. `presets.json` → `defaults.strategy_nfqws2` (id по умолчанию для
+nfqws2) и `defaults.quick_test_strategies_nfqws2`. Автоподбор при `engine=nfqws2` берёт кандидатов из этих списков.
+
+### 15.7. LuCI / rpcd
+
+Новые методы: `dns_status` → `dns status`; `dns_setup` → `dns setup`; `diagnose_start {services?: [id]}` → `diagnose`;
+`diagnose_status` → `diagnose status`. ACL: read — `dns_status, diagnose_status`; write — `dns_setup, diagnose_start`.
+`page diagnostics` дополняется полями `dns`, `diagnose`; `page overview` — полем `dns`.
+
+### 15.8. Уточнения по реализации (2026-09-22, приёмка backend2)
+
+1. §15.1: умолчание `flow_offload` для **новых** установок — `own`. Своя flowtable ставится, только если ускорение fw4 было
+   включено до zaprett; иначе `own` работает как `auto`. Порядок попыток: аппаратная (`flags offload`, нижние устройства
+   мостов и VLAN) → программная → без flowtable + `flowtable_failed`. Выигрыш в скорости на слабом железе не измерен
+   (на x86-VM разница в пределах разброса); доказано, что при `keep` движок видит только рукопожатие (счётчик очереди
+   3 пакета на запрос против 12 при `own`), а при `own` соединения получают `[OFFLOAD]`.
+2. §15.2 QUIC: `counter drop` в цепочке `forward_quic` (hook forward, priority filter−1); фильтр клиентов действует и во
+   время автоподбора.
+3. §15.2 игровой фильтр: два профиля (TCP и UDP) с guard-ipset и `--ipset-exclude`; пустой include-ipset активным не
+   считается; есть вариант для nfqws2; широкие порты штатно дают `wide_port_range`.
+4. §15.4: `throttle` — тело 1…24576 байт (uclient-fetch видит только тело: TLS и заголовки съедают первые килобайты);
+   подменённый сертификат → `http_block`; сайт открылся → `ok`, даже если адрес не совпал с DoH (CDN). Дополнительные поля
+   цели: `service`, `reason`, `error`, `bytes`, `tcp`. При равенстве в `summary.verdict` решает порядок списка вердиктов.
+5. §15.3: коды ошибок `no_package_manager`, `package_update_failed`, `package_install_failed`, `dns_not_running`.
+   Провайдер «работает», если его init-скрипт есть и у procd-службы есть работающий экземпляр.
+6. Классификатор загрузок (`probe`, монитор, автоподбор): отказ TCP на 24.10 печатается uclient-fetch как
+   «SSL error: NET - Sending information through the socket failed» — это `connect_failed`, не `tls_error`.
+7. База генератора для nfqws2: `--lua-init` для `zapret-lib`, `zapret-antidpi`, `zapret-auto` (оркестратор `circular`).
+   `engine nfqws2` без выбранной стратегии берёт `presets.defaults.strategy_nfqws2`, если она установлена.
+
+---
+
+## 16. Изменения контракта v1.5 (2026-09-22): собственные списки проекта
+
+### 16.1. Что это
+
+Списки доменов и IP-сетей, которые **собирает генератор проекта** (`tools/lists/`) из первоисточников, а не копирует чужие
+готовые списки: официальные домены сервисов и их документация, сертификаты сервисов (Certificate Transparency),
+анонсы автономных систем сервиса (RIPEstat), официальные опубликованные диапазоны. Каждая запись проверяется
+(домен резолвится через два независимых DoH-резолвера; сеть анонсируется AS сервиса), журнал сборки с причиной
+включения/исключения каждой записи хранится в репозитории. Лицензия списков — лицензия проекта (MIT).
+
+### 16.2. Варианты на сервис
+
+У каждого сервиса несколько списков (id вида `zaprett-<сервис>` и `zaprett-<сервис>-<вариант>`):
+
+| Вариант | Смысл |
+|---|---|
+| `zaprett-<сервис>` (основной) | минимальный достаточный набор для сайта и приложения; **id существующих списков сохраняются** (`zaprett-youtube`, `zaprett-discord`, `zaprett-telegram`, `zaprett-rutracker`) |
+| `-full` | расширенный: вспомогательные домены, CDN, API, домены приложений ТВ/консолей |
+| `-ipset` / `-ipset6` | IP-сети сервиса (IPv4 / IPv6), только если у сервиса есть свои AS или официальные диапазоны |
+| `-voice` и подобные | узкие наборы под отдельную функцию (голос, звонки, игровые серверы), если нужны |
+
+Манифест дополнительно содержит `service` (id сервиса из presets), `variant` (`core`, `full`, `ipset`, `ipset6`, `voice`, …),
+`generated` (дата сборки `YYYY-MM-DD`), `method` (кратко: откуда и как собрано), `author: "zaprett-openwrt"`, `license: "MIT"`,
+`name_en`, `description_en`.
+
+### 16.3. Пресеты
+
+У сервиса в `presets.json` необязательный массив `variants: [{id, name, name_en, description, description_en, lists, ipsets,
+tier}]` — альтернативные наборы (например, «расширенный»); `lists`/`ipsets` самого сервиса — основной вариант, как раньше.
+Мастер и UI варианты поддерживают отдельной доработкой; до неё варианты доступны как обычные списки на странице «Списки».
+
+---
+
+## 17. Изменения контракта v1.6 (2026-09-22): автоподбор без отключения обхода
+
+Сейчас автоподбор (§10) останавливает движок на всё время перебора: вся сеть остаётся без обхода. Новый режим
+`isolated` — основной движок продолжает работать для клиентов, а стратегии-кандидаты проверяются вторым
+экземпляром движка только на трафике проверочных запросов:
+
+- проверочные загрузки автоподбора выполняются от отдельного системного пользователя `zaprett-test` (создаётся
+  uci-defaults идемпотентно; uid/gid фиксированы в BACKEND.md), движок-кандидат — procd-инстанс `test` на очереди
+  `qnum+1`;
+- в таблице `inet zaprett` на время теста — цепочки для локального трафика с `meta skuid <uid zaprett-test>` в очередь
+  `qnum+1`; этот же трафик исключается из основной очереди; после теста цепочки и инстанс снимаются (в том числе при
+  отмене и при падении задачи — восстановление обязательно, как у `recover_dead_test`);
+- базовый прогон «без обхода» в режиме `isolated` — проверочные запросы от `zaprett-test` без очереди (основной движок
+  их не видит);
+- если изоляция невозможна (нет пользователя, `nft -c` отверг правила, второй инстанс не стартовал) — прежний режим
+  `exclusive` (§10) с записью причины; `test start --exclusive` — принудительно прежний режим;
+- `test-results.json` и `test status` дополняются полем `mode: "isolated" | "exclusive"` и, при откате, `mode_reason` ∈
+  `forced`, `engine_not_running`, `no_test_user`, `qnum_out_of_range`, `mark_conflict`, `write_failed`, `nft_rejected`,
+  `instance_failed`. Пользователь `zaprett-test` — uid/gid 29411; метка проверочного трафика `0x04000000` (ct mark).
+
+Фильтр клиентов (`clients_mode`) и режим `test_mode` генератора в `isolated` применяются только к инстансу `test`;
+основной инстанс остаётся с рабочей конфигурацией.
+
+### 16.4. Варианты в мастере (v1.7, 2026-09-23)
+
+- `wizard apply <service>[:<variant>]...` — для сервиса с `variants` можно указать id варианта; без варианта — основной.
+  Включаются `lists`/`ipsets` выбранного варианта; списки других вариантов этого же сервиса, включённые мастером
+  ранее, выключаются (пользовательские `user-*` не трогаются никогда). Неизвестный вариант → `{ok:false, error:"unknown_variant"}`.
+  Уточнение (приёмка 2026-09-23): мастер не хранит, что включал он сам, поэтому выключает списки всех наборов невыбранных
+  сервисов и прочих вариантов выбранных (продолжение прежнего поведения); общие элементы выбранных наборов не теряются.
+  Ответ дополнен `variants: {<service>: <variant>|null}`; один сервис с разными вариантами → `bad_args`.
+- `presets` отдаёт у сервиса `enabled_variant`: id варианта, чьи списки сейчас все включены (`null` — основной или не
+  включён); варианты с `tier: "full"` на роутере с ОЗУ < `tiers.full.min_ram_mib` дают `low_memory`, как сервис.
+- rpcd `wizard_apply {services: ["youtube", "discord:full"]}` — строки вида `id` или `id:variant` (обе части по правилу id).
+- LuCI: в «Быстрой настройке» у сервиса с вариантами — выбор варианта (основной + варианты с описанием и оценкой
+  нагрузки); текущий — по `enabled_variant`.

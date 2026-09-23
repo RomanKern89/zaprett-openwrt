@@ -22,10 +22,10 @@ export const LIST_TYPES = [ 'list', 'list_exclude', 'ipset', 'ipset_exclude' ];
 export const STRATEGY_TYPES = [ 'nfqws', 'nfqws2' ];
 
 export const USER_LISTS = {
-	'user-hosts': { type: 'list', file: 'hosts-include.txt', name: 'Мои домены' },
-	'user-hosts-exclude': { type: 'list_exclude', file: 'hosts-exclude.txt', name: 'Мои домены-исключения' },
-	'user-ipset': { type: 'ipset', file: 'ipset-include.txt', name: 'Мои IP-сети' },
-	'user-ipset-exclude': { type: 'ipset_exclude', file: 'ipset-exclude.txt', name: 'Мои IP-сети-исключения' }
+	'user-hosts': { type: 'list', file: 'hosts-include.txt', name: 'Мои домены', name_en: 'My domains' },
+	'user-hosts-exclude': { type: 'list_exclude', file: 'hosts-exclude.txt', name: 'Мои домены-исключения', name_en: 'My excluded domains' },
+	'user-ipset': { type: 'ipset', file: 'ipset-include.txt', name: 'Мои IP-сети', name_en: 'My IP networks' },
+	'user-ipset-exclude': { type: 'ipset_exclude', file: 'ipset-exclude.txt', name: 'Мои IP-сети-исключения', name_en: 'My excluded IP networks' }
 };
 
 export const MAX_MANIFEST_BYTES = 65536;
@@ -98,6 +98,9 @@ export function parse_manifest(obj, itype, source, file_id, root) {
 		version: version,
 		author: clean_str(obj.author, 128),
 		description: clean_str(obj.description, 1024),
+		// optional English metadata (contract v1.3 §14.6); null when the manifest has none
+		name_en: clean_str(obj.name_en, 128) || null,
+		description_en: clean_str(obj.description_en, 1024) || null,
 		dependencies: deps,
 		file: file,
 		// items in /etc/zaprett come from the repository or from URL subscriptions (contract v1.1)
@@ -113,7 +116,7 @@ export function parse_manifest(obj, itype, source, file_id, root) {
 function add_user_items(idx) {
 	for (let id, u in USER_LISTS) {
 		idx.items[u.type][id] = {
-			id: id, type: u.type, name: u.name, version: '', author: '', description: '',
+			id: id, type: u.type, name: u.name, name_en: u.name_en, version: '', author: '', description: '', description_en: null,
 			dependencies: [], file: P.user + '/' + u.file, source: 'user', sha256: null,
 			installed_at: null, manifest_url: null, manifest_path: null
 		};
@@ -127,7 +130,7 @@ function add_user_items(idx) {
 			if (!is_id(id) || substr(id, 0, 5) != 'user-' || !is_file(dir + '/' + n))
 				continue;
 			idx.items[eng][id] = {
-				id: id, type: eng, name: id, version: '', author: '', description: 'Своя стратегия',
+				id: id, type: eng, name: id, name_en: null, version: '', author: '', description: 'Своя стратегия', description_en: 'Own strategy',
 				dependencies: [], file: dir + '/' + n, source: 'user', sha256: null,
 				installed_at: null, manifest_url: null, manifest_path: null
 			};
@@ -284,6 +287,8 @@ export function describe(idx, cfg, only_type) {
 				version: it.version,
 				author: it.author,
 				description: it.description,
+				name_en: it.name_en ?? null,
+				description_en: it.description_en ?? null,
 				source: it.source,
 				file: it.file,
 				entries: entries_of(it),

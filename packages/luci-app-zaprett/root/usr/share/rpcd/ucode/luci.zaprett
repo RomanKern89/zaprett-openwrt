@@ -27,9 +27,13 @@ import * as fs from 'fs';
 const CLI = '/usr/bin/zaprett';
 const TMPDIR = '/var/run/luci-zaprett';
 
-const ID_RE = /^[A-Za-z0-9._-]{1,96}$/;
-const USER_ID_RE = /^user-[A-Za-z0-9._-]{1,91}$/;
-const SOURCE_NAME_RE = /^[a-z0-9_]{1,32}$/;
+// Lengths are checked with length(): ucode compiles a regex with a large bounded
+// repetition like {1,96} on every call, which is about 100 times slower.
+const ID_RE = /^[A-Za-z0-9._-]+$/;
+const USER_ID_RE = /^user-[A-Za-z0-9._-]+$/;
+const SOURCE_NAME_RE = /^[a-z0-9_]+$/;
+const MAX_ID = 96;
+const MAX_SOURCE_NAME = 32;
 const SOURCE_URL_RE = /^https:\/\/[A-Za-z0-9.-]+(:[0-9]{1,5})?(\/[A-Za-z0-9._~%!$&'()*+,;=:@\/?#-]*)?$/;
 
 const MAX_TEXT = 1048576;      // CLI limit for user lists and strategies
@@ -40,6 +44,7 @@ const MAX_SERVICES = 32;
 const MAX_STRATEGIES = 200;
 const MAX_SOURCES = 64;
 const MAX_TAIL = 5000;
+const MAX_LOG_TAIL = 1000;     // "zaprett log --tail N" accepts at most 1000 lines
 const MAX_TITLE = 128;
 const MAX_URL = 2048;
 
@@ -49,6 +54,7 @@ const TIMEOUT_CHANGE = 19;     // may restart the engine; LuCI RPC timeout is 20
 const SERVICE_ACTIONS = [ 'start', 'stop', 'restart', 'enable', 'disable' ];
 const ITEM_TYPES = [ 'list', 'list_exclude', 'ipset', 'ipset_exclude', 'nfqws', 'nfqws2', 'bin', 'lua_lib', 'byedpi' ];
 const SOURCE_TYPES = [ 'list', 'list_exclude', 'ipset', 'ipset_exclude' ];
+const PAGES = [ 'overview', 'lists', 'strategies', 'diagnostics' ];
 
 // $1 = stdin file, $2 = stdout file, $3 = stderr file, the rest is argv.
 const EXEC_SCRIPT = 'in=$1; out=$2; err=$3; shift 3; exec "$@" <"$in" >"$out" 2>"$err"';
@@ -60,11 +66,25 @@ function fail(code, message) {
 }
 
 function is_id(v) {
-	return type(v) == 'string' && match(v, ID_RE) != null;
+	return type(v) == 'string' && length(v) <= MAX_ID && match(v, ID_RE) != null;
 }
 
 function is_user_id(v) {
-	return type(v) == 'string' && match(v, USER_ID_RE) != null;
+	return type(v) == 'string' && length(v) <= MAX_ID && match(v, USER_ID_RE) != null;
+}
+
+// "<service>" or "<service>:<variant>" (contract v1.7 §16.4): both parts follow the id rule.
+function is_service_ref(v) {
+	if (type(v) != 'string' || length(v) > MAX_ID * 2 + 1)
+		return false;
+
+	const parts = split(v, ':');
+
+	return (length(parts) == 1 || length(parts) == 2) && length(filter(parts, p => !is_id(p))) == 0;
+}
+
+function is_source_name(v) {
+	return type(v) == 'string' && length(v) <= MAX_SOURCE_NAME && match(v, SOURCE_NAME_RE) != null;
 }
 
 function snippet(s) {
@@ -73,9 +93,9 @@ function snippet(s) {
 	return (length(s) > 400) ? substr(s, 0, 400) + '...' : s;
 }
 
-// Validates an optional array of ids; returns the de-duplicated array,
-// or null when the value is invalid.
-function id_list(v, max, allow_empty) {
+// Validates an optional array of ids (or of values accepted by valid());
+// returns the de-duplicated array, or null when the value is invalid.
+function id_list(v, max, allow_empty, valid) {
 	if (v == null)
 		return allow_empty ? [] : null;
 
@@ -85,7 +105,7 @@ function id_list(v, max, allow_empty) {
 	let seen = {}, res = [];
 
 	for (let id in v) {
-		if (!is_id(id))
+		if (!(valid ? valid(id) : is_id(id)))
 			return null;
 
 		if (!seen[id]) {
@@ -141,6 +161,15 @@ function trim_test_targets(res) {
 			delete r.targets;
 
 	res.targets_trimmed = true;
+
+	return res;
+}
+
+// "page strategies" embeds the answer of "test status --brief"; an older
+// backend may ignore --brief there, so the same trimming applies to it.
+function trim_page(res) {
+	if (type(res.test) == 'object')
+		trim_test_targets(res.test);
 
 	return res;
 }
@@ -228,7 +257,7 @@ function source_list(v, allow_empty) {
 	let seen = {}, res = [];
 
 	for (let name in v) {
-		if (type(name) != 'string' || match(name, SOURCE_NAME_RE) == null)
+		if (!is_source_name(name))
 			return null;
 
 		if (!seen[name]) {
@@ -433,10 +462,10 @@ const methods = {
 	wizard_apply: {
 		args: { services: [] },
 		call: function(req) {
-			const services = id_list(req.args?.services, MAX_SERVICES, false);
+			const services = id_list(req.args?.services, MAX_SERVICES, false, is_service_ref);
 
 			if (!services)
-				return fail('invalid_argument', 'services must be a non-empty array of service ids');
+				return fail('invalid_argument', 'services must be a non-empty array of "id" or "id:variant" strings');
 
 			return run([ 'wizard', 'apply', ...services ], TIMEOUT_CHANGE);
 		}
@@ -467,7 +496,7 @@ const methods = {
 
 			/* Only the name is required: the backend keeps the values of an existing
 			 * subscription for every field that is left out (commands.uc source_values). */
-			if (type(a.name) != 'string' || match(a.name, SOURCE_NAME_RE) == null)
+			if (!is_source_name(a.name))
 				return fail('invalid_argument', 'name must match ^[a-z0-9_]{1,32}$');
 
 			if (a.title != null && !is_plain_text(a.title, MAX_TITLE))
@@ -506,7 +535,7 @@ const methods = {
 		call: function(req) {
 			const name = req.args?.name;
 
-			if (type(name) != 'string' || match(name, SOURCE_NAME_RE) == null)
+			if (!is_source_name(name))
 				return fail('invalid_argument', 'name must match ^[a-z0-9_]{1,32}$');
 
 			return run([ 'sources', 'delete', name ], TIMEOUT_CHANGE);
@@ -514,16 +543,20 @@ const methods = {
 	},
 
 	test_start: {
-		args: { strategies: [], quick: false },
+		args: { strategies: [], quick: false, apply_if_better: false },
 		call: function(req) {
 			const strategies = id_list(req.args?.strategies, MAX_STRATEGIES, true);
 			const quick = req.args?.quick;
+			const apply_if_better = req.args?.apply_if_better;
 
 			if (!strategies)
 				return fail('invalid_id', 'strategies must be an array of valid strategy ids');
 
 			if (quick != null && type(quick) != 'bool')
 				return fail('invalid_argument', 'quick must be a boolean');
+
+			if (apply_if_better != null && type(apply_if_better) != 'bool')
+				return fail('invalid_argument', 'apply_if_better must be a boolean');
 
 			const args = [ 'test', 'start' ];
 
@@ -533,13 +566,104 @@ const methods = {
 			if (quick)
 				push(args, '--quick');
 
+			if (apply_if_better)
+				push(args, '--apply-if-better');
+
 			return run(args, TIMEOUT_READ);
 		}
 	},
 
 	test_status: {
+		args: { brief: false },
 		call: function(req) {
-			return run([ 'test', 'status' ], TIMEOUT_READ, null, trim_test_targets);
+			const brief = req.args?.brief;
+
+			if (brief != null && type(brief) != 'bool')
+				return fail('invalid_argument', 'brief must be a boolean');
+
+			return run(brief ? [ 'test', 'status', '--brief' ] : [ 'test', 'status' ], TIMEOUT_READ, null, trim_test_targets);
+		}
+	},
+
+	probe_start: {
+		args: { services: [] },
+		call: function(req) {
+			const services = id_list(req.args?.services, MAX_SERVICES, true);
+
+			if (!services)
+				return fail('invalid_argument', 'services must be an array of service ids');
+
+			return run(length(services) ? [ 'probe', '--services', join(',', services) ] : [ 'probe' ], TIMEOUT_READ);
+		}
+	},
+
+	probe_status: {
+		call: function(req) {
+			return run([ 'probe', 'status' ], TIMEOUT_READ);
+		}
+	},
+
+	monitor_status: {
+		call: function(req) {
+			return run([ 'monitor', 'status' ], TIMEOUT_READ);
+		}
+	},
+
+	dns_status: {
+		call: function(req) {
+			return run([ 'dns', 'status' ], TIMEOUT_READ);
+		}
+	},
+
+	// Installing the package is a background job ("dns-setup") of the backend.
+	dns_setup: {
+		call: function(req) {
+			return run([ 'dns', 'setup' ], TIMEOUT_READ);
+		}
+	},
+
+	diagnose_start: {
+		args: { services: [] },
+		call: function(req) {
+			const services = id_list(req.args?.services, MAX_SERVICES, true);
+
+			if (!services)
+				return fail('invalid_argument', 'services must be an array of service ids');
+
+			return run(length(services) ? [ 'diagnose', '--services', join(',', services) ] : [ 'diagnose' ], TIMEOUT_READ);
+		}
+	},
+
+	diagnose_status: {
+		call: function(req) {
+			return run([ 'diagnose', 'status' ], TIMEOUT_READ);
+		}
+	},
+
+	log: {
+		args: { tail: 0 },
+		call: function(req) {
+			const tail = req.args?.tail;
+
+			if (tail == null)
+				return run([ 'log' ], TIMEOUT_READ);
+
+			if (type(tail) != 'int' || tail < 1 || tail > MAX_LOG_TAIL)
+				return fail('invalid_argument', `tail must be an integer between 1 and ${MAX_LOG_TAIL}`);
+
+			return run([ 'log', '--tail', tail ], TIMEOUT_READ);
+		}
+	},
+
+	page: {
+		args: { name: 'name' },
+		call: function(req) {
+			const name = req.args?.name;
+
+			if (type(name) != 'string' || index(PAGES, name) < 0)
+				return fail('invalid_argument', 'name must be one of: ' + join(', ', PAGES));
+
+			return run([ 'page', name ], TIMEOUT_READ, null, trim_page);
 		}
 	},
 
@@ -592,5 +716,23 @@ const methods = {
 		}
 	}
 };
+
+// rpcd itself refuses arguments that are not declared in "args"; the same
+// check here keeps the plugin strict when it is called in any other way.
+// rpcd adds "ubus_rpc_session" to every call.
+function strict(name, def) {
+	const handler = def.call;
+
+	def.call = function(req) {
+		for (let k in keys(req?.args ?? {}))
+			if (k != 'ubus_rpc_session' && !exists(def.args ?? {}, k))
+				return fail('invalid_argument', `unknown argument "${k}" for ${name}`);
+
+		return handler(req);
+	};
+}
+
+for (let name, def in methods)
+	strict(name, def);
 
 return { 'luci.zaprett': methods };

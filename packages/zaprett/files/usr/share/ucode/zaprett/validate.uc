@@ -329,9 +329,27 @@ export function ranges_to_strings(ranges) {
 	return map(ranges, (r) => (r[0] == r[1]) ? ('' + r[0]) : sprintf('%d-%d', r[0], r[1]));
 };
 
+// Ports of the game filter (contract v1.4 §15.2): a port filter without negation and without port 0.
+// Returns the merged list as "a,b-c" or null.
+export function game_ports(value) {
+	let p = parse_port_filter(value);
+	if (!p.ok || p.negated)
+		return null;
+	for (let r in p.ranges)
+		if (r[0] < 1)
+			return null;
+	return join(',', ranges_to_strings(merge_ranges(p.ranges)));
+};
+
 export function url_valid(u) {
 	return type(u) == 'string' && length(u) <= 2048 &&
 		match(u, /^https?:\/\/[A-Za-z0-9.-]+(:[0-9]{1,5})?(\/[A-Za-z0-9._~%!$&'()*+,;=:@\/?#-]*)?$/) != null;
+};
+
+// Addresses the router downloads configuration from (repository index, subscriptions): https only (contract v1.3).
+// url_valid() itself also accepts http:// — manifests and test targets of the repository keep using it.
+export function https_url_valid(u) {
+	return url_valid(u) && substr(u, 0, 8) == 'https://';
 };
 
 export function sha256_valid(s) {

@@ -13,5 +13,9 @@
   "source": "bundle",
   "sha256": "91833f28f7bfcce5d7c49e791ff400cacbb156afb6bcbc8795ed3a5c05995e79",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt5.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt5.json",
+  "name_en": "strategy-alt5",
+  "description_en": "Strategy alt5 from the zapret for Windows repository",
+  "name_zh": "strategy-alt5",
+  "description_zh": "来自 Windows 版 zapret 仓库的 alt5 策略"
 }

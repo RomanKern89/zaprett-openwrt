@@ -1,0 +1,117 @@
+{
+ "anchor": "discord.com",
+ "fetched": "2026-09-22",
+ "san_sets": [
+  [
+   "*.discord.com",
+   "discord.com"
+  ],
+  [
+   "androiddiag.discord.com"
+  ],
+  [
+   "creator-support.discord.com",
+   "support-ads.discord.com",
+   "support-apps.discord.com",
+   "support-dev.discord.com",
+   "support.discord.com"
+  ],
+  [
+   "creator-support.discord.com",
+   "support-apps.discord.com",
+   "support-dev.discord.com",
+   "support.discord.com"
+  ],
+  [
+   "enam-rtc-sfu-finder.discord.com"
+  ],
+  [
+   "events.discord.com"
+  ],
+  [
+   "otelcol.discord.com"
+  ],
+  [
+   "prod-wf1.discord.com"
+  ],
+  [
+   "prod-wf2.discord.com"
+  ],
+  [
+   "prod-wf3.discord.com"
+  ],
+  [
+   "rtc-sfu-finder.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-da.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-de.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-en.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-es-es.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-fr.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-it.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-ja.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-ko.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-nl.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-pl.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-pt-br.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-ru.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-sv-se.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-tr.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-zh-cn.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022-zh-tw.discord.com"
+  ],
+  [
+   "snowsgiving-tale-2022.discord.com"
+  ],
+  [
+   "static-edge.discord.com"
+  ],
+  [
+   "static.discord.com"
+  ]
+ ],
+ "since": "2025-09-22",
+ "sources": {
+  "certspotter": {
+   "certs": 100,
+   "error": "HTTP Error 429: Too Many Requests",
+   "ok": true,
+   "pages": 1
+  },
+  "crt.sh": {
+   "error": "HTTP Error 504: Gateway Time-out",
+   "ok": false
+  }
+ }
+}

@@ -84,7 +84,7 @@ let exports = {};
 for (let n in sort(fs.lsdir(MODDIR) ?? []))
 	if (substr(n, -3) == '.uc')
 		exports[substr(n, 0, length(n) - 3)] = UC.exports_of(fs.readfile(MODDIR + '/' + n));
-T.ok(length(keys(exports)) == 15 && exports.nft?.is_applied && exports.net?.probe && !exports.net?.is_applied,
+T.ok(length(keys(exports)) == 21 && exports.engine_options?.ENGINE_OPTIONS && exports.isolate?.refusal && exports.nft?.is_applied && exports.net?.probe && !exports.net?.is_applied,
 	sprintf('exports collected from %d modules (is_applied only in nft)', length(keys(exports))));
 T.eq(UC.module_imports("import * as N from 'zaprett.net';\nimport * as NF from 'zaprett.nft';\n"), { N: 'net', NF: 'nft' },
 	'module aliases parsed');

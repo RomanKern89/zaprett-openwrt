@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "f8f7e045527d2b14a41a53c869a79ddb152299b1f2f5a2a8b0ba6fddf369d5f7",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discordfix-mgts.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-discordfix-mgts.json",
+  "name_en": "strategy-discordfix-mgts",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-discordfix-mgts",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

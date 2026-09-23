@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-general",
+  "type": "nfqws2",
+  "name": "nfqws2: general",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос стратегии strategy-general (Flowseal) на nfqws2. TLS: фейковый ClientHello с фулингом MD5 и неверным номером последовательности (8 повторов), затем настоящий ClientHello режется посередине домена и отправляется частями в обратном порядке (multidisorder). QUIC (UDP 443) — фейк QUIC Initial Google 6 раз; голос Discord (UDP 19294–19344, 50000–50100) — фейк из нулей 6 раз; HTTP — фейк с MD5 и autottl, затем разрезание запроса. Рекомендуется начать с неё.",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-general.txt",
+  "source": "bundle",
+  "sha256": "95459c98cfa95c93cba08dbfa724ea8e28dcf08091970cfbbf450a251f327ddf",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: general",
+  "description_en": "Port of strategy-general (Flowseal) to nfqws2. TLS: a fake ClientHello with MD5 and bad-sequence fooling (8 repeats), then the real ClientHello is cut in the middle of the domain and sent in reverse order (multidisorder). QUIC (UDP 443) gets a Google QUIC Initial fake 6 times; Discord voice (UDP 19294–19344, 50000–50100) gets a zero-filled fake 6 times; HTTP gets an MD5 + autottl fake followed by a split request. Start with this one.",
+  "name_zh": "nfqws2：general",
+  "description_zh": "strategy-general（Flowseal）移植到 nfqws2。TLS：先发送带 MD5 和错误序列号干扰的伪造 ClientHello（重复 8 次），然后把真实 ClientHello 从域名中间切开并倒序发送（multidisorder）。QUIC（UDP 443）发送 6 次 Google QUIC Initial 伪造包；Discord 语音（UDP 19294–19344、50000–50100）发送 6 次全零伪造包；HTTP 先发送 MD5 + autottl 伪造包，再分段发送请求。建议从这个策略开始。"
+}

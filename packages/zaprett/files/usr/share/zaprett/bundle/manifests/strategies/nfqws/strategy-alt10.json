@@ -15,5 +15,9 @@
   "source": "bundle",
   "sha256": "379edfd416508b617f4ab4d1a3c3a941f731d8d61694158e68219e232f64fcea",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt10.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt10.json",
+  "name_en": "strategy-alt10",
+  "description_en": "Port of the alt10 strategy by flowseal",
+  "name_zh": "strategy-alt10",
+  "description_zh": "flowseal 的 alt10 策略移植版"
 }

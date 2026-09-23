@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-alt3",
+  "type": "nfqws2",
+  "name": "nfqws2: alt3",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-alt3. TLS: fakedsplit по 1-му байту — части ClientHello вперемешку с фейками, фейки с неверными номерами последовательности и TTL, подобранным по расстоянию до сервера (autottl), 8 повторов. QUIC (UDP 443) — фейк QUIC Initial Google 6 раз; голос Discord (UDP 19294–19344, 50000–50100) — фейк из нулей 6 раз; HTTP — фейк с MD5 и autottl, затем разрезание запроса.",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-alt3.txt",
+  "source": "bundle",
+  "sha256": "0aa5b9430d5ffd5feacbbc37755babbfa67fb21e8236b0d94bb1a1a1801e5d4a",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: alt3",
+  "description_en": "Port of strategy-alt3. TLS: fakedsplit at byte 1, ClientHello parts mixed with fakes that carry bad sequence numbers and a TTL guessed from the distance to the server (autottl), 8 repeats. QUIC (UDP 443) gets a Google QUIC Initial fake 6 times; Discord voice (UDP 19294–19344, 50000–50100) gets a zero-filled fake 6 times; HTTP gets an MD5 + autottl fake followed by a split request.",
+  "name_zh": "nfqws2：alt3",
+  "description_zh": "strategy-alt3 的移植版。TLS：在第 1 个字节处 fakedsplit，ClientHello 的各部分与伪造包混合，伪造包带有错误序列号，TTL 按到服务器的距离推算（autottl），重复 8 次。QUIC（UDP 443）发送 6 次 Google QUIC Initial 伪造包；Discord 语音（UDP 19294–19344、50000–50100）发送 6 次全零伪造包；HTTP 先发送 MD5 + autottl 伪造包，再分段发送请求。"
+}

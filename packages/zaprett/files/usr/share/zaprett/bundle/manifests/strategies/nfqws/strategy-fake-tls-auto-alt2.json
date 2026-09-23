@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "f2015987940c040e181c8aaa21e0ff3a3318d1534b5619f3b40e630b6be2f838",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fake-tls-auto-alt2.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fake-tls-auto-alt2.json",
+  "name_en": "strategy-fake-tls-auto-alt2",
+  "description_en": "Strategy fake-tls-auto-alt2 from the zapret for Windows repository",
+  "name_zh": "strategy-fake-tls-auto-alt2",
+  "description_zh": "来自 Windows 版 zapret 仓库的 fake-tls-auto-alt2 策略"
 }

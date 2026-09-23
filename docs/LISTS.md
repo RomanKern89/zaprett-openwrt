@@ -1,7 +1,7 @@
 # Списки, стратегии и пресеты zaprett для OpenWrt
 
 Этот документ объясняет, какие данные встроены в пакет `zaprett`, что включено сразу после установки, где обход
-не поможет и как добавить свои сайты. Данные сняты **2026-09-17**. Технические источники фактов:
+не поможет и как добавить свои сайты. Стратегии сняты **2026-09-17**, собственные списки сервисов — **2026-09-22**. Технические источники фактов:
 `research/03-lists.md` (листы и память), `research/01-zapret-core.md` §5 (стратегии), `docs/ARCHITECTURE.md` §3, §4, §9.
 
 ---
@@ -13,27 +13,85 @@
 
 ### 1.1. Списки сайтов и IP-сетей
 
-| Id | Название в интерфейсе | Что внутри | Записей | Откуда |
-|---|---|---|---:|---|
-| `zaprett-youtube` | YouTube | сайт, видео (`googlevideo.com`), превью, API | 13 | очищенный набор (см. ниже) |
-| `zaprett-discord` | Discord | сайт, приложение, вложения, `discord.media` | 19 | очищенный набор |
-| `zaprett-telegram` | Telegram | `telegram.org`, `t.me`, `telesco.pe` и др. | 17 | очищенный набор |
-| `zaprett-rutracker` | RuTracker | `rutracker.org`, `.net`, `.ru`, `.cc`, `.wiki` | 5 | `list-rutracker` из CherretGit/zaprett-repo без изменений |
-| `zaprett-telegram-ipset` | Telegram: IP-сети | сети серверов Telegram (15 104 адреса IPv4 и 4 сети IPv6) | 12 | официальный `core.telegram.org/resources/cidr.txt` + анонсы автономных систем Telegram по RIPEstat |
-| `zaprett-exclude` | Исключения: сайты | госуслуги, банки, Яндекс, VK, маркетплейсы, игры и софт | 379 | Flowseal `list-exclude` + zaprett-repo `list-exclude-general` + remittor |
-| `zaprett-exclude-ipset` | Исключения: локальные сети | частные сети, loopback, link-local, CGNAT, multicast | 11 | исключения bol-van/zapret + Flowseal |
+Списки сервисов — **собственные списки проекта** (docs/ARCHITECTURE.md §16): их собирает генератор
+`tools/lists/generate.py` из первоисточников, а не копирует чужие готовые списки. У каждого сервиса несколько
+вариантов: основной (минимальный достаточный набор), расширенный (`-full`) и, где у сервиса есть свои сети,
+IP-список. Включайте **один** доменный вариант сервиса: расширенный уже содержит основной. У Telegram
+расширенного варианта нет: всё подтверждённое уже входит в основной.
 
-**Как чистились списки YouTube, Discord и Telegram.** Домен попадал в набор, только если он есть минимум в двух
-независимых источниках (CherretGit/zaprett-repo, Flowseal/zapret-discord-youtube, itdoginfo/allow-domains,
-remittor/zapret-openwrt) и реально существует в DNS (проверка через два DoH-резолвера с контролями). Поддомены
-удалены, если есть родительский домен: nfqws сам учитывает все поддомены. Что и почему отброшено — в
-`research/03-lists.md` §6.1 и журнале `upstream/lists-refs/curated/BUILD_LOG.tsv`.
+| Id | Вариант | Что внутри | Записей | Память nfqws, ≈ |
+|---|---|---|---:|---:|
+| `zaprett-youtube` | основной | `youtube.com`, `googlevideo.com` (видео), `ytimg.com`, `ggpht.com`, `yt3.googleusercontent.com`, API клиента `youtubei.`/`youtube.`/`jnn-pa.googleapis.com` и др. | 12 | 1,3 КиБ |
+| `zaprett-youtube-full` | расширенный | + служебные узлы API, YouTube Go, YouTube для образования, блог | 23 | 2,6 КиБ |
+| `zaprett-discord` | основной | `discord.com`, `discord.gg`, `discordapp.com/.net`, `discord.media`, `discordsays.com`, `discordstatus.com`, `dis.gd`, `discord.co`, `discord.gift`, `discord.new`, `discordmerch.com` | 12 | 1,3 КиБ |
+| `zaprett-discord-full` | расширенный | + `discord.tools` | 13 | 1,5 КиБ |
+| `zaprett-discord-voice` | голос (IP) | сети голосовых серверов из блока Discord Inc. `66.22.192.0/18` (12 032 адреса IPv4) | 14 | 1,1 КиБ |
+| `zaprett-telegram` | основной | `telegram.org`, `t.me`, `telegram.me`, `telesco.pe`, `telegra.ph`, `graph.org`, `fragment.com`, `contest.com` и др. | 14 | 1,6 КиБ |
+| `zaprett-telegram-ipset` | IP | официальный `cidr.txt` + анонсы AS Telegram (15 104 адреса IPv4, 4 сети IPv6) | 12 | 1,0 КиБ |
+| `zaprett-rutracker` | основной | `rutracker.org`, `rutracker.net`, `rutracker.cc`, `rutracker.wiki` | 4 | 0,4 КиБ |
+| `zaprett-rutracker-full` | расширенный | + `rutrk.org` | 5 | 0,6 КиБ |
+| `zaprett-roblox` | основной | `roblox.com`, `rbxcdn.com`, капча входа `roblox-api.arkoselabs.com` | 3 | 0,3 КиБ |
+| `zaprett-roblox-full` | расширенный | + `robloxdev.com`, `robloxlabs.com`, `rbx.com`, `rblx.org`, `rbxcdn.net`, `cdn.arkoselabs.com` и др. | 14 | 1,6 КиБ |
+| `zaprett-roblox-ipset` | IP | анонсы AS22697 ROBLOX-PRODUCTION (33 792 адреса IPv4, 2 сети IPv6) | 6 | 0,5 КиБ |
+| `zaprett-signal` | основной | `signal.org`, `signal.me`, `signal.group`, `signal.link` | 4 | 0,5 КиБ |
+| `zaprett-signal-full` | расширенный | + `signal.art`, `signal.tube`, `signalusers.org` | 7 | 0,8 КиБ |
+| `zaprett-cloudflare-ipset` | IP (IPv4) | официальные диапазоны `cloudflare.com/ips-v4` — снимок, без загрузки | 15 | 1,2 КиБ |
+| `zaprett-cloudflare-ipset6` | IP (IPv6) | официальные диапазоны `cloudflare.com/ips-v6` | 7 | 0,6 КиБ |
+| `zaprett-exclude` | исключения | госуслуги, банки, Яндекс, VK, маркетплейсы, игры и софт | 379 | — |
+| `zaprett-exclude-ipset` | исключения | частные сети, loopback, link-local, CGNAT, multicast | 11 | — |
 
-Почему не взяты готовые списки zaprett-repo: они устарели и содержат мусор. Например, в `list-general` 12
-несуществующих узлов googlevideo, в `ipset-telegram` в 1 457 раз больше адресов, чем у Telegram на самом деле,
-а `list-extended` занимает в памяти nfqws около 74 МиБ (`research/03-lists.md` §3).
+Память — оценка по замеру `research/03-lists.md` §5 (около 115 байт на домен и 80 байт на сеть, 64 бит). Все
+собственные списки вместе — около 18 КиБ. Исключения пока взяты из прежнего очищенного набора
+(Flowseal `list-exclude` + zaprett-repo `list-exclude-general` + remittor; `upstream/lists-refs/curated/`).
 
-Все встроенные листы вместе занимают в памяти nfqws меньше 0,1 МиБ.
+**Как собраны списки (методика генератора).**
+
+1. **Семена** — домены из первоисточников: справка Google Workspace о доменах YouTube, справка Roblox для
+   администраторов сетей, справка Signal о настройке файрвола, статья Discord о переезде на discord.com, сайты
+   Telegram и RuTracker. Адреса документов — в `tools/lists/seeds.py` и в журнале.
+2. **Certificate Transparency.** Сертификаты якорного домена сервиса (crt.sh и certspotter, действовавшие в
+   последний год). Имя, стоящее на одном сертификате с якорным доменом, принадлежит тому же владельцу, поэтому
+   попадает в расширенный вариант. Исключения из правила: у Google сертификаты общие для всех его сайтов, а
+   сертификаты SaaS-площадок (карьерные сайты, CDN) несут имена многих клиентов — из таких сертификатов берутся
+   только имена с ключевыми словами сервиса. Поддомены (`*.discord.com` и т. п.) сворачиваются под родителя.
+3. **Код страниц сервиса** (`www.youtube.com`, `discord.com/app`, `www.roblox.com`, …): имена, на которые
+   ссылаются сами страницы, — только с ключевыми словами сервиса.
+3а. **Реальная сессия в браузере.** Генератор открывает страницы сервиса в настоящем Chromium (Playwright) по
+   сценариям — YouTube: главная, видео, канал, embed, вход; Discord: главная, `/login`, `/app`; Telegram:
+   `telegram.org`, `web.telegram.org/k` и `/a`; Roblox: главная, вход, страница игры; Signal; RuTracker — и
+   записывает имена хостов всех запросов, а также имена в коде JS, который эти страницы загружают с доменов
+   сервиса. Так подтверждены, например, `jnn-pa.googleapis.com` (есть в коде плеера YouTube и запрашивается
+   в embed), `dis.gd` (код Discord), `yt3.googleusercontent.com` (страница канала). В снимке — только имена
+   хостов, сценарий и дата.
+4. **Собственные сети сервиса.** Для Telegram домен без ключевого слова (`t.me`, `graph.org`, `contest.com`)
+   принимается, если все его адреса лежат в сетях Telegram.
+5. Семя без документа, не подтверждённое шагами 2–4, **исключается**. Прежние (до 2026-09) списки YouTube,
+   Discord, Telegram и RuTracker, а также чужие стратегии — только кандидаты: подтверждённая запись прежнего
+   основного списка возвращается в основной, неподтверждённая исключается с причиной. Сравнение «было → стало»
+   по каждой записи — `tools/lists/out/COMPARE_OLD.tsv`. На 2026-09-23 не подтвердились:
+   `youtubeembeddedplayer.googleapis.com`, `discord-activities.com`, `discordactivities.com`, `discord.design`,
+   `discord.dev`, `discord.gifts`, `discord.store`, `cdn-telegram.org`, `tdesktop.com`, `usercontent.dev`,
+   `rutracker.ru`, а также `discord-attachments-uploads-prd.storage.googleapis.com` (загрузка вложений Discord):
+   его нет в коде `discord.com/app` и `/login`, а сессию под учётной записью снять нельзя. Если вложения не
+   грузятся — добавьте это имя в «Мои домены».
+6. **DNS.** Каждое имя проверяется через DoH `dns.google` и `cloudflare-dns.com`; взять можно только имя, для
+   которого **оба** ответили NOERROR. Перед проверкой — контроли резолверов: `google.com` обязан резолвиться,
+   случайное несуществующее имя обязано дать NXDOMAIN, иначе сборка останавливается.
+7. **Исключения.** Имя, попадающее под `zaprett-exclude`, в список не входит.
+8. **IP-сети** — анонсы автономных систем сервиса по RIPEstat `announced-prefixes` (владелец AS сверяется по
+   `as-overview`, анонс должен быть действующим на момент снимка) и официальные списки. У Discord своей AS нет:
+   голосовые серверы анонсирует хостер i3D.net (AS49544), поэтому берутся только его анонсы внутри блока
+   `66.22.192.0/18`, владелец которого — Discord Inc. (проверено по RDAP RIPE). Сети специального назначения
+   (частные, документационные, multicast) отбрасываются, остальные агрегируются.
+
+Журнал сборки `tools/lists/out/BUILD_LOG.tsv`: для каждой записи — включена в основной и/или расширенный
+вариант, свёрнута под родителя или исключена, с причиной и источником (`doc:…`, `ct:…`, `page:…`, `ip:…`,
+`ripestat:AS…`).
+
+**Почему у YouTube нет IP-списка.** AS, где были бы только сети YouTube, нет: AS36040 «YOUTUBE» анонсирует и
+кэши Google в чужих сетях, AS43515 — адреса Google Cloud. IP-список поймал бы чужой трафик, а замедление YouTube
+идёт по имени сайта — доменного списка достаточно. У RuTracker и Signal своих сетей нет (Cloudflare, облака),
+поэтому и у них только домены.
 
 ### 1.2. Стратегии и фейки
 
@@ -45,7 +103,9 @@ remittor/zapret-openwrt) и реально существует в DNS (пров
   `tls_clienthello_4pda_to`, `tls_clienthello_max_ru`, `tls_clienthello_vk_com`, `tls_clienthello_sberbank_ru`.
   Их используют стратегии; все зависимости всех 64 стратегий есть в пакете.
 
-Стратегии для nfqws2 в zaprett-repo пока нет, поэтому встроенных стратегий nfqws2 тоже нет.
+- **14 стратегий nfqws2** (движок zapret2 v1.0.5.2, пакет `zaprett-nfqws2`) с id `z2-…` — собственные: в
+  zaprett-repo стратегий nfqws2 нет. Десять — переносы стратегий nfqws из этого списка на язык nfqws2, четыре —
+  приёмы, которых в nfqws нет (см. §6.4).
 
 ---
 
@@ -62,7 +122,7 @@ remittor/zapret-openwrt) и реально существует в DNS (пров
 | Стратегия | `strategy-general` (general из набора Flowseal) |
 | Подписки из интернета | все выключены |
 
-Telegram и RuTracker встроены, но не включены: их включают в мастере или на странице «Списки». Исключения
+Остальные списки (Telegram, RuTracker, Roblox, Signal, расширенные и IP-варианты) встроены, но не включены: их включают в мастере или на странице «Списки». Исключения
 действуют в обоих режимах и проверяются раньше списков.
 
 ---
@@ -76,9 +136,11 @@ zaprett обходит **DPI** — оборудование, которое уз
 |---|---|---|---|
 | YouTube | замедление по имени сайта (DPI) | **да** | включить список, при необходимости — автоподбор стратегии |
 | Discord | блокировка РКН | **да** для сайта и чатов; голос — отдельное правило стратегии по портам UDP, официального списка портов нет | если нет голоса — другая стратегия |
-| Telegram | ограничение звонков (с 2025-08) и медиа (с 2026-02) | **частично**: приложение ходит по IP, для него включается список IP-сетей; помогает ли против текущего замедления — **не проверено** | включить оба списка Telegram |
+| Telegram | ограничение звонков (с 2025-08) и замедление (с 2026-02) | **частично**: сайты — по именам; приложение, по словам автора zapret, замедляют по IP-адресам, и обход DPI ему не помогает ([bol-van/zapret2#148](https://github.com/bol-van/zapret2/discussions/148), 2026-03-15) | для приложения — VPN или прокси |
 | RuTracker | давняя блокировка РКН | **частично**: помогает против DPI, но не против подмены DNS | при подмене DNS — шифрованный DNS (пакет `https-dns-proxy`) |
 | Сайты за Cloudflare | с 2025-06 грузятся только первые 16 КБ | **не проверено**; подключаются официальные сети Cloudflare | выключить, если что-то сломалось |
+| Roblox | заблокирован РКН 2025-12-03 ([Meduza](https://meduza.io/news/2025/12/03/roskomnadzor-zablokiroval-igrovuyu-platformu-roblox)); игры — UDP 49152–65535 | **частично**: сайт по именам; для игр — IP-список AS22697 и стратегия с UDP-правилом по IP-спискам (`strategy-alt2-roblox`); у сообщества работает ([bol-van/zapret#1928](https://github.com/bol-van/zapret/discussions/1928)), у нас — **не проверено** | включить списки Roblox и стратегию `*-roblox` |
+| Signal | заблокирован РКН 2024-08-09 ([Интерфакс](https://www.interfax.ru/russia/975909)) | **не проверено**: способ ограничения в открытых источниках не описан; звонкам нужны UDP 3478 и 10000 | встроенный прокси приложения |
 | WhatsApp | домены исключены из НСДИ в 2026-02 — это блокировка DNS | **нет** | шифрованный DNS на роутере или VPN |
 | Instagram, Facebook | блокировка по IP-адресам | **нет** | VPN или прокси |
 | X (Twitter) | блокировка по IP-адресам | **нет** | VPN или прокси |
@@ -213,6 +275,67 @@ nfqws перечитывает изменённые списки сам. Есл�
 
 Полный машиночитаемый разбор — `tools/data/strategy_audit.json`.
 
+### 6.4. Стратегии nfqws2 (движок zapret2)
+
+zapret1 (nfqws) автор объявил завершённым: новые приёмы появляются только в zapret2. У nfqws2 другой язык
+стратегий — само воздействие на трафик описывается вызовами Lua-функций (`--lua-desync=fake:…`,
+`--lua-desync=multisplit:…`), поэтому стратегии nfqws к нему не подходят и переписаны вручную. Источник —
+`tools/data/nfqws2/<id>.txt` и описания в `tools/data/nfqws2_strategies.py`; в пакет их кладёт генератор (§8).
+
+| id | Из чего сделана | Что делает с HTTPS (TCP 443) |
+|---|---|---|
+| `z2-general` | `strategy-general` | фейк (MD5 + неверные номера последовательности, 8 повторов) + multidisorder по середине домена |
+| `z2-alt` | `strategy-alt` | фейк TLS google с испорченной меткой времени + fakedsplit |
+| `z2-alt2` | `strategy-alt2` | multisplit с перекрытием 652 байта данными TLS google, без фейков |
+| `z2-alt3` | `strategy-alt3` | fakedsplit по 1-му байту, неверные номера, autottl, 8 повторов |
+| `z2-simple-fake` | `strategy-simple-fake` | только фейк TLS google с испорченной меткой времени |
+| `z2-fake-tls-auto` | `strategy-general-fake-tls-auto` | фейк + fakedsplit, MD5 и autottl (и для HTTP) |
+| `z2-fake-tls-auto-alt` | `strategy-fake-tls-auto-alt` | фейк с изменёнными полями и SNI www.google.com + fakedsplit |
+| `z2-discord` | `strategy-discord` | фейк TLS google + fakedsplit; голос Discord по протоколу и по IP-спискам |
+| `z2-ultimatefix` | `strategy-ultimatefix` | фейк TLS google + fakedsplit; UDP 50000–65535 по IP-спискам |
+| `z2-ultimatefix-universal` | `strategy-ultimatefix-universal` | только разрезание после 1-го байта |
+| `z2-hostfakesplit` | новый приём nfqws2 | разрезание по границам имени сайта с фейковыми именами между частями |
+| `z2-disorder-seqovl` | новый приём nfqws2 | multidisorder с перекрытием, которое сервер перезаписывает настоящими данными |
+| `z2-circular` | оркестратор `circular` | для каждого сайта отдельно переключает 4 набора приёмов после 3 неудач |
+| `z2-circular-nofake` | оркестратор `circular` | то же, 3 набора без фейков с порчей заголовков |
+
+Как переводились приёмы nfqws: `md5sig` → `tcp_md5`; `badseq` → `tcp_seq=-10000:tcp_ack=-66000` (значения
+nfqws по умолчанию); `ts` → `tcp_ts=-600000`; `--dpi-desync-autottl=2` → `ip_autottl=-2,3-20` (в nfqws число без
+знака — отрицательная дельта); `--dpi-desync-repeats=N` → `repeats=N` у фейка; `--dpi-desync-fake-tls=${bin:…}` →
+`--blob=<имя>:@${bin:…}` и `blob=<имя>`; фейк для голоса Discord — 64 нулевых байта, как умолчание nfqws;
+`--dpi-desync-any-protocol --dpi-desync-cutoff=d3` → `--out-range=<d3` и `payload=all`. В nfqws порча заголовков
+действовала только на фейки, в nfqws2 у каждого вызова свои аргументы — поэтому порча стоит только у `fake` и у
+фейковых частей `fakedsplit`/`hostfakesplit`, но не у `multisplit`/`multidisorder`, которые шлют настоящие данные.
+Везде стоят фильтры `--payload=…`: Lua вызывается только для нужных пакетов, это экономит процессор.
+
+**Оркестратор circular.** Считает для каждого сайта неудачи — повторные отправки ClientHello (сервер не ответил)
+и сброс соединения в начале — и после 3 неудач за минуту переключает сайт на следующий набор приёмов по кругу.
+Ограничения: учёт живёт в памяти движка и сбрасывается при перезапуске службы; для учёта ответов сервера nfqws2
+должен видеть входящие пакеты, а правила nft по умолчанию передают только 3 первых входящих пакета TCP —
+неудачи по повторным отправкам это не мешает считать, а признак «сайт заработал» (ответ длиннее 4 КБ) при трёх
+пакетах может не набраться, тогда счётчик неудач сбрасывается только по времени. Для circular полезно поднять
+`tcp_pkt_in` до 10 (так у zapret2 по умолчанию). В быстрый автоподбор circular не входит: автоподбор каждый раз
+перезапускает движок, и circular всегда начинал бы с первого набора, то есть проверялся бы как `z2-general`.
+
+**По умолчанию и быстрый автоподбор для nfqws2.** По умолчанию — `z2-general` (перенос стратегии по умолчанию
+nfqws). Быстрый набор — 8 стратегий с разными приёмами: `z2-general`, `z2-alt`, `z2-alt2`, `z2-alt3`,
+`z2-simple-fake`, `z2-fake-tls-auto-alt`, `z2-hostfakesplit`, `z2-disorder-seqovl`. Без правил на весь трафик
+порта (поэтому нет `z2-ultimatefix*` с UDP 50000–65535 по IP-спискам) и без circular.
+
+**Порча только MD5 ненадёжна.** Если получатель принимает сегменты с опцией MD5, а autottl не может определить
+расстояние до него, фейки, испорченные только MD5, принимаются как данные и ломают соединение. Так было на стенде
+разработки 2026-09-22 (соединения там завершает прозрачный прокси в соседнем хопе, входящие пакеты приходят с
+TTL 64): ломались `z2-fake-tls-auto` и её исходник nfqws `strategy-general-fake-tls-auto`. Как поведут себя
+настоящие серверы за DPI провайдера — на стенде не проверить. В `z2-hostfakesplit` фейки дополнительно получают неверные номера
+последовательности — с ними соединения на стенде открываются. `z2-fake-tls-auto` оставлена как точный перенос:
+у провайдеров, где autottl срабатывает, она может быть полезна, а автоподбор её отбракует, если она ломает сайты.
+
+**Проверка.** Генератор сверяет каждую стратегию с исходниками zapret2: опции nfqws2, имена Lua-функций и то, что
+их библиотека подключена (`circular` живёт в `zapret-auto.lua`), имена блобов, маркеры позиций, типы пейлоадов и
+протоколов, формат autottl и диапазонов, нумерацию наборов circular. Часть этих ошибок сам nfqws2 при проверке
+`--intercept=0` не видит: блоб с неизвестным именем проходит проверку с кодом 0 и падает только на первом пакете.
+На роутере каждая стратегия проходит `nfqws2 --intercept=0` (тест `tests/test_bundle.uc`).
+
 ---
 
 ## 7. Как автоподбор проверяет сервисы
@@ -232,6 +355,8 @@ nfqws перечитывает изменённые списки сам. Есл�
 | Telegram | `https://telegram.org/` | 17 000 | 19 919 / 19 919 / 19 918 |
 | RuTracker | `https://rutracker.org/forum/index.php` | 32 768 | 96 334 ×3 |
 | Сайты за Cloudflare | `https://speed.cloudflare.com/__down?bytes=102400` | 65 536 | 102 400 ×3 |
+| Roblox | `https://www.roblox.com/` | 32 768 | 62 681 / 62 744 / 62 681 / 62 681 / 62 681 (2026-09-22) |
+| Signal | `https://signal.org/` | 17 000 | 22 194 ×5 (2026-09-22) |
 
 Размеры сняты 2026-09-17 с рабочей станции разработчика: `curl --http1.1 -A uclient-fetch`, по три запроса.
 Это справочные размеры ответов, а не проверка доступности: шёл ли этот трафик через обход или VPN, не
@@ -243,21 +368,45 @@ nfqws перечитывает изменённые списки сам. Есл�
 ## 8. Для разработчиков: как пересобрать данные
 
 ```sh
+# собственные списки сервисов (tools/lists)
+PYTHONUTF8=1 python tools/lists/generate.py                  # сборка по снимкам, без сети -> tools/lists/out
+PYTHONUTF8=1 python tools/lists/generate.py --check          # сверить out/ со сборкой по снимкам байт в байт
+PYTHONUTF8=1 python tools/lists/generate.py --refresh        # заново опросить источники и обновить снимки
+PYTHONUTF8=1 python tools/lists/generate.py --refresh-missing   # дозапросить только отсутствующие снимки
+# для сессий браузера при --refresh нужен python-пакет playwright и Chromium (python -m playwright install chromium)
+PYTHONUTF8=1 python tools/lists/test_generate.py             # контроли генератора (без сети)
+# пакет
 PYTHONUTF8=1 python tools/data/build_bundle.py               # сборка, проверки, установка в пакет
 PYTHONUTF8=1 python tools/data/build_bundle.py --check-only  # проверить то, что лежит в пакете
 PYTHONUTF8=1 python tools/data/test_build_bundle.py          # положительные и отрицательные контроли
 ```
 
-- Входы зафиксированы sha256: очищенные листы (`research/03-lists.md` §10), `index.json` zaprett-repo, каждая
-  стратегия и фейк сверяются с манифестом репозитория. При любом расхождении сборка останавливается, пакет не
-  меняется. Чтобы обновить данные, пересоберите листы по `research/03-lists.md` §10, проверьте изменения и
-  обновите хэши в `build_bundle.py`.
+- **Собственные списки.** Семена и правила по сервисам — `tools/lists/seeds.py`; снимки ответов источников
+  (сертификаты, коды страниц, DNS, RIPEstat, RDAP, официальные списки, Public Suffix List) —
+  `tools/lists/snapshots/`, в отсортированном виде, чтобы изменения читались в diff. Без `--refresh` генератор
+  сети не трогает, и повторная сборка даёт те же файлы байт в байт. `--refresh` делает паузы между запросами;
+  crt.sh и certspotter иногда отвечают 502/429 — тогда остаётся прежний снимок сертификатов, а недостающее
+  можно дозапросить `--refresh-missing`. Дата снимка (`generated` в манифестах) — дата последнего опроса.
+  Новый сервис: добавить запись в `SERVICES` (и при необходимости в `IPSETS`) и тексты в `TEXTS`, затем
+  `--refresh-missing`, просмотреть `out/BUILD_LOG.tsv`, добавить сервис в `tools/data/presets_data.py`.
+- Входы пакета зафиксированы: собственные списки сверяются по sha256 из `tools/lists/out/lists.json`,
+  исключения — по хэшам в `build_bundle.py` (`research/03-lists.md` §10), `index.json` zaprett-repo, каждая
+  стратегия и фейк — по манифесту репозитория. При любом расхождении сборка останавливается, пакет не меняется.
+- Манифест собственного списка дополнительно несёт `service`, `variant` (`core`, `full`, `ipset`, `ipset6`,
+  `voice`), `generated`, `method`, `license: "MIT"`, автор `zaprett-openwrt`; `presets.json` — `variants` у
+  сервисов (§16.3). Проверки: у каждого сервиса минимум два собственных списка, сервис есть в presets, сети
+  IP-списков не пересекаются с частными и служебными, `name`/`description` не длиннее 128/1024 байт (столько
+  читает бэкенд).
 - Сборка воспроизводима: повторный запуск даёт то же дерево (дайджест печатается в конце).
 - Проверки: UTF-8 без BOM, LF (CR считается побайтно), без пробелов и масок в листах, валидные домены и CIDR,
   без дублей и перекрытий, включённые домены не перекрыты исключениями, уникальные id, совпадение sha256,
   разрешение зависимостей и плейсхолдеров (`${bin:…}` и т. п.), опции и режимы стратегий сверяются с исходниками
-  nfqws v72.13, пресеты — со схемой §9.
-- Размер: 155 файлов, 158 КБ без сжатия; в архиве gzip около 21 КБ, xz около 17 КБ.
+  nfqws v72.13, пресеты — со схемой §9. Стратегии nfqws2 берутся из `tools/data/nfqws2/` и сверяются с исходниками
+  zapret2 (`upstream/zapret2/nfq2/*.c`, `upstream/zapret2/lua/*.lua`), см. §6.4. Английские поля манифестов и
+  пресетов (`name_en`, `description_en`, `note_en`) и `needs_dns` тоже задаются в генераторе
+  (`build_bundle.py`, `presets_data.py`, `nfqws2_strategies.py`), править `presets.json` и манифесты руками нельзя —
+  следующая сборка перезапишет их.
+- Размер: 205 файлов, 220 КБ без сжатия (из них стратегии nfqws2 — 17 КБ); в архиве gzip около 32 КБ, xz около 26 КБ.
 
 ---
 
@@ -265,12 +414,14 @@ PYTHONUTF8=1 python tools/data/test_build_bundle.py          # положите�
 
 | Источник | Что взято | Лицензия |
 |---|---|---|
-| Flowseal/zapret-discord-youtube | часть доменов YouTube/Discord, исключения, стратегии-порты (через zaprett-repo) | MIT (`LICENSE.txt`: bol-van, Flowseal) |
-| remittor/zapret-openwrt | часть исключений, сверка списков | MIT |
+| **этот проект** (zaprett-openwrt) | собственные списки сервисов `zaprett-<сервис>[-вариант]` и их генератор `tools/lists` | **MIT** |
+| документация и сайты сервисов, CT-журналы, RIPEstat, RDAP, DoH | факты, из которых генератор выводит списки (имена доменов и сетей) | публичные данные; тексты не копируются |
+| Public Suffix List | правила регистрируемых доменов (снимок в `tools/lists/snapshots/`, в пакет не входит) | MPL 2.0 |
+| Flowseal/zapret-discord-youtube | исключения, стратегии-порты (через zaprett-repo) | MIT (`LICENSE.txt`: bol-van, Flowseal) |
+| remittor/zapret-openwrt | часть исключений | MIT |
 | 1andrevich/Re-filter-lists | подписка `refilter_domains` (загружается на роутере, в пакет не входит) | MIT |
 | bol-van/zapret | исключения локальных сетей, nfqws | MIT (`docs/LICENSE.txt`) |
-| CherretGit/zaprett-repo | 64 стратегии, 6 фейков, список RuTracker, часть доменов и исключений | **лицензии нет** (файла LICENSE нет, GitHub API: `license: null`) |
-| itdoginfo/allow-domains | один из источников доменов YouTube, Discord, Telegram | **лицензии нет** |
+| CherretGit/zaprett-repo | 64 стратегии, 6 фейков, часть исключений | **лицензии нет** (файла LICENSE нет, GitHub API: `license: null`) |
 | antifilter.download | подписка `antifilter_allyouneed` (загружается на роутере) | условия **не проверены** |
 | Telegram, Cloudflare, RIPEstat | официальные диапазоны адресов | публичные данные сервисов |
 

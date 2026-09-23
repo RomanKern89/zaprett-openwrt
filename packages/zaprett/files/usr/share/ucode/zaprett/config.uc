@@ -36,11 +36,17 @@ export const DEFAULTS = {
 		tcp_pkt_in: '3',
 		udp_pkt_out: '9',
 		udp_pkt_in: '0',
-		flow_offload: 'auto',
+		flow_offload: 'own',
 		clients_mode: 'all',
 		clients: [],
 		user: 'daemon',
 		debug: '0',
+		watchdog: '1',
+		// contract v1.4 §15.2
+		quic_block: '0',
+		game_filter: '0',
+		game_ports_tcp: '1024-65535',
+		game_ports_udp: '1024-65535',
 		deleted_sources: []
 	},
 	repo: {
@@ -53,13 +59,29 @@ export const DEFAULTS = {
 		concurrency: '6',
 		max_domains: '20',
 		settle: '2'
+	},
+	// contract v1.3 §14.1; uci-defaults creates the section with these values when it is missing
+	monitor: {
+		enabled: '1',
+		interval: '30',
+		threshold: '3',
+		auto_repair: '0',
+		max_targets: '5',
+		timeout: '8'
 	}
 };
+
+// Minutes between monitor checks that a cron line can express (contract v1.3 §14.1).
+export const MONITOR_INTERVALS = [ 10, 15, 20, 30, 60 ];
 
 export const LIST_OPTIONS = [ 'lists', 'exclude_lists', 'ipsets', 'exclude_ipsets', 'wan', 'clients' ];
 
 // Mark reserved for the LAN client filter (ARCHITECTURE §8).
 export const CLIENT_MARK = 0x08000000;
+
+// Conntrack mark of the connections of an isolated automatic selection (contract v1.6 §17): their replies go to the
+// test queue as well.
+export const TEST_MARK = 0x04000000;
 
 function as_list(v) {
 	if (v == null)
@@ -87,11 +109,13 @@ function pick_list(raw, name, sec) {
 
 // Pure: turns raw UCI section objects into a typed configuration.
 // Invalid values fall back to defaults and add a warning 'bad_config' with the option name.
-export function normalize(main, repo, test) {
+export function normalize(main, repo, test, monitor) {
 	let warnings = [], bad = [];
 	function bad_opt(name) {
 		push(bad, name);
 	}
+	// options of the monitor section are reported as monitor.<name>: `timeout` and `enabled` exist in other sections too
+	let opt_name = (sec, name) => (sec == 'monitor') ? ('monitor.' + name) : name;
 	function enum_opt(name, allowed) {
 		let v = pick(main, name, 'main');
 		if (index(allowed, v) < 0) {
@@ -106,13 +130,13 @@ export function normalize(main, repo, test) {
 			return true;
 		if (v == '0' || v == 'false' || v == 'off' || v == 'no' || v == '')
 			return false;
-		push(bad, name);
+		push(bad, opt_name(sec, name));
 		return DEFAULTS[sec][name] == '1';
 	}
 	function uint_opt(raw, sec, name, min, max) {
 		let n = V.parse_uint(pick(raw, name, sec), min, max);
 		if (n == null) {
-			push(bad, name);
+			push(bad, opt_name(sec, name));
 			n = int(DEFAULTS[sec][name]);
 		}
 		return n;
@@ -124,6 +148,19 @@ export function normalize(main, repo, test) {
 			n = V.parse_mark(DEFAULTS.main[name]);
 		}
 		return n;
+	}
+
+	// ports of the game filter profile (contract v1.4 §15.2): "a,b-c", no negation, 1..65535; '' = none
+	function game_ports_opt(name) {
+		let v = pick(main, name, 'main');
+		if (v == '')
+			return '';
+		let r = V.game_ports(v);
+		if (r == null) {
+			bad_opt(name);
+			return DEFAULTS.main[name];
+		}
+		return r;
 	}
 
 	let ids = (name) => filter(as_list(pick_list(main, name, 'main')), (x) => {
@@ -153,12 +190,17 @@ export function normalize(main, repo, test) {
 		tcp_pkt_in: uint_opt(main, 'main', 'tcp_pkt_in', 0, 1000),
 		udp_pkt_out: uint_opt(main, 'main', 'udp_pkt_out', 0, 1000),
 		udp_pkt_in: uint_opt(main, 'main', 'udp_pkt_in', 0, 1000),
-		flow_offload: enum_opt('flow_offload', [ 'auto', 'keep' ]),
+		flow_offload: enum_opt('flow_offload', [ 'auto', 'own', 'keep' ]),
 		clients_mode: enum_opt('clients_mode', [ 'all', 'include', 'exclude' ]),
 		clients4: [],
 		clients_mac: [],
 		user: pick(main, 'user', 'main'),
 		debug: bool_opt(main, 'main', 'debug'),
+		watchdog: bool_opt(main, 'main', 'watchdog'),
+		quic_block: bool_opt(main, 'main', 'quic_block'),
+		game_filter: bool_opt(main, 'main', 'game_filter'),
+		game_ports_tcp: game_ports_opt('game_ports_tcp'),
+		game_ports_udp: game_ports_opt('game_ports_udp'),
 		deleted_sources: filter(as_list(pick_list(main, 'deleted_sources', 'main')), (x) => name_valid_1_32(x)),
 		repo: {
 			url: pick(repo, 'url', 'repo'),
@@ -170,8 +212,23 @@ export function normalize(main, repo, test) {
 			concurrency: uint_opt(test, 'test', 'concurrency', 1, 16),
 			max_domains: uint_opt(test, 'test', 'max_domains', 0, 500),
 			settle: uint_opt(test, 'test', 'settle', 0, 30)
+		},
+		// a missing section means "monitor off" (status.monitor = null); uci-defaults creates it on install
+		monitor: {
+			present: monitor != null,
+			enabled: monitor != null && bool_opt(monitor, 'monitor', 'enabled'),
+			interval: uint_opt(monitor, 'monitor', 'interval', 1, 60),
+			threshold: uint_opt(monitor, 'monitor', 'threshold', 1, 20),
+			auto_repair: bool_opt(monitor, 'monitor', 'auto_repair'),
+			max_targets: uint_opt(monitor, 'monitor', 'max_targets', 1, 20),
+			timeout: uint_opt(monitor, 'monitor', 'timeout', 2, 30)
 		}
 	};
+
+	if (index(MONITOR_INTERVALS, cfg.monitor.interval) < 0) {
+		bad_opt('monitor.interval');
+		cfg.monitor.interval = int(DEFAULTS.monitor.interval);
+	}
 
 	for (let s in [ 'strategy', 'strategy_nfqws2' ]) {
 		if (cfg[s] != '' && !is_id(cfg[s])) {
@@ -205,7 +262,7 @@ export function normalize(main, repo, test) {
 		cfg.user = DEFAULTS.main.user;
 	}
 
-	if (!V.url_valid(cfg.repo.url)) {
+	if (!V.https_url_valid(cfg.repo.url)) {
 		push(bad, 'url');
 		cfg.repo.url = DEFAULTS.repo.url;
 	}
@@ -241,7 +298,7 @@ function section(u, name) {
 export function load() {
 	let u = uci_cursor();
 	u.load('zaprett');
-	let cfg = normalize(section(u, 'main'), section(u, 'repo'), section(u, 'test'));
+	let cfg = normalize(section(u, 'main'), section(u, 'repo'), section(u, 'test'), section(u, 'monitor'));
 	cfg.present = (section(u, 'main') != null);
 	u.unload('zaprett');
 	return cfg;
@@ -296,7 +353,7 @@ export function source_name_valid(name) {
 };
 
 export function source_url_valid(url) {
-	return V.url_valid(url) && substr(url, 0, 8) == 'https://';
+	return V.https_url_valid(url);
 };
 
 // Pure: typed subscription from a raw UCI section. valid=false when name/type/url are unusable.

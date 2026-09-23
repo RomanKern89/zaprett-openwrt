@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="ru-RU" Codepage="1251" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ProductLanguage" Value="1049" />
+  <String Id="DefaultUiLanguage" Value="ru" />
+  <String Id="LicenseFile" Value="License.ru-RU.rtf" />
+  <String Id="ProductDescription" Value="zaprett — обход DPI движком zapret для этого компьютера" />
+  <String Id="DowngradeError" Value="Уже установлена более новая версия zaprett. Установка прервана." />
+  <String Id="RequiresX64" Value="zaprett работает только в 64-разрядной Windows (x64)." />
+  <String Id="RequiresWin10" Value="Для zaprett нужна Windows 10 версии 2004 (сборка 19041) или новее." />
+  <String Id="ServiceDisplayName" Value="zaprett" />
+  <String Id="ServiceDescription" Value="Служба zaprett: запускает движок обхода DPI (winws) и хранит настройки." />
+  <String Id="ShortcutDescription" Value="Управление обходом блокировок zaprett" />
+  <String Id="FeatureCoreTitle" Value="zaprett" />
+  <String Id="FeatureCoreDescription" Value="Служба, интерфейс, командная строка, движок winws, стратегии и списки." />
+  <String Id="FeatureEngine2Title" Value="Движок zapret2 (winws2)" />
+  <String Id="FeatureEngine2Description" Value="Второй движок со стратегиями на Lua." />
+  <String Id="FeatureDohTitle" Value="Локальный DoH-прокси" />
+  <String Id="FeatureDohDescription" Value="Шифрованный DNS для Windows 10 (в разработке)." />
+  <String Id="ZaprettWarningDlg_Title" Value="Установка zaprett" />
+  <String Id="ZaprettWarningDlgTitle" Value="{\WixUI_Font_Title}Перед установкой" />
+  <String Id="ZaprettWarningDlgDescription" Value="Как работает zaprett и что может заметить антивирус" />
+  <String Id="ZaprettWarningDlgText" Value="zaprett перехватывает сетевые пакеты драйвером WinDivert (из проекта zapret) и меняет их так, чтобы система DPI провайдера не распознала заблокированный сайт. Ничего не отправляется на сторонние серверы, телеметрии нет.&#xD;&#xA;&#xD;&#xA;Некоторые антивирусы помечают WinDivert и winws.exe как «хакерский инструмент» или «потенциально опасное приложение»: драйвер умеет перехватывать трафик. Файлы движка взяты из официальных релизов zapret без изменений, их контрольные суммы сверены при сборке. Если антивирус удалит их, добавьте папку установки zaprett (по умолчанию C:\Program Files\zaprett) в исключения.&#xD;&#xA;&#xD;&#xA;Одновременно с zaprett не должны работать GoodbyeDPI, другая копия zapret и программы, которые сами используют WinDivert." />
+  <String Id="ZaprettWarningDlgTray" Value="Показывать значок zaprett в области уведомлений при входе в систему" />
+</WixLocalization>

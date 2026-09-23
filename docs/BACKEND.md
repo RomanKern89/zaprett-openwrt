@@ -1,7 +1,10 @@
 # zaprett для OpenWrt — бэкенд (пакет `zaprett`)
 
-> Версия 1.0.0 (2026-09-17). Реализация контракта `docs/ARCHITECTURE.md` **v1.2** (§3–§10).
-> Отклонения от контракта и их причины — раздел 12.
+> Версия 1.0.0 (2026-09-17), дополнено 2026-09-22. Реализация контракта `docs/ARCHITECTURE.md` **v1.4** (§3–§10, §14,
+> §15.1–§15.5, серверная часть §15.7): сторож движка, монитор доступности с авторемонтом, живая проверка сервисов,
+> `page`, `log`, пределы загрузок, только https для каталога, английские метаданные; v1.4 — собственная flowtable
+> (`flow_offload=own`), блокировка QUIC, игровой фильтр, шифрованный DNS (`dns status/setup`), диагностика
+> «чем блокирует провайдер» (`diagnose`). Подробно v1.4 — раздел 13. Отклонения от контракта — раздел 12.
 
 ---
 
@@ -39,19 +42,24 @@ ca-bundle zaprett-nfqws`. Модули ucode — только `fs`, `uci`, `ubus
 
 | Модуль | Назначение |
 |---|---|
-| `util` | пути `P` (переопределяются только в тестах); `run()` — команда **массивом** через постоянную обёртку `sh -c 'exec "$@" <in >out 2>err'`; атомарная запись (tmp + проверка размера + rename); JSON; sha256; `df`; flock через `fs.file.lock`; время старта процесса; журнал через `logger` |
+| `util` | пути `P` (переопределяются только в тестах, в том числе `/proc/meminfo`, счётчик NFQUEUE и `logread`); `meminfo_mib()`, `download_concurrency()`; `run()` — команда **массивом** через постоянную обёртку `sh -c 'exec "$@" <in >out 2>err'`; атомарная запись (tmp + проверка размера + rename); JSON; sha256; `df`; flock через `fs.file.lock`; время старта процесса; журнал через `logger` |
 | `validate` | чистые проверки: id, домены, IPv4/IPv6/CIDR (с обнулением хостовых битов), MAC, метки, порты, версии, URL, текст пользовательских листов |
 | `config` | UCI -> типизированная конфигурация с умолчаниями; неверное значение → умолчание + предупреждение `bad_config` (+`bad_options`); отсутствующая list-опция в существующей секции = пустой список (UCI и LuCI удаляют пустые списки); подписки `config source` |
 | `store` | элементы: bundle < `/etc/zaprett` (репозиторий и подписки `source:url`) + пользовательские; проверка манифестов (id = имя файла, `type` = каталог, файл только внутри своего `files/`), подсчёт записей с кэшем, `used_by`, `active` |
 | `strategy` | генератор аргументов (раздел 3), проверка путей файлов в опциях, dry-run, запись `/var/run/zaprett/{args,engine,ports.json,status.json}` |
-| `nft` | WAN из `ubus network.interface dump`, генерация скрипта (§8), `nft -c -f` → `nft -f`, удаление |
-| `offload` | `flow_offload=auto`: сохранить в `/etc/zaprett/offload-saved.json` и выключить fw4 offload, вернуть при выключении |
+| `nft` | WAN из `ubus network.interface dump`, генерация скрипта (§8) — с flowtable `ft` и цепочкой `forward_offload` (режим `own`) и цепочкой `forward_quic` (`quic_block`), `nft -c -f` → `nft -f`, удаление |
+| `offload` | `flow_offload=auto\|own`: сохранить в `/etc/zaprett/offload-saved.json` и выключить fw4 offload, вернуть при выключении; для `own` — план собственной flowtable (`flowtable_plan()`: устройства из `/var/run/fw4.state`, для аппаратного ускорения — нижние устройства мостов/VLAN) |
 | `service` | состояние (ubus `service list`), автозапуск (симлинк `/etc/rc.d/S95zaprett`), версия движка (кэш), предупреждения, вызов `/etc/init.d/zaprett` |
 | `job` | фоновые задачи (раздел 8) |
 | `net` | `probe()` поверх `probe.sh`, классификация результатов `uclient-fetch` |
+| `dns` | шифрованный DNS (§15.3): какой провайдер работает (`https-dns-proxy`, `stubby`, `dnscrypt-proxy`: init-скрипт есть и у procd-службы есть работающий экземпляр), задача `dns-setup` (apk/opkg); `hooks` подменяют статус, запуск команд и менеджер пакетов в юнит-тестах |
+| `diagnose` | «чем блокирует провайдер» (§15.4): системный DNS против DNS-over-HTTPS, загрузка, проверка TCP до настоящего адреса, вердикт (чистый `judge()`); `hooks` подменяют резолверы и загрузчик |
 | `repo` | клиент zaprett-repo: индекс, манифесты, зависимости, установка/обновление/удаление |
 | `sources` | подписки по URL: загрузка, нормализация, проверки, `src-<имя>` |
-| `tester` | автоподбор (§10); `opts.hooks` (управление движком, признак «работает», опрос целей) подменяется в юнит-тестах |
+| `tester` | автоподбор (§10) и `--apply-if-better`; общие для `probe` и монитора `service_active()`, `preset_services()`, `probe_targets()`; `opts.hooks` (управление движком, признак «работает», опрос целей) подменяется в юнит-тестах |
+| `isolate` | автоподбор без отключения обхода (§17, раздел 9): пользователь `zaprett-test` (из `P.passwd`), причины отката `refusal()`, состояние правил теста `test-isolated.json` (порты проверяются), файлы инстанса `test`, `cleanup()` (ubus `service delete` инстанса `test`, `start-stop-daemon -K -u`, `fw apply`) |
+| `cron` | строки `/etc/crontabs/root` с метками `# zaprett-autoupdate`, `# zaprett-watchdog`, `# zaprett-monitor` (§14.2): чистый `render()`, `wanted()` по конфигурации и маркеру остановки, `sync()` |
+| `health` | `ensure` (сторож), `probe` (проверка сервисов без перезапуска движка), монитор: чистый `monitor_step()`, `monitor_run()` / `monitor_status()`; `hooks` подменяют procd, движок, опрос целей и запуск задач в юнит-тестах |
 | `commands` | команды CLI; каждая возвращает `{ok, ...}` или `{ok:false, error, message}` |
 | `text` | человекочитаемый вывод и тексты предупреждений на русском |
 
@@ -91,11 +99,17 @@ ca-bundle zaprett-nfqws`. Модули ucode — только `fs`, `uci`, `ubus
 
 1. Текст стратегии: построчно убираются висячие `\`, разбиение по пробельным символам; `--comment` без `=`
    и все токены до следующего `--...` выбрасываются; одиночные `\` выбрасываются.
+   Затем `canonicalize()`: каждая опция → `--<полное имя>[=значение]` по таблице `long_options` движка, как её
+   видит `getopt_long_only` (одиночный `-`, однозначный префикс, значение отдельным словом у опции с обязательным
+   значением). Неизвестное/неоднозначное имя, значение у опции без значения, слово-не-опция → `bad_option`.
+   Таблица — `zaprett/engine_options.uc`, генерируется из `long_options` исходников движков по тегам версий пакетов:
+   `PYTHONUTF8=1 python tools/data/gen_engine_options.py` (`--check` — сверка, `--compare-help` — сверка с `--help`
+   бинарника); пересобирать при каждом обновлении nfqws/nfqws2. В args уходит канонический токен.
 2. nfqws: в `--dpi-desync=` — `split→fakedsplit`, `split2→multisplit`, `disorder→fakeddisorder`,
    `disorder2→multidisorder`.
 3. Удаляются опции, которыми управляет zaprett (`--qnum --user --uid --daemon --pidfile --debug --dry-run
-   --version --dpi-desync-fwmark --fwmark --intercept --chdir --writable`) — предупреждение `strategy_option_ignored`.
-4. Профили (отрезки между `--new`); пустые (в том числе после завершающего `--new`) удаляются —
+   --version --dpi-desync-fwmark --fwmark --intercept --chdir --writable --fuzz`) — предупреждение `strategy_option_ignored`.
+4. Профили (отрезки между `--new`, у nfqws2 и `--new=<имя>`); пустые (в том числе после завершающего `--new`) удаляются —
    `empty_profile_removed`.
 5. Активные элементы UCI: отсутствующий обычный лист — **ошибка** `item_not_found` (`missing_lists`);
    нескачанная подписка `src-<имя>` пропускается — предупреждение `source_not_downloaded`.
@@ -140,7 +154,11 @@ ca-bundle zaprett-nfqws`. Модули ucode — только `fs`, `uci`, `ubus
   `procd_open_instance engine` с аргументами из `/var/run/zaprett/args` (массивом через `set --`),
   `respawn 3600 5 5`, `file args`, stdout/stderr в syslog; `zaprett fw apply`; `zaprett offload apply` (не в тесте).
 - `stop_service`: `fw remove`; `offload restore`, если служба выключена (`enabled=0`). Команда `zaprett stop`
-  возвращает offload явно.
+  возвращает offload явно. Кроме перезапуска (`action=restart` в rc.common) пишет маркер
+  `/var/run/zaprett/stopped` («остановлено пользователем») и вызывает `cron sync`: строки сторожа и монитора
+  исчезают, `ensure` службу не поднимает. `start_service` снимает маркер и тоже вызывает `cron sync`.
+  Пока идёт автоподбор (`test-override` или `test-state.json`), `cron sync` из init не вызывается — тест много раз
+  останавливает и запускает движок, расписание при этом не трогается.
 - `reload_service`: `start` (procd перезапускает движок только при изменении md5 файла `args`) + `zaprett cron sync`.
   `service_triggers`: `procd_add_reload_trigger zaprett`.
 - fw4: `firewall.zaprett` (`type script`, `path /usr/share/zaprett/fw4-include.sh`, `fw4_compatible 1`).
@@ -148,17 +166,30 @@ ca-bundle zaprett-nfqws`. Модули ucode — только `fs`, `uci`, `ubus
   `instances.engine.running = true` (`ubus call service list | jsonfilter`).
 - hotplug `60-zaprett`: на `ifup/ifdown/ifupdate` (кроме loopback) при существующем `zaprett.nft` —
   `zaprett fw apply --if-applied` (применённая таблица получает новый набор WAN, в том числе пока идёт старт).
-- cron: `zaprett cron sync` держит в `/etc/crontabs/root` одну строку
+- cron (§14.2): `zaprett cron sync` держит по одной строке на метку:
+  `*/5 * * * * /usr/bin/zaprett ensure --quiet # zaprett-watchdog` — при `main.enabled=1`, `main.watchdog=1` и без
+  маркера остановки; `*/<interval> * * * * /usr/bin/zaprett monitor run --quiet # zaprett-monitor` (для 60 —
+  `<M> * * * *`, минута случайная и сохраняется) — при `main.enabled=1`, `monitor.enabled=1` и без маркера;
+  нет секции `monitor` — строки нет. Чужие строки не трогаются, дубли своих сводятся к одной. Запись файла и
+  `cron restart` — только когда текст изменился. Третья строка —
   `<M> <autoupdate_hour> * * * /usr/bin/zaprett repo upgrade --all --foreground --quiet # zaprett-autoupdate`.
   Минута случайная и сохраняется. Строка нужна, если `repo.autoupdate=1` **или** включена хотя бы одна
   корректная подписка; иначе удаляется. Эта форма команды выполняет задачу `autoupdate`: подписки с истёкшим
   `interval_hours` обновляются всегда (допуск −1 ч, чтобы суточный запуск не сдвигал обновление на сутки),
   установленное из репозитория — только при `repo.autoupdate=1`. `cron sync` вызывается из `uci-defaults`,
-  `reload_service`, `sources save/delete` и `wizard apply`.
+  `start_service`/`stop_service`/`reload_service`, `enable`/`disable`, `sources save/delete` и `wizard apply`.
+- `fw apply` не трогает ядро, если отрисованный текст совпадает с `/var/run/zaprett/zaprett.nft` и таблица
+  стоит (`changed:false`) — hotplug и init вызывают его на каждое событие интерфейса.
+- Повторный dry-run при `zaprett start` не выполняется: после успешной проверки в `/var/run/zaprett/dryrun-ok.json`
+  хранится ключ — размер и mtime бинарника, аргументы построчно и размер/mtime каждого файла из аргументов
+  (отсутствующий файл тоже часть ключа). Совпал ключ — dry-run пропускается (`dry_run.cached:true`); любое
+  изменение аргументов, листа или бинарника проверяется заново; ошибка dry-run удаляет ключ; `zaprett check`
+  проверяет всегда (`force_dry_run`).
 - fw: `fw apply` (вместе с генерацией скрипта) и `fw remove` выполняются под общей блокировкой
   `/var/lock/zaprett-fw.lock` (ожидание до 30 с, затем ошибка `busy`): их одновременно вызывают init, hotplug и CLI.
 - Пакет: `prerm` (не при обновлении) — отмена задачи, остановка, возврат offload, удаление таблицы, include,
-  строки cron и `/var/run/zaprett`; `postinst` — сброс кэша. `uci-defaults` запускает `default_postinst`.
+  все три строки cron (`# zaprett-autoupdate`, `# zaprett-watchdog`, `# zaprett-monitor`) и `/var/run/zaprett`;
+  `postinst` — сброс кэша. `uci-defaults` запускает `default_postinst`.
   Пустые каталоги пакетные менеджеры не убирают, это делают `postrm`: пакет `zaprett` проходит
   `/usr/share/zaprett` и `/usr/share/ucode/zaprett` от глубоких каталогов к корню (`find -type d | sort -r`,
   затем `rmdir`), поэтому каталог с файлами другого пакета (`/usr/share/zaprett/lua` пакета `zaprett-nfqws2`)
@@ -166,7 +197,8 @@ ca-bundle zaprett-nfqws`. Модули ucode — только `fs`, `uci`, `ubus
   Каталог `/usr/libexec/zaprett` создают пакеты движков, и они же снимают его своим `postrm` (`rmdir`, только
   если он пуст, — при установленном втором движке он остаётся); `zaprett-nfqws2` так же снимает свой
   `/usr/share/zaprett/lua`. `/etc/zaprett` — данные пользователя, его удаляет `install.sh --purge`.
-  `uci-defaults` также вызывает `zaprett sources defaults`: при обновлении сохранённый `/etc/config/zaprett` не
+  `uci-defaults` создаёт секцию `monitor` с умолчаниями, если её нет (существующая не меняется), и вызывает
+  `zaprett sources defaults`: при обновлении сохранённый `/etc/config/zaprett` не
   содержит подписок, добавленных в новой версии, и они дописываются, кроме перечисленных в
   `main.deleted_sources` (их удалил пользователь).
 - Изменения через CLI (`list`, `strategy set`, `mode`, `engine`, `wizard apply`) применяются к **работающему**
@@ -207,23 +239,23 @@ WAN — интерфейсы `up` с маршрутом `0.0.0.0/0` (`::/0` дл
 ## 6. CLI `/usr/bin/zaprett`
 
 Флаги: `--json` (один JSON-объект в stdout), `--foreground` (задача выполняется сразу), `--quiet` (без вывода
-при успехе), `--type <тип>`, `--tail N`, `--strategies id,id`, `--quick`, `--all`, `--if-running`,
-`--if-applied`, `--full` (только `diag`).
+при успехе), `--type <тип>`, `--tail N`, `--strategies id,id`, `--services id,id`, `--quick`,
+`--apply-if-better`, `--brief`, `--all`, `--if-running`, `--if-applied`, `--full` (только `diag`).
 Коды возврата: `0` — успех, `1` — ошибка, `2` — неверные аргументы (`error: "usage"`).
 Ошибка: `{"ok":false,"error":"<код>","message":"<текст ru>", ...}`. Id: `^[A-Za-z0-9._-]{1,96}$`, не с точки.
 
 | Команда | Ответ `--json` (успех) |
 |---|---|
-| `status` | `{ok, enabled, autostart, running, pid, engine, engine_version, strategy:{id,name,source}, list_mode, lists, exclude_lists, ipsets, exclude_ipsets, nft_applied, wan:[dev], flow_offload:{fw4, fw4_hw, mode}, clients_mode, test_mode, warnings:[код], details:{generate, bad_options, recovered_test?}, version}` |
+| `status` | `{ok, enabled, autostart, running, pid, engine, engine_version, strategy:{id,name,source}, list_mode, lists, exclude_lists, ipsets, exclude_ipsets, nft_applied, wan:[dev], flow_offload:{fw4, fw4_hw, mode, own}, dns:{encrypted, provider}, clients_mode, test_mode, queue: null\|{packets}, ipv6_wan, job: null\|{id,name,state,progress}, monitor: null\|{state,consecutive_failures,checked_at}, warnings:[код], details:{generate, bad_options, recovered_test?}, version}` — `queue.packets` — 8-й столбец `/proc/net/netfilter/nfnetlink_queue` для `qnum`; `job` — последняя задача в любом состоянии; `monitor` — `null`, если секции нет или монитор выключен |
 | `start` | `{ok, running, pid, warnings, nft_applied}` — `enabled=1`, `init enable`, проверка генерации, ожидание запуска до 6 с |
 | `stop` | `{ok, running:false}` — остановка + возврат offload |
 | `restart` | `{ok, running, pid, warnings}`; при `enabled=0` — ошибка `disabled` |
 | `enable` / `disable` | `{ok, enabled, autostart}`; `disable` также останавливает движок |
 | `check` | `{ok, engine, strategy, args, ports:{tcp,udp}, dry_run:{rc,output}, warnings, details, dropped_tokens}` |
 | `gen-args` | `{ok, path, engine, strategy, warnings, test_mode}`; текстом — путь |
-| `fw apply [--if-running\|--if-applied]` | `{ok, applied, wan:{v4,v6}, ports, warnings}` или `{ok, skipped:true}` |
+| `fw apply [--if-running\|--if-applied]` | `{ok, applied, changed, flowtable: "hw"\|"sw"\|null, wan:{v4,v6}, ports, warnings}` или `{ok, skipped:true, changed:false}`; `changed:false` — тот же текст уже стоит, ядро не трогалось; в режиме `own` без принятой ядром flowtable — `flowtable_failed` в `warnings` |
 | `fw remove` / `fw show` | `{ok, removed}` / `{ok, text, applied, wan, ports}` |
-| `items [--type t]` | `{ok, items:[{id,type,name,version,author,description,source,file,entries,size,active,used_by,dependencies,supported}], errors:[{path,error}]}` |
+| `items [--type t]` | `{ok, items:[{id,type,name,version,author,description,name_en,description_en,source,file,entries,size,active,used_by,dependencies,supported}], errors:[{path,error}]}` |
 | `list enable/disable <id>` | `{ok, id, type, enabled, changed, reloaded, warnings}`; `src-<имя>` можно включить до первой загрузки |
 | `strategy set <id>` | `{ok, id, engine, reloaded, warnings}` |
 | `strategy show <id>` | `{ok, id, type, name, source, description, dependencies, text, args, ports, warnings}` или `build_error/build_message` |
@@ -235,11 +267,18 @@ WAN — интерфейсы `up` с маршрутом `0.0.0.0/0` (`::/0` дл
 | `sources update [<имя>...]` | `{ok, job:{id,name}}`; результат задачи `{updated, unchanged, failed:[{name,error,message}]}` |
 | `sources save <имя>` (JSON в stdin ≤64 КиБ) / `sources delete <имя>` | `{ok, name, item_id, type, created, type_changed, url_changed, reloaded}` / `{ok, name, removed_item, reloaded}`; во время фоновой задачи — ошибка `job_busy` |
 | `sources defaults` | `{ok, added:[имя], skipped:[имя]}` — служебная, для `uci-defaults` |
-| `presets` | `{ok, schema, services:[{id,name,description,note,tier,works,lists,ipsets,sources,test_targets,enabled,partially_enabled,available}], defaults, always, tiers, ram_total_mib, recommended_tier: light\|full}` |
-| `wizard apply <service>...` | `{ok, services, skipped:[{id,reason}], lists, ipsets, exclude_lists, exclude_ipsets, list_mode, strategy, sources, sources_disabled, job?, job_error?:{code,message}, reloaded, warnings}` |
+| `presets` | `{ok, schema, services:[{id,name,description,note,name_en,description_en,note_en,tier,works,lists,ipsets,sources,test_targets,enabled,partially_enabled,available,variants:[{id,name,name_en,description,description_en,lists,ipsets,sources,tier,enabled,available}],enabled_variant}], defaults, always, tiers, ram_total_mib, recommended_tier: light\|full}`. `enabled`/`partially_enabled` — по основному набору сервиса; `variants[].enabled` — включены все элементы варианта; `enabled_variant` — id включённого варианта (из нескольких — самый большой, при равенстве первый), `null` — работает основной набор или сервис выключен (контракт v1.7 §16.4). Вариант без своего `tier` наследует `tier` сервиса |
+| `wizard apply <service>[:<variant>]...` | Для сервиса с `variants` можно указать вариант (`discord:voice`); без варианта — основной набор. Включаются элементы выбранного набора; все остальные наборы пресетов (другие варианты выбранного сервиса, любые наборы невыбранных) выключаются, кроме элементов, которые нужны выбранному набору; `user-*` не выключаются никогда. Ошибки: `unknown_variant` (у сервиса нет такого варианта), `bad_args` (часть ссылки не id или сервис указан с разными вариантами), `unknown_service`. Ответ `{ok, services, variants:{<service>: <variant>\|null}, skipped:[{id,reason}], lists, ipsets, exclude_lists, exclude_ipsets, list_mode, strategy, sources, sources_disabled, job?, job_error?:{code,message}, reloaded, warnings}`; сервис или выбранный вариант уровня `full` при ОЗУ меньше `tiers.full.min_ram_mib` применяется с `low_memory` в `warnings` (так же в `status`, если такой вариант включён целиком) |
 | `repo fetch` / `repo install <id>...` / `repo remove <id>` / `repo upgrade [--all\|<id>...]` | `{ok, job:{id,name}}` (с `--foreground` — результат задачи) |
 | `repo list [--type t]` | `{ok, fetched_at, url, items:[{id,type,name,version,author,description,installed,installed_version,installed_source,update_available,supported,size,error}]}` |
-| `test start [--strategies a,b] [--quick]` / `test status` / `test stop` / `test apply <id>` | `{ok, job}` / `{ok, running, job, results}` (в `results.results` подробности целей только у первых 10 результатов, не больше 100 целей; `results.targets_trimmed`) / как `job cancel`, либо `{ok, state:"restored", reloaded}` без задачи / `{ok, strategy, engine, reloaded, warnings}` |
+| `test start [--strategies a,b] [--quick] [--apply-if-better]` / `test status [--brief]` / `test stop` / `test apply <id>` | `{ok, job}` (результат задачи `{tested, best, baseline_ok, applied, message}`) / `{ok, running, job, results}` (в `results.results` подробности целей только у первых 10 результатов, не больше 100 целей; `results.targets_trimmed`; с `--brief` поля `targets` нет ни у результатов, ни у `baseline`) / как `job cancel`, либо `{ok, state:"restored", reloaded}` без задачи / `{ok, strategy, engine, reloaded, warnings}`. С `--apply-if-better` исходная стратегия всегда в переборе (первой); лучшая применяется, только если её доля строго больше доли исходной (исходная, которая не запустилась, считается 0); UCI меняется до возврата, поэтому движок перезапускается один раз. `applied: <id>\|null` — и в результате задачи, и в `test-results.json` |
+| `ensure [--quiet]` | `{ok, action, reason?, pid?}`: `none` (`reason: disabled` или `stopped`, либо без `reason` — всё работает), `started` (`reason: not_running`), `fw_applied`, `skipped` (`reason: test_running`). Неудачный запуск — `{ok:false, error:"engine_not_running", action:"started"}`. Действия ≠ `none`/`skipped` пишутся в syslog («сторож: …»). Под блокировкой `zaprett.lock` |
+| `probe [--services id,id] [--foreground]` / `probe status` | задача `probe`: цели `test_targets` сервисов, у которых включён лист, ipset или элемент подписки `src-<имя>` (с `--services` — названные, даже выключенные; неизвестный — `unknown_service`), одним параллельным опросом, **без** остановки и перезапуска движка; результат задачи `{reachable, total, services, message}`. `probe status` → `{ok, probe: null\|{started, finished, engine_running, strategy: id\|null, ok, total, services:[{id,name,ok,total,avg_ms,targets:[{url,ok,ms,bytes,error}]}]}}` из `/var/run/zaprett/probe.json`; `error` — `null` при `ok`, иначе код классификатора (раздел 9) |
+| `monitor run [--quiet]` / `monitor status` | одна проверка: не больше `max_targets` целей тех же сервисов, таймаут `monitor.timeout`, параллельно; пропуск без записи — `{ok, skipped}` (`monitor_disabled`, `service_disabled`, `stopped`, `not_running`, `job_busy`; причина перепроверяется и после опроса); иначе `{ok, state, reachable, total, consecutive_failures, repair_started}`. `monitor status` → `{ok, monitor:{enabled, auto_repair, interval, threshold, state, checked_at, ok, total, consecutive_failures, history:[{t,ok,total}] (48), last_repair: null\|{t, job_id}}}` из `/var/run/zaprett/monitor.json` |
+| `log [--tail N]` | `{ok, lines}` — строки `logread` с `zaprett` или `nfqws`, N по умолчанию 200, больше 1000 урезается до 1000, не число — `bad_value` |
+| `dns status` / `dns setup [--foreground]` | `{ok, dns:{encrypted, provider}}` / при уже работающем провайдере сразу `{ok, changed:false, dns}`, иначе задача `dns-setup` (результат `{changed:true, packages, manager, dns, message}`; ошибки `no_package_manager`, `package_update_failed`, `package_install_failed`, `dns_not_running`, `cancelled`) |
+| `diagnose [--services id,id] [--foreground]` / `diagnose status` | задача `diagnose` (результат `{verdict, counts, total, message}`) / `{ok, diagnose: null\|{started, finished, engine_running, targets:[{url, host, verdict, dns:{system, doh, spoofed}, detail, service, reason, error, bytes, tcp}], summary:{verdict, counts}}}` из `/var/run/zaprett/diagnose.json`; `unknown_service`, `no_targets` |
+| `page overview\|lists\|strategies\|diagnostics` | `{ok, page, <поля>}` — один процесс; каждое поле — ответ команды целиком со своим `ok`: overview `status, job, presets, monitor, probe, dns`; lists `status, job, items, sources, presets`; strategies `status, job, items, test` (`test status --brief`); diagnostics `status, job, monitor, dns, diagnose` (`dns` = ответ `dns status`, `diagnose` = ответ `diagnose status`). Исключение в одной части не роняет страницу: поле получает `{ok:false, error:"internal_error"}` |
 | `job status` / `job log [--tail N]` / `job cancel` | `{ok, job}` / `{ok, log}` / `{ok, state:"cancelling", job:{id,name}}` — сразу, не дожидаясь задачи |
 | `diag [--full]` / `version` | `{ok, text, full}` / `{ok, version, nfqws, nfqws2}` |
 | служебные | `offload apply\|restore\|status`, `cron sync`, `__job-run <id> <name> ...` |
@@ -271,12 +310,18 @@ WAN — интерфейсы `up` с маршрутом `0.0.0.0/0` (`::/0` дл
  "strategy":{"id":"user-x","name":"user-x","source":"user"},"engine":"nfqws","args":["..."],"dry_run":{"rc":1,"output":"invalid dpi-desync mode"}}
 ```
 
-### Коды предупреждений (`warnings`) — закрытый список контракта v1.2
+### Коды предупреждений (`warnings`) — закрытый список контракта v1.2 + v1.3 + v1.4
 
 `bad_config`, `generate_failed`, `engine_missing`, `nft_queue_missing`, `no_strategy`, `strategy_missing`,
 `list_missing` (в `status`: включён обычный лист, которого нет среди установленных), `not_running`,
 `nft_not_applied`, `no_wan`, `test_running`, `flow_offload_enabled`, `no_active_lists`, `source_not_downloaded`,
-`profile_unfiltered`, `strategy_option_ignored`, `empty_profile_removed`, `wide_port_range`, `config_was_invalid`.
+`profile_unfiltered`, `strategy_option_ignored`, `empty_profile_removed`, `wide_port_range`, `config_was_invalid`,
+`ipv6_wan_unhandled` (у WAN маршрут `::/0`, а `ipv6=0`; при включённой или работающей службе), `low_memory`
+(включён сервис уровня `full` при ОЗУ меньше `tiers.full.min_ram_mib` или `ram_mib` включённых подписок больше
+половины `MemAvailable`), `monitor_degraded` (монитор включён и в состоянии `degraded` или `repairing`);
+v1.4: `flowtable_failed` (режим `own`, исходно fw4-ускорение было включено, таблица в ядре есть, а своей flowtable в
+ней нет — нет устройств или ядро не приняло), `game_filter_no_ipsets` (игровой фильтр включён, а непустых включённых
+include-ipset нет — профиль не добавлен), `dns_plain` (информационное: включён сервис с `needs_dns`, шифрованного DNS нет).
 Других кодов бэкенд не выдаёт; русские тексты — `text.uc`, `WARNINGS` (тест сверяет ключи со списком
 контракта). Ошибка попутной фоновой задачи идёт в `job_error {code, message}`, не в `warnings`.
 
@@ -288,10 +333,10 @@ WAN — интерфейсы `up` с маршрутом `0.0.0.0/0` (`::/0` дл
 `unknown_placeholder`, `bad_placeholder_id`, `dependency_not_declared`, `item_not_installed`, `path_not_allowed`,
 `bad_option`, `bad_port_filter`, `dry_run_failed`, `nft_check_failed`, `nft_apply_failed`, `nft_remove_failed`,
 `too_large`, `invalid_entries`, `item_active`, `item_in_use`, `readonly_item`, `not_installed`, `presets_missing`,
-`unknown_service`, `preset_unavailable`, `preset_item_missing`, `job_busy`, `job_spawn_failed`, `no_job`,
+`unknown_service`, `unknown_variant`, `preset_unavailable`, `preset_item_missing`, `job_busy`, `job_spawn_failed`, `no_job`,
 `internal_error`, `download_failed`, `bad_index`, `not_in_repo`, `unsupported_item`, `dep_not_found`,
 `sha256_mismatch`, `no_space`, `repo_not_fetched`, `cancelled`, `no_targets`, `no_strategies`,
-`source_update_failed` (с `failed[].error`: `invalid_source`, `download_failed`, `too_large`, `too_few_entries`,
+`engine_not_running` (и у `ensure`), `logread_failed`, `source_update_failed` (с `failed[].error`: `invalid_source`, `download_failed`, `too_large`, `too_few_entries`,
 `bad_content`, `no_space`, `write_failed`).
 
 ## 7. Подписки по URL (§4, v1.1)
@@ -335,7 +380,8 @@ WAN — интерфейсы `up` с маршрутом `0.0.0.0/0` (`::/0` дл
 
 `job.json`: `{id, name, state: running|done|failed|cancelled, progress, message, started, finished, rc, result,
 pid, pid_start}`; журнал `job.log` (не больше 256 КиБ, при переполнении остаётся последняя половина).
-Задачи: `repo-fetch`, `repo-install`, `repo-remove`, `repo-upgrade`, `sources-update`, `test`, `autoupdate`.
+Задачи: `repo-fetch`, `repo-install`, `repo-remove`, `repo-upgrade`, `sources-update`, `test`, `autoupdate`, `probe`,
+`dns-setup`, `diagnose`.
 
 - Запуск: `flock` на `/var/lock/zaprett-job.lock` (занято → `job_busy`), запись `job.json`, снятие блокировки,
   затем `start-stop-daemon -S -b -m -p /var/run/zaprett/job.pid -x /usr/bin/ucode -- -S --
@@ -355,7 +401,13 @@ pid, pid_start}`; журнал `job.log` (не больше 256 КиБ, при �
 
 ## 9. Репозиторий и автоподбор
 
-**Репозиторий.** `repo fetch`: `index.json` (≤1 МиБ, `schema 1`), затем все манифесты (8 потоков) в кэш
+**Пределы загрузок (§14.5).** Каждая загрузка идёт через `probe.sh` с `max_bytes` (обрыв `ulimit -f`): индекс
+2 МиБ, манифест 64 КиБ, артефакт 32 МиБ, подписка 16 МиБ. Размер сверяется **до** кода возврата (обрезанный файл
+заканчивается SIGXFSZ, а не ошибкой загрузки) → `too_large`, временный каталог удаляется. Артефакты — 4 потока,
+при `MemAvailable < 64 МиБ` — 1; подписки — 2, при `MemAvailable < 48 МиБ` — 1; манифесты — 8.
+`repo.url` — только `https://` (иначе `bad_config` с `bad_options: url` и адрес по умолчанию).
+
+**Репозиторий.** `repo fetch`: `index.json` (≤2 МиБ, `schema 1`), затем все манифесты (8 потоков) в кэш
 `/var/run/zaprett/repo/index.json`. Ключ элемента — пара (type, id). Id берётся из индекса: у
 `ipset-exclude-x5group` и `ipset-exclude-yandex` в zaprett-repo id манифеста с точкой на конце — элемент
 принимается, расхождение отмечается в `id_note`.
@@ -377,12 +429,50 @@ pid, pid_start}`; журнал `job.log` (не больше 256 КиБ, при �
   с `_` пропускаются.
 - **Кандидаты:** `--strategies`; `--quick` — стратегия по умолчанию, `defaults.quick_test_strategies`, затем
   первые стратегии bundle, всего до 12; без флагов — все установленные для текущего движка, текущая первой.
-- **Ход:**
+- **Режим `isolated` (по умолчанию, контракт v1.6 §17; модуль `isolate.uc`)** — основной движок не
+  останавливается и не перезапускается, сеть остаётся с обходом:
+  1. **Пользователь проверок** `zaprett-test`, uid/gid **29411** — создаёт `uci-defaults` через `user_add`/`group_add`
+     из `/lib/functions.sh` (строки в `/etc/passwd`, `/etc/group`, `/etc/shadow`), один раз; если uid или gid 29411
+     уже заняты чужими — пользователь не создаётся (→ `no_test_user`). `postrm` при удалении пакета удаляет только
+     строки `^zaprett-test:` (под `lock /var/lock/passwd`). Загрузки идут через
+     `start-stop-daemon -S -c zaprett-test -x /usr/share/zaprett/probe.sh -- …` (в busybox обеих версий нет `su`;
+     проверено: `meta skuid 29411 counter` растёт только от этих загрузок, от root — нет). Каталог загрузок
+     отдаётся пользователю `chown`; не удалось — ошибка `tmp_failed`, а не загрузка от root.
+  2. **Правила** — из `/var/run/zaprett/test-isolated.json` `{uid, qnum, ports}` рисует обычный `fw apply`
+     (поэтому их восстанавливают и fw4-include после `firewall restart`, и hotplug — проверено живым
+     `firewall restart` посреди теста). В `postnat` первым правилом
+     `meta skuid <uid> ct mark set ct mark or 0x04000000 goto postnat_test`, в `prenat` первым —
+     `ct mark and 0x04000000 != 0 goto prenat_test` (ответы; `skuid` в prerouting не работает). Цепочки
+     `postnat_test`/`prenat_test` — те же правила с портами и лимитами пакетов кандидата, очередь `qnum+1`, **без**
+     фильтра клиентов; на базовом прогоне (`ports: null`) они пусты — проверки не идут ни в одну очередь.
+     `goto`, а не `jump`: трафик проверок не возвращается в основные правила очереди `qnum`.
+  3. **Инстанс `test`** — `/etc/init.d/zaprett` в `start_service` объявляет его из `/var/run/zaprett/test-args` и
+     `test-engine` (без respawn; `--qnum=<qnum+1>`, `--user` как у основного). Каждая стратегия — запись этих файлов
+     + `fw apply` + `init start`: procd перезапускает только инстанс с изменившимися аргументами, а reload во время
+     теста объявляет `test` заново (procd снимает не объявленные при `start` инстансы). Генерация кандидата не
+     трогает кэш dry-run основного движка (`keep_dry_run_cache`).
+  4. **Подготовка**: пишутся состояние и пустые правила теста, `fw apply` (отказ → `nft_rejected`), инстанс `test`
+     запускается с текущей стратегией; через 1 с не работает → `instance_failed`. Затем базовая проверка,
+     кандидаты, в конце `ISO.cleanup`: файлы, `ubus call service delete {name, instance:"test"}` (основной инстанс
+     не трогается), `start-stop-daemon -K -s KILL -u zaprett-test`, `fw apply` без цепочек теста. Основной движок
+     перезапускается только для стратегии, применённой `--apply-if-better`, или запускается, если умер за время
+     теста (но не после `stop` пользователя — маркер `stopped`).
+  5. **Откат на `exclusive`** (прежний режим ниже) с `mode_reason`: `forced` (`--exclusive`), `engine_not_running`
+     (служба выключена, остановлена или движок не работает), `no_test_user`, `qnum_out_of_range` (`qnum` 65535),
+     `mark_conflict` (`desync_mark`/`postnat_mark` задевают бит `0x04000000`), `write_failed`, `nft_rejected`,
+     `instance_failed`.
+  6. **Падение задачи** (`kill -9`, OOM): любой следующий `status`/`job status`/`test status`/`test stop`/`ensure`/
+     `monitor run` видит оставшиеся файлы теста при неработающей задаче и снимает всё то же, что `cleanup`;
+     `test-results.json` из `running` становится `failed`.
+- **Режим `exclusive`** (прежний, §10):
   1. Записывается исходное состояние, движок останавливается (`init stop`), идёт базовая проверка без обхода.
   2. Для каждой стратегии: генерация и dry-run (ошибка → `invalid`), `test-override`, `init start`, пауза
      `settle`, проверка, что движок запущен, проверка целей, запись `test-results.json`.
   3. При любом исходе override удаляется и восстанавливается исходное состояние (был запущен → `start`,
      иначе `stop`).
+- **Поля:** `mode` (`isolated`|`exclusive`) и `mode_reason` (`null` в isolated) — в `test-results.json`, в
+  `test status` (и `--brief`) на верхнем уровне и в `results`, в `result` задачи. Статус службы во время любого
+  теста несёт `test_running`.
 - **Сортировка:** `done` выше остальных, затем доля успешных ↓ (дробная), затем среднее время ↑.
 
 Проверка цели: `uclient-fetch -T <timeout> [-4 при ipv6=0] -U <UA браузера> -O <файл> <url>` **без `-q`** (с
@@ -400,6 +490,7 @@ pid, pid_start}`; журнал `job.log` (не больше 256 КиБ, при �
 | 4 | `Connection error: Connection failed` ✓ (24.10, отказ в соединении) / `Failed to send request: ...` ✓ (25.12 — отказ; обе версии — TCP без ответа за `-T`; DNS) | `connect_failed` |
 | −9 | убит по общему таймауту | `timeout` |
 | 3/2 | ошибка записи файла | `local_error` |
+| 4 | `SSL error: NET - Sending information through the socket failed` + `Connection error: Connection failed` ✓ (24.10, mbedtls: отказ или сброс TCP — ClientHello не ушёл) | `connect_failed` (до 2026-09-22 ошибочно было `tls_error`) |
 
 ## 10. Тесты
 
@@ -407,7 +498,10 @@ pid, pid_start}`; журнал `job.log` (не больше 256 КиБ, при �
 tests/run.sh <корень пакета> <рабочий каталог в /tmp> [бинарник nfqws] [имена тестов...]
 tests/lib/ztest.uc          мини-фреймворк (FAIL/RESULT, selfcheck, песочница, перенаправление путей P)
 tests/test_*.uc             validate, config, store, strategy, nft, repo, sources, tester, job, commands, uci,
-                            bundle, static, pkgscripts (последний читает Makefile'ы пакетов движков рядом с
+                            bundle, static, health (ensure, probe, монитор, status, log, page), cron (строки cron,
+                            init, uci-defaults и prerm в песочнице), v13 (пределы загрузок, https, кэш dry-run,
+                            --apply-if-better, IPv6 WAN, английские метаданные), v14 (flowtable, QUIC, игровой фильтр,
+                            DNS, диагностика — раздел 13), pkgscripts (последний читает Makefile'ы пакетов движков рядом с
                             корнем пакета: `packages/zaprett-nfqws*/Makefile`; без них — SKIP)
 tests/tools/mem_normalize.uc  ручной замер пиковой памяти нормализации подписок (VmHWM)
 tests/fixtures/             bundle из zaprett-repo (64 стратегии, 6 bin, листы), фиксированные id bundle, «установленные»,
@@ -481,6 +575,24 @@ sources 74, tester 48, job 46, commands 60, uci 113, bundle 41, static 46, pkgsc
 - `3/4 == 0`;
 - падающий и аварийный тест-файл: `run.sh` возвращает 1.
 
+**Результат 2026-09-22 (контракт v1.4).** 24.10.8 и 25.12.5: по **1337 PASS / 0 FAIL** (backend), плагин
+227/0. Новый файл `test_v14.uc` — 145 проверок: параметры v1.4 и их отказы, игровой фильтр (состав профилей по
+Flowseal, порядок, пустой ipset не считается, `nfqws --dry-run` трёх вариантов и `nfqws2 --intercept=0` с
+отрицательными контролями), план и отрисовка своей flowtable, порядок кандидатов hw → sw → без неё и откат
+(`apply_candidates` с подменой ядра), `nft -c` всех новых вариантов и отказ на несуществующем устройстве, QUIC с
+фильтром клиентов и IPv6, провайдеры DNS, `dns-setup` (успех, повтор без действий, ошибки обновления и установки,
+«установлен, но не запустился»), `dns_plain`, разбор `nslookup`/DoH, адреса-заглушки, признак TCP по текстам
+uclient-fetch обеих версий, все вердикты, задача `diagnose` целиком с подменой сети, поля `page`, тексты, CLI.
+
+Мутационная проверка v1.4 (скрипт-драйвер вне пакета, копия пакета на тестовом роутере 25.12): 19 мутаций, **19 обнаружены**, контрольный
+прогон без мутаций 229/0 — порог `flow add` убран; порог = min вместо max; план без учёта исходного ускорения;
+нет отката к следующему кандидату; QUIC без фильтра клиентов; пустой ipset считается активным; нет guard-ipset;
+игровые профили не в конце; «установлен» = «работает»; `dns-setup` без проверки запуска; `dns_plain` при шифрованном
+DNS; 10/8 не заглушка; «адрес другой» раньше «сайт открылся» (ложная подмена DNS у CDN); текст отказа TCP 24.10 не
+учтён в `tcp_connected` и в `classify`; любой размер = замедление; `page overview` без `dns`; hw и sw переставлены;
+отрицание в игровых портах. `status → flowtable_failed` юнит-тестом не закреплено (зависит от таблицы в ядре стенда) —
+проверено вживую (раздел 13).
+
 ## 11. Отладка
 
 - `zaprett status`, `zaprett check` — что сломано и почему (аргументы, dry-run, предупреждения).
@@ -493,7 +605,9 @@ sources 74, tester 48, job 46, commands 60, uci 113, bundle 41, static 46, pkgsc
 - `logread -e zaprett` — сообщения бэкенда; вывод nfqws пишется в syslog под именем бинарника. `debug '1'`
   добавляет `--debug=syslog`.
 - Файлы: `/var/run/zaprett/{args,engine,ports.json,status.json,zaprett.nft,job.json,job.log,test-override,
-  test-results.json,repo/index.json}`, `/etc/zaprett/{sources-state.json,offload-saved.json}`.
+  test-results.json,repo/index.json,probe.json,monitor.json,dryrun-ok.json,stopped}`,
+  `/etc/zaprett/{sources-state.json,offload-saved.json}`.
+- `zaprett log --tail 50` — последние строки zaprett и nfqws; `logread | grep сторож` — действия сторожа.
 - `zaprett fw show` — скрипт nft без применения; `nft list table inet zaprett` — что стоит в ядре.
 
 ## 12. Отклонения от контракта и ограничения
@@ -524,6 +638,30 @@ sources 74, tester 48, job 46, commands 60, uci 113, bundle 41, static 46, pkgsc
     `config.uc` (`DEFAULT_SOURCES`), тест сверяет их с `/etc/config/zaprett`.
 14. `list_missing` выдаёт `status`, когда включён обычный лист, которого нет среди установленных (генерация в
     этом случае падает с `item_not_found`, и `generate_failed` одно не объясняет причину).
+15. v1.3: строки сторожа и монитора снимаются и при `zaprett stop` (маркер `/var/run/zaprett/stopped`), а не
+    только при `enabled=0` — иначе сторож через 5 минут запускал бы остановленную вручную службу. Внесено в
+    контракт (§14.3, «Уточнения по реализации»).
+16. v1.3: счётчики в результатах задачи `probe` и `monitor run` называются `reachable` (поле `ok` ответа занято
+    признаком успеха); в `probe status` / `monitor status` — `ok`, как в контракте.
+17. v1.3: сервис считается включённым и по элементу своей подписки `src-<имя>` в `lists`/`ipsets` (раньше — только
+    по листам и ipset); это меняет и цели автоподбора (у «Сайты за Cloudflare» они появляются).
+18. v1.3: `monitor.json` лежит в tmpfs — после перезагрузки история и время последнего авторемонта пропадают,
+    поэтому авторемонт после перезагрузки возможен раньше 6 часов.
+
+19. v1.4: собственная flowtable ставится, только если fw4-ускорение было включено до zaprett (сохранённое значение
+    или текущее): роутеру без ускорения zaprett его не добавляет. `own` для такого роутера ведёт себя как `auto`.
+20. v1.4: flowtable с `counter` (как у fw4) и `hook ingress priority filter`; аппаратный вариант (`flags offload`)
+    пробуется первым, при отказе ядра — программный, затем таблица без flowtable (`flowtable_failed`).
+21. v1.4: блокировка QUIC — `counter drop` в своей цепочке `forward_quic` (hook forward, priority filter − 1), фильтр
+    клиентов действует и во время автоподбора (цепочка `clients_mark` ставится ради QUIC и в тестовом режиме).
+22. v1.4: игровой фильтр — два профиля (TCP и UDP, каждый при непустых портах), с guard-ipset и всеми
+    `--ipset-exclude`; для nfqws2 — та же атака в его синтаксисе (`--blob`, `--out-range`, `--lua-desync`).
+    Широкие игровые порты дают штатное `wide_port_range`.
+23. v1.4: `diagnose` — дополнительные поля цели `service, reason, error, bytes, tcp`; подменённый сертификат и страница
+    с текстом заглушки → `http_block`; «замедление» — загрузка оборвалась или замерла, когда тело уже шло и его было
+    не больше 24 КиБ (нижней границы 14 КБ по телу нет: uclient-fetch видит только тело, а TLS и заголовки съедают
+    первые килобайты — на стенде 26000 байт соединения дали 5433 байта тела); `summary.verdict` при равенстве —
+    по порядку списка вердиктов.
 
 Ограничения и что не проверено:
 - Сборка пакета в SDK (Makefile), установка, `uci-defaults` (в том числе `sources defaults`),
@@ -532,9 +670,11 @@ sources 74, tester 48, job 46, commands 60, uci 113, bundle 41, static 46, pkgsc
   функции, команды в песочнице, компиляция и синтаксис. Что из этого проверено вживую на роутере, а что
   нет, перечислено в `../tests/RESULTS.md`. Логика подписок проверена с подставленным загрузчиком;
   обрыв по `ulimit -f` — живой загрузкой с локального uhttpd.
-- Размер артефакта репозитория известен только после загрузки: большой элемент сначала попадает в RAM (tmpfs),
-  лимит 32 МиБ проверяется после загрузки (у подписок — обрыв на 16 МиБ во время загрузки). `repo list`
-  показывает `size` только для установленного.
+- Размер артефакта репозитория заранее неизвестен: загрузка идёт в RAM (tmpfs) и обрывается на 32 МиБ
+  (индекс — 2 МиБ, манифест — 64 КиБ, подписка — 16 МиБ). `repo list` показывает `size` только для
+  установленного.
+- Не проверено вживую: авторемонт монитора (запуск `test --quick --apply-if-better` при `degraded`) и полный
+  проход `test start --apply-if-better` на роутере — только юнит-тестами с подменой движка и опроса целей.
 - Число записей gzip-листов не считается (`entries: null`).
 - `uclient-fetch -T` — таймаут бездействия: медленный, но живой ответ может идти дольше. Общий предел на пачку
   проверок — `(timeout·3+5)` с на группу.
@@ -556,3 +696,97 @@ sources 74, tester 48, job 46, commands 60, uci 113, bundle 41, static 46, pkgsc
   дорогой по времени: 500 тыс. строк IPv6 — около минуты на x86-VM.
 - Автоподбор с роутера проверяет только трафик самого роутера; при `clients_mode=include` фильтр клиентов на
   время теста снимается.
+
+## 13. Контракт v1.4 (§15): как устроено и как проверено
+
+### 13.1. Собственная flowtable (`flow_offload own`, по умолчанию для новых установок)
+
+- `start_service`: `fw apply` рисует таблицу с `flowtable ft { hook ingress priority filter; devices = {…}; counter; }`
+  и `chain forward_offload { type filter hook forward priority filter + 1; meta l4proto { tcp, udp } ct original packets
+  > N flow add @ft }`, N = max(`tcp_pkt_out`, `udp_pkt_out`); затем `offload apply` сохраняет и выключает ускорение fw4
+  (как `auto`). Устройства — `related_physdevs` зон из `/var/run/fw4.state`, существующие в `/sys/class/net` (как у fw4
+  для программного ускорения); при исходном `flow_offloading_hw=1` — сначала вариант с `flags offload` на нижних
+  устройствах мостов/VLAN (`lower_*`, как `resolve_lower_devices` fw4).
+- Нет устройств или ядро не приняло ни один вариант → таблица без flowtable, `flowtable_failed` (в `fw apply` и в
+  `status`). `status.flow_offload.own` — flowtable есть в `nft list table inet zaprett`.
+- `stop`/`disable` → `offload restore` возвращает `flow_offloading(_hw)` fw4, таблица снимается.
+
+Проверено на тестовом роутере (OpenWrt 25.12.5), клиентская машина за роутером, исходно `flow_offloading=1` (выставлено для опыта):
+- в ядре `flowtable ft { hook ingress priority filter devices = { "br-lan", "eth1" } counter }` и правило
+  `meta l4proto { tcp, udp } ct original packets > 9 flow add @ft`; fw4 своей flowtable больше не держит;
+- счётчик очереди (8-й столбец `nfnetlink_queue`) на три запроса клиента к `https://www.youtube.com/`: 0 → 12 → 24 → 36
+  (+12 на соединение: 9 исходящих + 3 ответных). Отрицательный контроль — `keep` при включённом ускорении fw4:
+  0 → 3 → 6 → 9 (+3: движок видит только рукопожатие TCP, ClientHello уходит мимо);
+- соединение клиента в `/proc/net/nf_conntrack` с флагом `[OFFLOAD]` (и `mark=1073741824` — прошло через очередь);
+  в `auto` тех же загрузок `[OFFLOAD]` — 0;
+- после `zaprett stop` — `flow_offloading=1`, flowtable fw4 вернулась, `offload-saved.json` удалён;
+- нет устройств (обнулены `related_physdevs` в `fw4.state`) → `fw apply` `flowtable: null, warnings: ["flowtable_failed"]`,
+  `status.flow_offload.own=false` + `flowtable_failed`; после `firewall reload` — снова `sw`, предупреждения нет;
+- `flow_offloading_hw=1` → `flowtable ft { devices = { "eth0", "eth1" } flags offload counter }` (br-lan заменён на eth0).
+
+Пропускная способность (клиент → тестовый роутер → HTTP-сервер в той же сети, адреса 192.168/16 в очередь не попадают, меряется
+только пересылка): без ограничений ~10 Гбит/с во всех режимах (auto 10065/10444, own 10489/10120, keep 10381/10353
+Мбит/с; softirq роутера 34–37 % / 26–31 % / 27–28 %); при `cpulimit 0.3` у VM роутера — auto 1143/1103, own 1395/1164,
+keep 1179/1164 Мбит/с. Разница в пределах разброса: x86-VM стенда упирается не в процессор роутера, выигрыш
+ускорения на слабом железе здесь **не измерен**.
+
+Почему `own` по умолчанию: при включённом ускорении fw4 режим `keep` ломает обход (движок не видит ClientHello —
+измерено выше), `auto` работает, но выключает ускорение для всего трафика, а `own` сохраняет и обход (движок видит
+те же 12 пакетов, что в `auto`), и ускорение ([OFFLOAD]); для роутера без ускорения `own` ≡ `auto`, при отказе
+flowtable — тоже `auto` с предупреждением. У существующих установок значение в `/etc/config/zaprett` не меняется.
+
+### 13.2. Блокировка QUIC и игровой фильтр
+
+- `quic_block=1`: `chain forward_quic { type filter hook forward priority filter - 1; iifname != @wanif oifname @wanif
+  udp dport 443 [фильтр клиентов] counter drop }` (+ `wanif6` при `ipv6=1`). Вживую: три UDP-пакета клиента на
+  8.8.8.8:443 — `counter packets 3 bytes 99 drop`; на порт 444 — прошли (conntrack `dport=444 … [UNREPLIED]` с SNAT);
+  при `quic_block=0` цепочки нет.
+- `game_filter=1`: в конец аргументов — профили по образцу Game Filter Flowseal zapret-discord-youtube (`general.bat`,
+  UDP-фейк — как в редакции 2026-02-23; текущая 2026-08-30 берёт `ACTIVE_GAME_UDP.bin` = `quic_initial_4pda_to.bin`,
+  которого нет в bundle):
+  ```
+  --filter-tcp=<game_ports_tcp> --ipset=<включённые include-ipset> --ipset=<guard> --ipset-exclude=<…>
+    --dpi-desync=multisplit --dpi-desync-any-protocol=1 --dpi-desync-cutoff=n3 --dpi-desync-split-seqovl=568
+    --dpi-desync-split-pos=1 --dpi-desync-split-seqovl-pattern=<bin tls_clienthello_4pda_to>
+  --filter-udp=<game_ports_udp> --ipset=… --ipset-exclude=… --dpi-desync=fake --dpi-desync-repeats=12
+    --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=<bin quic_initial_www_google_com> --dpi-desync-cutoff=n2
+  ```
+  nfqws2: `--blob=zaprett_game_tcp:@<bin> --out-range=<n3 --payload=all --lua-desync=multisplit:pos=1:seqovl=568:seqovl_pattern=zaprett_game_tcp`
+  и `--blob=zaprett_game_udp:@<bin> --out-range=<n2 --payload=all --lua-desync=fake:blob=zaprett_game_udp:repeats=12`.
+  Пустой (0 записей) include-ipset не считается: у nfqws пустой фильтр пропускает всё. Вживую на обеих VM: без ipset —
+  `game_filter_no_ipsets`, профилей нет; с `zaprett-telegram-ipset` — движок работает с обоими профилями, в `postnat`
+  порты `{ 80, 443, 1024-65535 }` и `{ 443, 1024-65535 }`, `zaprett check` — `dry_run.rc 0`.
+
+### 13.3. Шифрованный DNS
+
+`dns setup` на тестовых роутерах 25.12 (apk) и 24.10 (opkg): `{changed:true, packages:["https-dns-proxy","luci-app-https-dns-proxy"],
+manager:"apk"|"opkg", dns:{encrypted:true, provider:"https-dns-proxy"}}` за 17–19 с; до — `encrypted:false`; повтор —
+`{changed:false}` без задачи. После: dnsmasq `noresolv=1`, `server=127.0.0.1#5053/5054`, прокси слушает 5053/5054,
+`nslookup` через dnsmasq и напрямую через 5053 отвечает. `dns_plain`: с включённым `zaprett-rutracker` — нет при
+работающем прокси, есть после `/etc/init.d/https-dns-proxy stop`, снова нет после `start`.
+`needs_dns: true` — `rutracker` (заметка сервиса о подмене DNS), `rkn_full` («многие сайты заблокированы … через
+DNS»), `whatsapp` (исключение доменов из НСДИ; сервис `works:"no"`, предупреждения не даёт, поле — для интерфейса).
+
+### 13.4. Диагностика
+
+Порядок для каждой цели (`test_targets` выбранных или включённых сервисов, не больше 20): `nslookup -type=a` через
+системный DNS; DoH по IP-адресу — `https://8.8.8.8/resolve?name=…&type=A`, при отказе
+`https://1.1.1.1/dns-query?…` с `accept: application/dns-json` (у Cloudflare без заголовка — HTTP-ошибка, проверено);
+загрузка как у автоподбора (`probe.sh`, `-4`, тело до 1 МиБ); при `connect_failed`/`reset`/`timeout` без данных —
+TCP до двух адресов из DoH (сначала совпавших с системными) через `uclient-fetch https://<ip>:<порт>/`: ошибка
+сертификата или любой ответ = соединение есть; `Failed to send request`, `Connection failed` без SSL-ошибки и
+(24.10) `NET - Sending information through the socket failed` = нет.
+Вердикт (`judge`): все системные адреса — заглушки (0/8, 10/8, 127/8, 100.64/10, 169.254/16, 172.16/12,
+192.168/16, 224/3) → `dns_spoof`; сайт открылся → `ok` (адрес CDN может отличаться от DoH — это не подмена); нет
+системного ответа при ответе DoH или ни одного общего адреса → `dns_spoof`; 451, чужой сертификат, текст заглушки →
+`http_block`; обрыв/зависание при теле 1…24576 байт → `throttle`; SSL-ошибка → `tls_block`; TCP до настоящего адреса
+не устанавливается → `ip_block`; соединение есть, но сброс/таймаут → `tls_block`; иначе `unknown`.
+
+Живые отрицательные контроли на обеих VM (временные `/tmp/hosts/b2-ztest` и таблица `inet ztest` удалены, проверено
+`ls`/`nft list`): `10.10.10.10 www.youtube.com` в `/tmp/hosts` → `dns_spoof` (`stub_address`), после удаления — `ok`;
+`reject with tcp reset` на все адреса `gateway.discord.gg` → `ip_block` (`tcp_failed`), после удаления — `ok`
+(на 24.10 первый прогон дал `tls_block` — отсюда исправление классификатора, см. раздел 9); сброс ответов
+`www.youtube.com` после 26000 байт соединения → `throttle` (тело 10700 байт), после 90000 байт → не `throttle`
+(`tls_block`, тело 71 КБ). На стенде трафик уходит через xray-tproxy VM 200: TCP «устанавливается» всегда, поэтому
+`discord.com` (на стенде не отвечает и при выключенном обходе) даёт `tls_block`, а подмена на публичный чужой адрес
+не воспроизводится (tproxy ведёт по SNI на настоящий сервер) — проверено только заглушкой.

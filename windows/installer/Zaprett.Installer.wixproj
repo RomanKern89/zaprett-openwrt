@@ -1,0 +1,36 @@
+<Project Sdk="WixToolset.Sdk/7.0.0">
+
+  <!--
+    MSI of zaprett for Windows (ARCHITECTURE-WIN W-4, §3, §10). Built by windows/build/build.ps1, which stages
+    the published binaries, the engine and the data into $(StageDir) first.
+    WiX v7 needs the OSMF EULA accepted explicitly: build.ps1 passes -p:AcceptEula=wix7 (see docs/BUILD-WIN.md).
+  -->
+
+  <PropertyGroup>
+    <OutputName>zaprett</OutputName>
+    <OutputType>Package</OutputType>
+    <Platform>x64</Platform>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.1.0</ProductVersion>
+    <StageDir Condition="'$(StageDir)' == ''">$(MSBuildThisFileDirectory)..\artifacts\stage\</StageDir>
+    <StageDir>$([MSBuild]::EnsureTrailingSlash('$([System.IO.Path]::GetFullPath('$(StageDir)'))'))</StageDir>
+    <!-- ru-RU is the base culture (ARCHITECTURE-WIN §12.2); en-US and zh-CN become embedded transforms -->
+    <Cultures>ru-RU;en-US;zh-CN</Cultures>
+    <!-- build.ps1 passes a ProductCode derived from the version: both cultures must share it for the language transform -->
+    <ProductCode Condition="'$(ProductCode)' == ''">*</ProductCode>
+    <DefineConstants>ProductVersion=$(ProductVersion);ProductCode=$(ProductCode);StageDir=$(StageDir)</DefineConstants>
+    <SuppressValidation Condition="'$(SuppressValidation)' == ''">false</SuppressValidation>
+    <!-- ICE43/ICE57: the Start menu shortcut of a per-machine package (ALLUSERS=1) lives in the all-users
+         ProgramMenuFolder; these ICEs assume a per-user folder. -->
+    <!-- ICE03: Microsoft.ui.xaml.dll / Microsoft.UI.Xaml.Phone.dll (Windows App SDK) and their .mui carry language ids
+         1152 (ug-CN), 1153 (mi-NZ), 1169 (ckb) that the ICE03 table does not know ("Invalid Language Id"). The files
+         are Microsoft's, unmodified; Windows Installer installs them fine. -->
+    <SuppressIces>ICE03;ICE43;ICE57</SuppressIces>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.0" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>

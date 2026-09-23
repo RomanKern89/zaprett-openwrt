@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-alt2",
+  "type": "nfqws2",
+  "name": "nfqws2: alt2 (seqovl)",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-alt2. TLS без отдельных фейков: ClientHello режется после 2-го байта, к первой части слева приклеиваются 652 байта ClientHello www.google.com за пределами окна TCP (seqovl) — сервер их отбрасывает, а DPI видит чужое имя сайта. QUIC (UDP 443) — фейк QUIC Initial Google 6 раз; голос Discord (UDP 19294–19344, 50000–50100) — фейк из нулей 6 раз; HTTP — фейк с MD5 и autottl, затем разрезание запроса. Подходит, когда фейки с фулингом не проходят.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-alt2.txt",
+  "source": "bundle",
+  "sha256": "d334001bb6c9f00be8e77b46cff0488d0b6dc14e87be0bbf8a8bb4cb0ec4d06c",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: alt2 (seqovl)",
+  "description_en": "Port of strategy-alt2. TLS without separate fakes: the ClientHello is cut after byte 2 and 652 bytes of a www.google.com ClientHello are prepended to the first part outside the TCP window (seqovl): the server drops them while DPI sees another site name. QUIC (UDP 443) gets a Google QUIC Initial fake 6 times; Discord voice (UDP 19294–19344, 50000–50100) gets a zero-filled fake 6 times; HTTP gets an MD5 + autottl fake followed by a split request. Useful when fooled fakes do not get through.",
+  "name_zh": "nfqws2：alt2（seqovl）",
+  "description_zh": "strategy-alt2 的移植版。TLS 不单独发送伪造包：ClientHello 在第 2 个字节后切开，并在第一部分前面、TCP 窗口之外加上 652 字节的 www.google.com ClientHello（seqovl）：服务器丢弃这些字节，而深度包检测（DPI）看到的是另一个网站名称。QUIC（UDP 443）发送 6 次 Google QUIC Initial 伪造包；Discord 语音（UDP 19294–19344、50000–50100）发送 6 次全零伪造包；HTTP 先发送 MD5 + autottl 伪造包，再分段发送请求。适用于被干扰的伪造包无法通过的情况。"
+}

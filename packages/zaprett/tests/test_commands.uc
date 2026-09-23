@@ -49,7 +49,9 @@ else
 	print('SKIP [commands] nfqws binary not given\n');
 T.eq(CMD.strategy_save('mine', '--filter-tcp=443').error, 'bad_id', 'own strategies need user- prefix');
 T.eq(CMD.strategy_save('user-big', sprintf('%65537s', 'x')).error, 'too_large', 'strategy size limit');
-T.eq(CMD.strategy_save('user-ph', '--x=${hostlists}').error, 'placeholder_in_token', 'strategy save validates placeholders');
+T.eq(CMD.strategy_save('user-ph', '--filter-tcp=443 --dpi-desync-fake-tls=${hostlists}').error, 'placeholder_in_token', 'strategy save validates placeholders');
+T.eq(CMD.strategy_save('user-ab', '--filter-tcp=443 --dpi-desync=fake --dpi-desync-fake-qu /etc/zaprettX/f').error, 'path_not_allowed',
+	'strategy save checks an abbreviated file option like the full one (ZERR-033)');
 T.eq(CMD.strategy_delete('strategy-general').error, 'bad_id', 'bundle strategy cannot be deleted');
 T.eq(CMD.strategy_delete('user-none').error, 'not_found', 'delete unknown own strategy');
 if (T.NFQWS)
@@ -117,10 +119,11 @@ T.eq([ length(tr.results[0].targets), length(tr.results[9].targets), tr.results[
 	[ CMD.TEST_TARGETS_MAX, CMD.TEST_TARGETS_MAX, null, 's11', CMD.TEST_TARGETS_MAX, true ], 'test results trimmed');
 T.eq(CMD.trim_test_results({ results: [ { id: 'a', targets: [ { url: 'x' } ] } ] }).targets_trimmed, false, 'negative control: small results untouched');
 
-// every warning code of the contract has a text, and there are no codes outside the contract (v1.2 §6.2)
+// every warning code of the contract has a text, and there are no codes outside the contract (v1.2 §6.2 + v1.3 §14.4)
 const CONTRACT_WARNINGS = [ 'no_active_lists', 'no_wan', 'flow_offload_enabled', 'nft_queue_missing', 'engine_missing', 'strategy_missing',
 	'no_strategy', 'generate_failed', 'bad_config', 'config_was_invalid', 'list_missing', 'source_not_downloaded', 'profile_unfiltered',
-	'wide_port_range', 'empty_profile_removed', 'strategy_option_ignored', 'test_running', 'not_running', 'nft_not_applied' ];
+	'wide_port_range', 'empty_profile_removed', 'strategy_option_ignored', 'test_running', 'not_running', 'nft_not_applied',
+	'ipv6_wan_unhandled', 'low_memory', 'monitor_degraded', 'flowtable_failed', 'game_filter_no_ipsets', 'dns_plain' ];
 T.eq(sort(keys(TXT.WARNINGS)), sort(slice(CONTRACT_WARNINGS)), 'warning texts cover exactly the contract list');
 r = CMD.repo_list({});
 T.eq([ r.ok, r.fetched_at, r.items ], [ true, null, [] ], 'repo list without cache');

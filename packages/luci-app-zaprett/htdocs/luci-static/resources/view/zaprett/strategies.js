@@ -5,7 +5,6 @@
 'use strict';
 'require view';
 'require dom';
-'require poll';
 'require ui';
 'require zaprett.common as zc';
 
@@ -16,15 +15,29 @@ const EXAMPLE = '--filter-tcp=80,443 ${hostlists} --dpi-desync=fake,multisplit -
 
 return view.extend({
 	load() {
-		return zc.run(zc.callStatus).catch(err => err).then(status => {
-			const engine = (status instanceof Error) ? 'nfqws' : (status.engine || 'nfqws');
+		return zc.loadPage('strategies', {
+			status: () => zc.run(zc.callStatus),
+			items: () => zc.run(zc.callItems),
+			test: () => this.testStatus()
+		}).then(data => [ data.status, data.items, (data.test instanceof Error) ? null : data.test ]);
+	},
 
-			return Promise.all([
-				status,
-				zc.run(zc.callItems, engine).catch(err => err),
-				zc.run(zc.callTestStatus).catch(() => null)
-			]);
+	/* Progress of the selection without per-address details (--brief); an
+	 * older service does not know the flag and gets the full answer. */
+	testStatus() {
+		return zc.run(zc.callTestStatus, true).catch(err => {
+			if (!zc.isUsageError(err))
+				throw err;
+
+			return zc.run(zc.callTestStatus);
 		});
+	},
+
+	/* Strategies of the current engine: "page" returns items of all types. */
+	engineItems(items, engine) {
+		const list = (items instanceof Error) ? [] : (Array.isArray(items.items) ? items.items : []);
+
+		return list.filter(it => it.type == null || it.type == engine);
 	},
 
 	render(data) {
@@ -44,7 +57,7 @@ return view.extend({
 
 		this.status = status;
 		this.engine = (status instanceof Error) ? 'nfqws' : (status.engine || 'nfqws');
-		this.items = (items instanceof Error) ? [] : (Array.isArray(items.items) ? items.items : []);
+		this.items = this.engineItems(items, this.engine);
 
 		dom.content(this.root, [
 			this.renderCurrent(status),
@@ -75,14 +88,15 @@ return view.extend({
 
 		const id = this.currentId();
 		const item = this.findItem(id);
-		const name = item?.name ?? status.strategy?.name ?? id;
+		const name = zc.localized(item, 'name') ?? status.strategy?.name ?? id;
+		const description = zc.localized(item, 'description');
 
 		return zc.section(_('Current strategy'), null, [
 			E('p', {}, [
 				E('strong', {}, txt(id ? name : _('not selected'))),
 				(id && name != id) ? E('span', {}, txt(' (%s)'.format(id))) : ''
 			]),
-			item?.description ? E('p', {}, txt(item.description)) : '',
+			description ? E('p', {}, txt(description)) : '',
 			E('p', {}, txt(_('Engine: %s').format(this.engine))),
 			E('div', {}, [
 				id ? zc.button(_('Show'), ui.createHandlerFn(this, 'handleShow', id), 'action') : '', ' ',
@@ -95,6 +109,7 @@ return view.extend({
 
 	renderTest(test) {
 		this.quickBox = E('input', { 'type': 'checkbox', 'id': 'zaprett-test-quick', 'checked': '' });
+		this.autoApplyBox = E('input', { 'type': 'checkbox', 'id': 'zaprett-test-apply' });
 		this.testJob = zc.jobBox(L.bind(this.handleTestStop, this));
 		this.resultsNode = E('div', {});
 		this.startButton = zc.button(_('Start selection'), ui.createHandlerFn(this, 'handleTestStart'), 'apply');
@@ -107,7 +122,7 @@ return view.extend({
 		this.renderResults(test);
 
 		return zc.section(_('Automatic selection'),
-			_('zaprett checks strategies one by one: it restarts the engine with each of them and tries to open the sites of the enabled services and lists. The result shows how many of the checked sites opened. First the sites are checked without the bypass, to see what is actually blocked.'),
+			_('zaprett checks strategies one by one with a separate copy of the engine that handles only the check requests of the router itself, and tries to open the sites of the enabled services and lists. The devices in your network keep using the bypass with the current strategy meanwhile. The result shows how many of the checked sites opened. First the sites are checked without the bypass, to see what is actually blocked.'),
 			[
 				E('div', { 'class': 'cbi-value' }, [
 					E('label', { 'class': 'cbi-value-title', 'for': 'zaprett-test-quick' }, txt(_('Quick check'))),
@@ -116,7 +131,14 @@ return view.extend({
 						E('div', { 'class': 'cbi-value-description' }, txt(_('Check only the recommended strategies: much faster. Without this option all installed strategies are checked. If you mark strategies in the table below, only the marked ones are checked.')))
 					])
 				]),
-				E('div', { 'class': 'alert-message notice' }, txt(_('During the check connections through zaprett may briefly drop. After the check the previous strategy is restored; nothing changes until you apply a result.'))),
+				E('div', { 'class': 'cbi-value' }, [
+					E('label', { 'class': 'cbi-value-title', 'for': 'zaprett-test-apply' }, txt(_('Apply the best automatically'))),
+					E('div', { 'class': 'cbi-value-field' }, [
+						this.autoApplyBox,
+						E('div', { 'class': 'cbi-value-description' }, txt(_('The current strategy is always checked too. When the check ends, the best strategy is applied if it opened more sites than the current one; otherwise nothing changes.')))
+					])
+				]),
+				E('div', { 'class': 'alert-message notice' }, txt(_('The network is not left without the bypass during the check. Only when this is impossible (for example, the service is stopped) the engine is stopped for the time of the check, and the result says why. Nothing changes until you apply a result.'))),
 				E('div', {}, [ this.startButton ]),
 				this.testJob.node,
 				this.resultsNode
@@ -143,11 +165,25 @@ return view.extend({
 				nodes.push(E('div', { 'class': 'alert-message warning' }, txt(_('All checked sites open even without zaprett. Either the provider does not block them now, or the checked sites are not representative, so the comparison below says little.'))));
 		}
 
+		/* contract v1.6 §17: mode isolated keeps the bypass for the network, exclusive stops the engine */
+		if (res.mode == 'isolated')
+			nodes.push(E('p', {}, txt(_('The check ran next to the working bypass: the network was not left without it.'))));
+		else if (res.mode == 'exclusive')
+			nodes.push(E('div', { 'class': 'alert-message warning' },
+				txt(_('The engine was stopped for the time of the check: %s.').format(this.modeReason(res.mode_reason)))));
+
 		if (res.finished > 0)
 			nodes.push(E('p', {}, txt(_('Checked: %s').format(zc.formatTime(res.finished)))));
 
 		if (res.state == 'cancelled')
 			nodes.push(E('div', { 'class': 'alert-message warning' }, txt(_('The check was stopped before all strategies were checked.'))));
+
+		if (res.applied) {
+			const item = list.filter(r => r.id == res.applied)[0];
+
+			nodes.push(E('div', { 'class': 'alert-message success' },
+				txt(_('Strategy "%s" opened more sites than the previous one and is applied.').format(item?.name ?? res.applied))));
+		}
 
 		/* the backend keeps details only for the first results, the plugin drops
 		 * them completely when the answer would not fit into one ubus message */
@@ -156,7 +192,8 @@ return view.extend({
 
 		const best = running ? null : list.filter(r => r.status == 'done' && +r.ok > 0)[0];
 
-		if (best)
+		/* an automatically applied best result is already announced above */
+		if (best && best.id != res.applied)
 			nodes.push(E('div', { 'class': 'alert-message success' }, [
 				E('p', {}, txt(_('Best result: "%s", %d of %d sites opened.').format(best.name ?? best.id, +best.ok || 0, +best.total || 0))),
 				zc.button(_('Apply the best strategy'), ui.createHandlerFn(this, 'handleApply', best.id, best.name ?? best.id), 'apply')
@@ -164,12 +201,10 @@ return view.extend({
 		else if (!running && list.length)
 			nodes.push(E('div', { 'class': 'alert-message warning' }, txt(_('None of the checked strategies helped. Install more strategies from the "Repository" page and run the selection again, or check that the enabled lists contain the blocked sites.'))));
 
+		const titles = [ _('Strategy'), _('Sites opened'), _('Average time'), _('Result') ];
 		const rows = [
 			E('tr', { 'class': 'tr table-titles' }, [
-				E('th', { 'class': 'th' }, txt(_('Strategy'))),
-				E('th', { 'class': 'th' }, txt(_('Sites opened'))),
-				E('th', { 'class': 'th' }, txt(_('Average time'))),
-				E('th', { 'class': 'th' }, txt(_('Result'))),
+				...titles.map(t => E('th', { 'class': 'th' }, txt(t))),
 				E('th', { 'class': 'th right' }, txt(''))
 			])
 		];
@@ -177,26 +212,50 @@ return view.extend({
 		for (const r of list) {
 			const ratio = Math.round((+r.ratio || 0) * 100);
 			const tested = (r.status == 'done');
+			/* a --brief answer has no targets at all: they are loaded by the button */
+			const details = tested && (!Array.isArray(r.targets) || r.targets.length > 0);
 
 			rows.push(E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td' }, [ E('strong', {}, txt(r.name ?? r.id)), E('br'), E('small', {}, txt(r.id)) ]),
-				E('td', { 'class': 'td' }, tested
+				zc.td(titles[0], [ E('strong', {}, txt(r.name ?? r.id)), E('br'), E('small', {}, txt(r.id)) ]),
+				zc.td(titles[1], tested
 					? [ E('div', {}, txt('%d / %d (%d%%)'.format(+r.ok || 0, +r.total || 0, ratio))), zc.progressBar(ratio) ]
-					: txt('—')),
-				E('td', { 'class': 'td' }, txt((+r.avg_ms > 0) ? _('%d ms').format(+r.avg_ms) : '—')),
-				E('td', { 'class': 'td' }, [
+					: '—'),
+				zc.td(titles[2], (+r.avg_ms > 0) ? _('%d ms').format(+r.avg_ms) : '—'),
+				zc.td(titles[3], [
 					E('div', {}, txt(this.resultLabel(r))),
 					r.message ? E('small', {}, txt(r.message)) : ''
 				]),
-				E('td', { 'class': 'td right' }, [
-					(Array.isArray(r.targets) && r.targets.length) ? zc.button(_('Details'), ui.createHandlerFn(this, 'showTargets', r), 'neutral') : '', ' ',
-					(!running && tested && +r.ok > 0) ? zc.button(_('Apply'), ui.createHandlerFn(this, 'handleApply', r.id, r.name ?? r.id), 'apply') : ''
-				])
+				zc.td(null, [
+					details ? zc.button(_('Details'), ui.createHandlerFn(this, 'showTargets', r), 'neutral') : '', ' ',
+					(!running && tested && +r.ok > 0 && r.id != res.applied) ? zc.button(_('Apply'), ui.createHandlerFn(this, 'handleApply', r.id, r.name ?? r.id), 'apply') : ''
+				], 'right')
 			]));
 		}
 
 		nodes.push(E('table', { 'class': 'table' }, rows));
 		dom.content(this.resultsNode, nodes);
+	},
+
+	modeReason(reason) {
+		switch (reason) {
+		case 'forced':
+			return _('this mode was requested');
+
+		case 'engine_not_running':
+			return _('the service was not running');
+
+		case 'no_test_user':
+			return _('the system user zaprett-test is missing');
+
+		case 'nft_rejected':
+			return _('the firewall did not accept the check rules');
+
+		case 'instance_failed':
+			return _('the second copy of the engine did not start');
+
+		default:
+			return _('a separate check was not possible (%s)').format(reason ?? '?');
+		}
 	},
 
 	resultLabel(r) {
@@ -219,47 +278,26 @@ return view.extend({
 		}
 	},
 
-	targetError(t) {
-		const text = {
-			too_small: _('the answer was cut off'),
-			http_error: _('the server returned an HTTP error'),
-			timeout: _('no answer (timeout)'),
-			reset: _('the connection was reset'),
-			tls_cert: _('wrong certificate (substituted answer)'),
-			tls_error: _('encryption error'),
-			connect_failed: _('could not connect'),
-			local_error: _('check error on the router'),
-			failed: _('failed')
-		}[t.error] ?? String(t.error ?? '');
-
-		return (t.http_status > 0) ? '%s (HTTP %d)'.format(text, +t.http_status) : text;
-	},
-
+	/* Per-address details: present in the full answer of "test status" and
+	 * loaded on demand when the page polls with --brief. */
 	showTargets(r, ev) {
-		const targets = Array.isArray(r.targets) ? r.targets : [];
-		const rows = [
-			E('tr', { 'class': 'tr table-titles' }, [
-				E('th', { 'class': 'th' }, txt(_('Address'))),
-				E('th', { 'class': 'th' }, txt(_('Opened'))),
-				E('th', { 'class': 'th' }, txt(_('Time'))),
-				E('th', { 'class': 'th' }, txt(_('Received'))),
-				E('th', { 'class': 'th' }, txt(_('Error')))
-			])
-		];
+		const load = Array.isArray(r.targets)
+			? Promise.resolve(r.targets)
+			: zc.run(zc.callTestStatus).then(res => {
+				const list = Array.isArray(res.results?.results) ? res.results.results : [];
+				const full = list.filter(x => x.id == r.id)[0];
 
-		for (const t of targets)
-			rows.push(E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td', 'style': 'word-break:break-all' }, txt(t.url)),
-				E('td', { 'class': 'td' }, txt(t.ok ? _('yes') : _('no'))),
-				E('td', { 'class': 'td' }, txt((+t.ms > 0) ? _('%d ms').format(+t.ms) : '—')),
-				E('td', { 'class': 'td' }, txt(zc.formatBytes(t.bytes))),
-				E('td', { 'class': 'td' }, [ E('div', {}, txt(t.ok ? '' : this.targetError(t))), t.detail ? E('small', {}, txt(t.detail)) : '' ])
-			]));
+				return Array.isArray(full?.targets) ? full.targets : null;
+			});
 
-		ui.showModal(txt(_('Check details: %s').format(r.name ?? r.id)), [
-			E('table', { 'class': 'table' }, rows),
-			E('div', { 'class': 'right' }, [ zc.button(_('Close'), ui.hideModal, 'neutral') ])
-		], 'cbi-modal');
+		return load.then(targets => {
+			ui.showModal(txt(_('Check details: %s').format(r.name ?? r.id)), [
+				targets
+					? zc.targetsTable(targets)
+					: E('p', {}, txt(_('Too many sites were checked, so the details are shown only for the first strategies.'))),
+				E('div', { 'class': 'right' }, [ zc.button(_('Close'), ui.hideModal, 'neutral') ])
+			], 'cbi-modal');
+		}).catch(err => zc.notifyError(_('Could not load the details'), err));
 	},
 
 	selectedIds() {
@@ -279,15 +317,15 @@ return view.extend({
 		const ids = this.selectedIds();
 		const quick = !ids.length && this.quickBox.checked;
 		const text = ids.length
-			? _('%d marked strategies will be checked. During the check connections through zaprett may briefly drop. Start?').format(ids.length)
-			: (quick ? _('The recommended strategies will be checked. During the check connections through zaprett may briefly drop. Start?')
-				: _('All installed strategies will be checked; it may take a long time. During the check connections through zaprett may briefly drop. Start?'));
+			? _('%d marked strategies will be checked. The bypass keeps working for the network meanwhile. Start?').format(ids.length)
+			: (quick ? _('The recommended strategies will be checked. The bypass keeps working for the network meanwhile. Start?')
+				: _('All installed strategies will be checked; it may take a long time. The bypass keeps working for the network meanwhile. Start?'));
 
 		return zc.confirm(_('Automatic selection'), text, _('Start'), 'apply').then(ok => {
 			if (!ok)
 				return;
 
-			return zc.run(zc.callTestStart, ids.length ? ids : undefined, quick).then(res => {
+			return this.startTest(ids.length ? ids : undefined, quick, this.autoApplyBox.checked).then(res => {
 				this.setRunning(true);
 				this.testJob.update(Object.assign({ state: 'running', progress: 0, message: '' }, res.job ?? { name: 'test' }));
 				dom.content(this.resultsNode, E('p', {}, txt(_('Waiting for the first results…'))));
@@ -296,25 +334,43 @@ return view.extend({
 		});
 	},
 
+	/* --apply-if-better is sent only when asked for; an older service does
+	 * not know it, then the selection starts without it. */
+	startTest(ids, quick, autoApply) {
+		if (!autoApply)
+			return zc.run(zc.callTestStart, ids, quick);
+
+		return zc.run(zc.callTestStart, ids, quick, true).catch(err => {
+			if (!zc.isUsageError(err))
+				throw err;
+
+			zc.notifyInfo(_('The installed zaprett service cannot apply the best strategy by itself: apply it from the results when the check ends.'));
+
+			return zc.run(zc.callTestStart, ids, quick);
+		});
+	},
+
 	handleTestStop(ev) {
 		return zc.cancelJob(zc.callTestStop);
 	},
 
+	/* One brief "test status" per tick while the selection runs. */
 	watchTest() {
-		if (this.testPoll)
+		if (this.stopTestWatch)
 			return;
 
 		let errors = 0;
 
 		const stop = () => {
-			if (this.testPoll) {
-				poll.remove(this.testPoll);
-				window.removeEventListener('pagehide', stop);
-				this.testPoll = null;
-			}
+			const stopPoll = this.stopTestWatch;
+
+			this.stopTestWatch = null;
+
+			if (stopPoll)
+				stopPoll();
 		};
 
-		this.testPoll = () => zc.run(zc.callTestStatus).then(res => {
+		this.stopTestWatch = zc.pollVisible(() => this.testStatus().then(res => {
 			errors = 0;
 
 			const running = res.job?.state == 'running';
@@ -328,10 +384,15 @@ return view.extend({
 			if (!running) {
 				stop();
 
-				if (res.job?.state == 'done')
+				if (res.job?.state == 'done' && res.results?.applied)
+					zc.notifyInfo(_('Strategy selection is finished, the best strategy is applied.'));
+				else if (res.job?.state == 'done')
 					zc.notifyInfo(_('Strategy selection is finished. Choose a result to apply.'));
 				else if (res.job?.state == 'failed')
 					ui.addNotification(null, E('p', {}, txt(_('Strategy selection failed: %s').format(res.job.message ?? ''))), 'danger');
+
+				if (res.results?.applied)
+					return this.reloadCurrent();
 			}
 		}).catch(err => {
 			if (++errors >= 5) {
@@ -339,10 +400,7 @@ return view.extend({
 				this.setRunning(false);
 				zc.notifyError(_('Lost track of the background task'), err);
 			}
-		});
-
-		window.addEventListener('pagehide', stop);
-		poll.add(this.testPoll, 3);
+		}), 3);
 	},
 
 	handleApply(id, name, ev) {
@@ -363,7 +421,7 @@ return view.extend({
 			return zc.run(zc.callItems, engine).catch(err => err).then(items => {
 				this.status = status;
 				this.engine = engine;
-				this.items = (items instanceof Error) ? [] : (Array.isArray(items.items) ? items.items : []);
+				this.items = this.engineItems(items, engine);
 
 				const current = this.renderCurrent(status);
 				const list = this.renderList(items);
@@ -385,44 +443,44 @@ return view.extend({
 		const rows = [];
 		const table = E('table', { 'class': 'table' });
 
+		const titles = [ _('Strategy'), _('Author'), _('Version'), _('Source') ];
 		const header = E('tr', { 'class': 'tr table-titles' }, [
 			E('th', { 'class': 'th', 'style': 'width:2em' }, txt('')),
-			E('th', { 'class': 'th' }, txt(_('Strategy'))),
-			E('th', { 'class': 'th' }, txt(_('Author'))),
-			E('th', { 'class': 'th' }, txt(_('Version'))),
-			E('th', { 'class': 'th' }, txt(_('Source'))),
+			...titles.map(t => E('th', { 'class': 'th' }, txt(t))),
 			E('th', { 'class': 'th right' }, txt(''))
 		]);
 
-		const sorted = this.items.slice().sort((a, b) => String(a.name ?? a.id).localeCompare(String(b.name ?? b.id)));
+		const nameOf = it => zc.localized(it, 'name') ?? it.id;
+		const sorted = this.items.slice().sort((a, b) => String(nameOf(a)).localeCompare(String(nameOf(b))));
 
 		for (const it of sorted) {
 			const active = (it.id == current);
 			const isUser = (it.source == 'user');
+			const description = zc.localized(it, 'description');
 			const box = E('input', { 'type': 'checkbox', 'title': _('Check this strategy during automatic selection'), 'checked': this.selected[it.id] ? '' : null,
 				'change': ev => { this.selected[it.id] = ev.target.checked; } });
 
 			const row = E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td' }, [ box ]),
-				E('td', { 'class': 'td' }, [
-					E('strong', {}, txt(it.name ?? it.id)),
+				zc.td(_('Check'), [ box ]),
+				zc.td(titles[0], [
+					E('strong', {}, txt(nameOf(it))),
 					active ? E('span', { 'class': 'label success', 'style': 'margin-left:.5em' }, txt(_('in use'))) : '',
 					E('br'),
 					E('small', {}, txt(it.id)),
-					it.description ? E('div', { 'class': 'cbi-value-description' }, txt(it.description)) : ''
+					description ? E('div', { 'class': 'cbi-value-description' }, txt(description)) : ''
 				]),
-				E('td', { 'class': 'td' }, txt(it.author ?? '')),
-				E('td', { 'class': 'td' }, txt(it.version ?? '')),
-				E('td', { 'class': 'td' }, txt(zc.sourceLabel(it.source))),
-				E('td', { 'class': 'td right' }, [
+				zc.td(titles[1], it.author ?? ''),
+				zc.td(titles[2], it.version ?? ''),
+				zc.td(titles[3], zc.sourceLabel(it.source)),
+				zc.td(null, [
 					active ? '' : zc.button(_('Use'), ui.createHandlerFn(this, 'handleUse', it), 'apply'), ' ',
 					zc.button(_('Show'), ui.createHandlerFn(this, 'handleShow', it.id), 'neutral'), ' ',
 					isUser ? zc.button(_('Edit'), ui.createHandlerFn(this, 'handleEdit', it.id), 'edit') : '', ' ',
 					(isUser && !active) ? zc.button(_('Delete'), ui.createHandlerFn(this, 'handleDelete', it), 'remove') : ''
-				])
+				], 'right')
 			]);
 
-			row.setAttribute('data-search', [ it.id, it.name, it.description, it.author ].join(' ').toLowerCase());
+			row.setAttribute('data-search', [ it.id, it.name, it.name_en, description, it.author ].join(' ').toLowerCase());
 			rows.push(row);
 		}
 

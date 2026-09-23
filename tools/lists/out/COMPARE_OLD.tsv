@@ -1,0 +1,62 @@
+list	entry	now	reason
+zaprett-youtube	ggpht.com	core	
+zaprett-youtube	googlevideo.com	core	
+zaprett-youtube	jnn-pa.googleapis.com	core	
+zaprett-youtube	youtu.be	core	
+zaprett-youtube	youtube-nocookie.com	core	
+zaprett-youtube	youtube.com	core	
+zaprett-youtube	youtube.googleapis.com	core	
+zaprett-youtube	youtubeembeddedplayer.googleapis.com	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-youtube	youtubei.googleapis.com	core	
+zaprett-youtube	youtubekids.com	core	
+zaprett-youtube	yt.be	core	
+zaprett-youtube	yt3.googleusercontent.com	core	
+zaprett-youtube	ytimg.com	core	
+zaprett-discord	dis.gd	core	
+zaprett-discord	discord-activities.com	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discord-attachments-uploads-prd.storage.googleapis.com	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP; в коде discord.com/app и /login (677 скриптов) имени нет; загрузка вложений видна только после входа, сессии с учётной записью нет (seed)
+zaprett-discord	discord.co	core	
+zaprett-discord	discord.com	core	
+zaprett-discord	discord.design	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discord.dev	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discord.gg	core	
+zaprett-discord	discord.gift	core	
+zaprett-discord	discord.gifts	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discord.media	core	
+zaprett-discord	discord.new	core	
+zaprett-discord	discord.store	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discordactivities.com	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-discord	discordapp.com	core	
+zaprett-discord	discordapp.net	core	
+zaprett-discord	discordmerch.com	core	
+zaprett-discord	discordsays.com	core	
+zaprett-discord	discordstatus.com	core	
+zaprett-telegram	cdn-telegram.org	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-telegram	comments.app	core	
+zaprett-telegram	contest.com	core	
+zaprett-telegram	fragment.com	core	
+zaprett-telegram	graph.org	core	
+zaprett-telegram	quiz.directory	core	
+zaprett-telegram	t.me	core	
+zaprett-telegram	tdesktop.com	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-telegram	telegra.ph	core	
+zaprett-telegram	telegram.dog	core	
+zaprett-telegram	telegram.me	core	
+zaprett-telegram	telegram.org	core	
+zaprett-telegram	telegram.space	core	
+zaprett-telegram	telesco.pe	core	
+zaprett-telegram	tg.dev	core	
+zaprett-telegram	tx.me	core	
+zaprett-telegram	usercontent.dev	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-rutracker	rutracker.org	core	
+zaprett-rutracker	rutracker.net	core	
+zaprett-rutracker	rutracker.ru	-	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP (seed)
+zaprett-rutracker	rutracker.cc	core	
+zaprett-rutracker	rutracker.wiki	core	
+zaprett-roblox	rbxcdn.com	core (новое)	
+zaprett-roblox	roblox-api.arkoselabs.com	core (новое)	
+zaprett-roblox	roblox.com	core (новое)	
+zaprett-signal	signal.group	core (новое)	
+zaprett-signal	signal.link	core (новое)	
+zaprett-signal	signal.me	core (новое)	
+zaprett-signal	signal.org	core (новое)	

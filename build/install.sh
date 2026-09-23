@@ -5,6 +5,9 @@
 #   sh install.sh --with-nfqws2   дополнительно поставить движок nfqws2
 #   sh install.sh --uninstall     удалить пакеты zaprett (настройки остаются)
 #   sh install.sh --uninstall --purge   удалить пакеты, настройки и ключ репозитория zaprett
+#   --feed                        после установки оставить подключённым онлайн-фид zaprett (обновления
+#                                 штатно: apk upgrade / opkg update && opkg upgrade); --uninstall его убирает
+#   --feed-url URL                адрес онлайн-фида вместо https://romankern89.github.io/zaprett-openwrt
 #   --force                       не останавливаться на несовпадении версии OpenWrt или смене ключа
 #
 # Пакеты ставятся из подписанного фида внутри бандла как из обычного репозитория:
@@ -16,6 +19,11 @@ set -u
 
 FEED_NAME="zaprett_bundle"
 KEY_APK="/etc/apk/keys/zaprett.pem"
+# Постоянный онлайн-фид (--feed): <адрес>/<серия>/<arch>/ — те же подписанные индексы, что в бандле.
+ONLINE_FEED_NAME="zaprett"
+ONLINE_FEED_URL="https://romankern89.github.io/zaprett-openwrt"
+APK_FEED_LIST="/etc/apk/repositories.d/zaprett.list"
+OPKG_FEED_CONF="/etc/opkg/customfeeds.conf"
 MENU_PATH="cgi-bin/luci/admin/services/zaprett"
 
 say() { printf '%s\n' "$*"; }
@@ -23,7 +31,7 @@ warn() { printf 'ВНИМАНИЕ: %s\n' "$*" >&2; }
 die() { printf 'ОШИБКА: %s\n' "$*" >&2; exit 1; }
 
 usage() {
-	sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+	sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
 	exit "${1:-0}"
 }
 
@@ -31,12 +39,20 @@ MODE="install"
 WITH_NFQWS2=0
 PURGE=0
 FORCE=0
+FEED=0
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--uninstall) MODE="uninstall" ;;
 		--purge) PURGE=1 ;;
 		--with-nfqws2) WITH_NFQWS2=1 ;;
 		--force) FORCE=1 ;;
+		--feed) FEED=1 ;;
+		--feed-url)
+			[ $# -ge 2 ] || { warn "--feed-url: нужен адрес"; usage 2; }
+			ONLINE_FEED_URL="${2%/}"
+			FEED=1
+			shift
+			;;
 		-h|--help) usage 0 ;;
 		*) warn "неизвестный параметр: $1"; usage 2 ;;
 	esac
@@ -102,6 +118,34 @@ say "Роутер: OpenWrt ${RELEASE:-?}, менеджер пакетов $PM, �
 
 [ "$PM" = "$B_PM" ] || die "бандл для $B_PM (OpenWrt $B_SERIES), а на роутере $PM. Скачайте бандл для своей версии OpenWrt."
 
+# ---------------------------------------------------------------- онлайн-фид (--feed)
+feed_remove() {
+	if [ "$PM" = "apk" ]; then
+		if [ -f "$APK_FEED_LIST" ]; then
+			rm -f "$APK_FEED_LIST" || die "не удалось удалить $APK_FEED_LIST"
+			say "Онлайн-фид zaprett отключён ($APK_FEED_LIST удалён)"
+		fi
+	elif [ -f "$OPKG_FEED_CONF" ] && grep -q "^src/gz $ONLINE_FEED_NAME " "$OPKG_FEED_CONF"; then
+		sed -i "/^src\/gz $ONLINE_FEED_NAME /d" "$OPKG_FEED_CONF" || die "не удалось изменить $OPKG_FEED_CONF"
+		say "Онлайн-фид zaprett отключён (строка убрана из $OPKG_FEED_CONF)"
+	fi
+}
+
+feed_add() {
+	url="$ONLINE_FEED_URL/$B_SERIES/$B_ARCH"
+	feed_remove
+	if [ "$PM" = "apk" ]; then
+		mkdir -p "${APK_FEED_LIST%/*}" && printf '%s/packages.adb\n' "$url" > "$APK_FEED_LIST" \
+			|| die "не удалось записать $APK_FEED_LIST"
+		say "Онлайн-фид zaprett подключён: $APK_FEED_LIST -> $url/packages.adb"
+		say "Обновление: apk update && apk upgrade"
+	else
+		printf 'src/gz %s %s\n' "$ONLINE_FEED_NAME" "$url" >> "$OPKG_FEED_CONF" || die "не удалось дописать $OPKG_FEED_CONF"
+		say "Онлайн-фид zaprett подключён: $OPKG_FEED_CONF -> src/gz $ONLINE_FEED_NAME $url"
+		say "Обновление: opkg update && opkg upgrade zaprett zaprett-nfqws luci-app-zaprett luci-i18n-zaprett-ru"
+	fi
+}
+
 # ---------------------------------------------------------------- удаление
 if [ "$MODE" = "uninstall" ]; then
 	present=""
@@ -126,6 +170,7 @@ if [ "$MODE" = "uninstall" ]; then
 	else
 		say "Пакеты zaprett не установлены."
 	fi
+	feed_remove
 	if [ "$PURGE" = 1 ]; then
 		say "Удаляю настройки и ключ репозитория zaprett (--purge)"
 		rm -f /etc/config/zaprett /etc/config/zaprett-opkg /etc/config/zaprett.apk-new
@@ -175,6 +220,10 @@ PKGS="zaprett-nfqws zaprett luci-app-zaprett luci-i18n-zaprett-ru"
 TMPD=$(mktemp -d /tmp/zaprett-install.XXXXXX) || die "не удалось создать временный каталог в /tmp"
 cleanup() {
 	[ -n "${LISTS_DIR:-}" ] && rm -f "$LISTS_DIR/$FEED_NAME" "$LISTS_DIR/$FEED_NAME.sig"
+	# Онлайн-фид, отложенный на время установки (install_apk), возвращается, если его не заменил feed_add.
+	if [ -f "$TMPD/zaprett.list.saved" ] && [ ! -e "$APK_FEED_LIST" ]; then
+		mv "$TMPD/zaprett.list.saved" "$APK_FEED_LIST"
+	fi
 	rm -rf "$TMPD"
 }
 trap cleanup EXIT
@@ -185,6 +234,11 @@ fi
 
 # ---------------------------------------------------------------- apk (OpenWrt 25.12)
 install_apk() {
+	# Ставим только из бандла: недоступный онлайн-фид zaprett (нет сети, сайт не опубликован) apk считает
+	# «unavailable repository» и отказывается от add/upgrade. На время установки строка фида убирается.
+	if [ -f "$APK_FEED_LIST" ]; then
+		mv "$APK_FEED_LIST" "$TMPD/zaprett.list.saved" || die "не удалось временно отключить $APK_FEED_LIST"
+	fi
 	key_src="$SELF_DIR/keys/zaprett.pem"
 	[ -f "$key_src" ] || die "в бандле нет ключа keys/zaprett.pem"
 	if [ -f "$KEY_APK" ] && ! cmp -s "$key_src" "$KEY_APK"; then
@@ -259,6 +313,7 @@ for p in $PKGS; do
 	is_installed "$p" || missing="$missing $p"
 done
 [ -z "$missing" ] || die "после установки не найдены пакеты:$missing"
+[ "$FEED" = 1 ] && feed_add
 
 lan=$(uci -q get network.lan.ipaddr 2>/dev/null)
 lan=${lan%% *}

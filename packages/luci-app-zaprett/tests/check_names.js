@@ -3,7 +3,7 @@
 //
 // Name checks for the LuCI views of luci-app-zaprett (beyond `node --check`):
 //   * identifiers that are neither declared in the file nor known globals;
-//   * zc.<member> uses that common.js does not define;
+//   * zc.<member> / zh.<member> uses that common.js / health.js do not define;
 //   * ui.createHandlerFn(this, '<method>') names that the view does not define;
 //   * this.<method>(...) calls of view methods that do not exist.
 //
@@ -149,9 +149,14 @@ function parse(file) {
 	return { wrapped, ast: acorn.parse(wrapped.code, { ecmaVersion: 2022, locations: true }) };
 }
 
-const common = parse(path.join(res, 'zaprett/common.js'));
-const commonKeys = extendKeys(common.ast);
-const files = [ path.join(res, 'zaprett/common.js') ].concat(
+/* shared modules and the alias the views import them with */
+const modules = { zc: 'zaprett/common.js', zh: 'zaprett/health.js' };
+const moduleKeys = {};
+
+for (const alias of Object.keys(modules))
+	moduleKeys[alias] = extendKeys(parse(path.join(res, modules[alias])).ast);
+
+const files = fs.readdirSync(path.join(res, 'zaprett')).filter(f => f.endsWith('.js')).map(f => path.join(res, 'zaprett', f)).concat(
 	fs.readdirSync(path.join(res, 'view/zaprett')).filter(f => f.endsWith('.js')).map(f => path.join(res, 'view/zaprett', f)));
 
 for (const file of files) {
@@ -166,8 +171,9 @@ for (const file of files) {
 		if (n.type == 'Identifier' && isReference(n, parent, key) && !declared.has(n.name) && !GLOBALS.has(n.name))
 			problem(file, n, 'undeclared identifier "%s"'.replace('%s', n.name));
 
-		if (n.type == 'MemberExpression' && !n.computed && n.object.type == 'Identifier' && n.object.name == 'zc' && !commonKeys.has(n.property.name))
-			problem(file, n, 'zc.%s is not defined in common.js'.replace('%s', n.property.name));
+		if (n.type == 'MemberExpression' && !n.computed && n.object.type == 'Identifier' && moduleKeys[n.object.name] &&
+		    !moduleKeys[n.object.name].has(n.property.name))
+			problem(file, n, '%s.%s is not defined in %s'.replace('%s', n.object.name).replace('%s', n.property.name).replace('%s', modules[n.object.name]));
 
 		if (isView && n.type == 'CallExpression' && n.callee.type == 'MemberExpression' && !n.callee.computed &&
 		    n.callee.object.type == 'Identifier' && n.callee.object.name == 'ui' && n.callee.property.name == 'createHandlerFn' &&

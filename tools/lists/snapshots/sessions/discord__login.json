@@ -1,0 +1,39 @@
+{
+ "code_hosts": [
+  "canary.discord.com",
+  "canary.discordapp.com",
+  "cdn.discordapp.com",
+  "creator-support.discord.com",
+  "datadog.discord.tools",
+  "dis.gd",
+  "discord.co",
+  "discord.com",
+  "discord.facepunch.com",
+  "discord.gg",
+  "discord.shockbyte.com",
+  "discordapp.com",
+  "discordapp.onelink.me",
+  "discordmerch.com",
+  "discordstatus.com",
+  "docs.discord.com",
+  "feedback.discord.com",
+  "media.discordapp.net",
+  "promos.discord.gg",
+  "ptb.discord.com",
+  "ptb.discordapp.com",
+  "status.discord.com",
+  "support-apps.discord.com",
+  "support-dev.discord.com",
+  "support.discord.com",
+  "www.discord.com",
+  "www.googleapis.com"
+ ],
+ "fetched": "2026-09-23",
+ "requested_hosts": [
+  "discord.com"
+ ],
+ "scenario": "login",
+ "scripts_scanned": 677,
+ "service": "discord",
+ "url": "https://discord.com/login"
+}

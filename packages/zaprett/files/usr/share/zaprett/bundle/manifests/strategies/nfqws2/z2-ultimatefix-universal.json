@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-ultimatefix-universal",
+  "type": "nfqws2",
+  "name": "nfqws2: ultimatefix universal",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-ultimatefix-universal. TLS: только разрезание ClientHello после 1-го байта, без фейков; HTTP: фейк с MD5 и разрезание; для адресов из IP-списков — фейк на первые 2 пакета любого UDP на портах 50000–65535. Подходит там, где фейки ломают соединения.",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-ultimatefix-universal.txt",
+  "source": "bundle",
+  "sha256": "2bd39ba442e5c5ce97fccbf94cd435b53d8ea1ecd568b73c317caed2f8f29599",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: ultimatefix universal",
+  "description_en": "Port of strategy-ultimatefix-universal. TLS: only a split of the ClientHello after byte 1, no fakes; HTTP: an MD5 fake and a split; for addresses from IP lists a fake on the first 2 packets of any UDP on ports 50000–65535. Useful where fakes break connections.",
+  "name_zh": "nfqws2：ultimatefix universal",
+  "description_zh": "strategy-ultimatefix-universal 的移植版。TLS：只在第 1 个字节后切分 ClientHello，不发送伪造包；HTTP：MD5 伪造包加分段；对 IP 列表中的地址，在端口 50000–65535 上任何 UDP 的前 2 个数据包发送伪造包。适用于伪造包会破坏连接的情况。"
+}

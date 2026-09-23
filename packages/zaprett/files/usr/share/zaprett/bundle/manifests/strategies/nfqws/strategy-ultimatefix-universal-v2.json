@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "c0a04df2a19822b1a34a19b49cb2aae86a0d60b22f4059c431738f5392f1ea53",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-ultimatefix-universal-v2.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-ultimatefix-universal-v2.json",
+  "name_en": "strategy-ultimatefix-universal-v2",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-ultimatefix-universal-v2",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 import { P, read_json, write_json, mkdir_p, is_file, file_size, copy_file, sha256_file, df_avail_kib, uniq_name,
-	log, ok, fail, NULL_CTX } from 'zaprett.util';
+	log, ok, fail, NULL_CTX, meminfo_mib, download_concurrency } from 'zaprett.util';
 import * as V from 'zaprett.validate';
 import * as C from 'zaprett.config';
 import * as S from 'zaprett.store';
@@ -12,6 +12,9 @@ import * as N from 'zaprett.net';
 
 // Hard limit of a downloaded subscription; a larger download is cut off by probe.sh and rejected.
 export const MAX_SOURCE_BYTES = 16777216;
+// parallel downloads, one at a time below LOW_MEM_MIB of MemAvailable (contract v1.3 §14.5)
+export const CONCURRENCY = 2;
+export const LOW_MEM_MIB = 48;
 export const RESERVE_KIB = 256;
 // The daily cron run starts at the same minute but a download takes some time: an interval that ends
 // within this many seconds after the check still counts as elapsed.
@@ -275,7 +278,8 @@ export function update(names, ctx, opts) {
 	// not `(opts.probe ?? N.probe)(...)`: ucode compiles that as a method call and, when opts.probe is set,
 	// corrupts the caller's stack (checked on 24.10 and 25.12)
 	let probe = opts.probe ?? N.probe;
-	let dl = probe(tasks, { concurrency: 2, timeout: 60, max_bytes: MAX_SOURCE_BYTES });
+	let conc = download_concurrency(CONCURRENCY, LOW_MEM_MIB, opts.mem_available_mib ?? meminfo_mib('MemAvailable'));
+	let dl = probe(tasks, { concurrency: conc, timeout: 60, max_bytes: MAX_SOURCE_BYTES });
 
 	let updated = [], unchanged = [], failed = [];
 	for (let i = 0; i < length(targets); i++) {

@@ -13,5 +13,9 @@
   "source": "bundle",
   "sha256": "e249058a49ff9eca9eb8e980bd134fbef3f198afa30b73c50b71ef3d78848158",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt8.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt8.json",
+  "name_en": "strategy-alt8",
+  "description_en": "Strategy alt8 from the zapret for Windows repository",
+  "name_zh": "strategy-alt8",
+  "description_zh": "来自 Windows 版 zapret 仓库的 alt8 策略"
 }

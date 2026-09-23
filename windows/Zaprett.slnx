@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Zaprett.Cli/Zaprett.Cli.csproj" />
+    <Project Path="src/Zaprett.Core/Zaprett.Core.csproj" />
+    <Project Path="src/Zaprett.Ipc/Zaprett.Ipc.csproj" />
+    <Project Path="src/Zaprett.Service/Zaprett.Service.csproj" />
+    <Project Path="src/Zaprett.Ui/Zaprett.Ui.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Zaprett.Core.Tests/Zaprett.Core.Tests.csproj" />
+    <Project Path="tests/Zaprett.Service.Tests/Zaprett.Service.Tests.csproj" />
+    <Project Path="tests/Zaprett.Ui.Tests/Zaprett.Ui.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/update-sign/Zaprett.UpdateSign/Zaprett.UpdateSign.csproj" />
+    <Project Path="tools/update-sign/Zaprett.UpdateVerify.Tests/Zaprett.UpdateVerify.Tests.csproj" />
+    <Project Path="tools/update-sign/Zaprett.UpdateVerify/Zaprett.UpdateVerify.csproj" />
+  </Folder>
+</Solution>

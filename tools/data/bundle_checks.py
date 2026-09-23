@@ -30,6 +30,17 @@ STRATEGY_TYPES = ('nfqws', 'nfqws2')
 
 MANIFEST_KEYS = ('schema', 'id', 'type', 'name', 'version', 'author', 'description',
                  'dependencies', 'file', 'source', 'sha256', 'installed_at', 'manifest_url')
+MANIFEST_OPTIONAL_KEYS = ('name_en', 'description_en',   # §14.6, после обязательных и в этом порядке
+                          'name_zh', 'description_zh',   # §14.6, zh-CN для Windows-приложения
+                          'service', 'variant', 'generated', 'method', 'license')   # §16.2, собственные списки
+OWN_LIST_AUTHOR = 'zaprett-openwrt'
+OWN_LIST_KEYS = ('name_en', 'description_en', 'name_zh', 'description_zh', 'service', 'variant', 'generated',
+                 'method', 'license')
+LANG_PAIRS = (('name_en', 'name_zh'), ('description_en', 'description_zh'), ('note_en', 'note_zh'))
+CJK_RE = re.compile('[\u4e00-\u9fff]')
+LIST_VARIANTS = ('core', 'full', 'ipset', 'ipset6', 'voice')
+DATE_RE = re.compile(r'^20[0-9]{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])$')
+MAX_NAME_BYTES, MAX_DESCRIPTION_BYTES = 128, 1024   # store.uc обрезает name/description по байтам
 ID_RE = re.compile(r'^[A-Za-z0-9._-]{1,96}$')
 SHA_RE = re.compile(r'^[0-9a-f]{64}$')
 LABEL_RE = re.compile(r'^(?!-)[a-z0-9-]{1,63}(?<!-)$')
@@ -69,11 +80,24 @@ WIDE_UDP_PORTS = 1000
 PRESET_TOP_KEYS = ('schema', 'services', 'always', 'tiers', 'defaults')
 SERVICE_KEYS = ('id', 'name', 'description', 'lists', 'ipsets', 'sources', 'tier',
                 'test_targets', 'works', 'note')
+SERVICE_OPTIONAL_KEYS = ('name_en', 'description_en', 'note_en', 'name_zh', 'description_zh', 'note_zh',
+                         'needs_dns', 'variants')   # §14.6, §15.3, §16.3
+VARIANT_KEYS = ('id', 'name', 'name_en', 'name_zh', 'description', 'description_en', 'description_zh',
+                'lists', 'ipsets', 'tier')   # §16.3, §14.6
+DEFAULTS_KEYS = ('services', 'strategy', 'quick_test_strategies')
+DEFAULTS_NFQWS2_KEYS = ('strategy_nfqws2', 'quick_test_strategies_nfqws2')       # §15.6, только вместе
+QUICK2_MIN, QUICK2_MAX = 6, 10
 SERVICE_ID_RE = re.compile(r'^[a-z0-9_]{1,32}$')
 KNOWN_SOURCES = ('refilter_domains', 'antifilter_allyouneed', 'cloudflare_v4', 'cloudflare_v6')
 FREEZE_BYTES = 16384
 QUICK_MIN, QUICK_MAX = 8, 12
 CYRILLIC_RE = re.compile('[А-Яа-яЁё]')
+# Частные и служебные сети (RFC 6890, реестры IANA): во включающих IP-листах им не место
+SPECIAL_NETS = [ipaddress.ip_network(x) for x in (
+    '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24',
+    '192.0.2.0/24', '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24',
+    '224.0.0.0/4', '240.0.0.0/4', '::/127', '::ffff:0:0/96', '64:ff9b::/96', '100::/64', '2001::/23', '2001:db8::/32',
+    '2002::/16', 'fc00::/7', 'fe80::/10', 'ff00::/8')]
 
 
 class Report:
@@ -308,17 +332,46 @@ def analyze_profile(profile):
     }
 
 
+def _new_audit(sid, info):
+    return {'id': sid, 'placeholders': [], 'deprecated_modes': {}, 'comment_blocks': info['comment_blocks'],
+            'comment_junk_tokens': len(info['comment_junk']), 'trailing_backslashes': info['trailing_backslashes'],
+            'stray_tokens': [], 'profiles': 0, 'empty_profiles': 0, 'trailing_new': False,
+            'profiles_all_traffic': [], 'profiles_l7_only': [], 'wide_udp': [], 'syndata': False,
+            'autottl': False, 'any_protocol_no_cutoff': False, 'unused_dependencies': []}
+
+
 def check_strategy(item, text, items, grammar, rep):
     """Проверка стратегии nfqws: плейсхолдеры, зависимости, опции, режимы. Возвращает аудит."""
     sid = item['id']
-    deps = set(item.get('dependencies') or [])
     tokens, info = tokenize_strategy(text)
-    audit = {'id': sid, 'placeholders': [], 'deprecated_modes': {}, 'comment_blocks': info['comment_blocks'],
-             'comment_junk_tokens': len(info['comment_junk']), 'trailing_backslashes': info['trailing_backslashes'],
-             'stray_tokens': [], 'profiles': 0, 'empty_profiles': 0, 'trailing_new': False,
-             'profiles_all_traffic': [], 'profiles_l7_only': [], 'wide_udp': [], 'syndata': False,
-             'autottl': False, 'any_protocol_no_cutoff': False, 'unused_dependencies': []}
+    audit = _new_audit(sid, info)
+    _check_placeholders(item, text, tokens, info, items, rep, audit)
 
+    # опции и режимы
+    options, modes = grammar
+    for tk in tokens:
+        if not tk.startswith('--'):
+            if tk not in ('${hostlists}', '${ipsets}'):
+                audit['stray_tokens'].append(tk)
+            continue
+        opt = tk[2:].split('=', 1)[0]
+        if opt not in options:
+            rep.error('E_OPTION_UNKNOWN', sid, 'опции --%s нет в nfqws' % opt)
+        if opt == 'dpi-desync':
+            for mode in tk.split('=', 1)[1].split(',') if '=' in tk else ['']:
+                if mode not in modes:
+                    rep.error('E_MODE_UNKNOWN', sid, 'режима %r нет в nfqws' % mode)
+                elif mode in DEPRECATED_MODES:
+                    audit['deprecated_modes'][mode] = DEPRECATED_MODES[mode]
+    if audit['stray_tokens']:
+        rep.error('E_STRAY_TOKEN', sid, 'токены вне опций: %s' % ' '.join(audit['stray_tokens'][:5]))
+    _audit_profiles(sid, tokens, rep, audit)
+    return audit
+
+
+def _check_placeholders(item, text, tokens, info, items, rep, audit):
+    sid = item['id']
+    deps = set(item.get('dependencies') or [])
     if info['comment_eats_placeholder']:
         rep.error('E_COMMENT_EATS_PLACEHOLDER', sid, '--comment без = поглощает плейсхолдер')
 
@@ -353,26 +406,8 @@ def check_strategy(item, text, items, grammar, rep):
             rep.error('E_PLACEHOLDER_NOT_DEP', sid, '${%s}: id не объявлен в dependencies' % name)
     audit['unused_dependencies'] = sorted(deps - used_ids)
 
-    # опции и режимы
-    options, modes = grammar
-    for tk in tokens:
-        if not tk.startswith('--'):
-            if tk not in ('${hostlists}', '${ipsets}'):
-                audit['stray_tokens'].append(tk)
-            continue
-        opt = tk[2:].split('=', 1)[0]
-        if opt not in options:
-            rep.error('E_OPTION_UNKNOWN', sid, 'опции --%s нет в nfqws' % opt)
-        if opt == 'dpi-desync':
-            for mode in tk.split('=', 1)[1].split(',') if '=' in tk else ['']:
-                if mode not in modes:
-                    rep.error('E_MODE_UNKNOWN', sid, 'режима %r нет в nfqws' % mode)
-                elif mode in DEPRECATED_MODES:
-                    audit['deprecated_modes'][mode] = DEPRECATED_MODES[mode]
-    if audit['stray_tokens']:
-        rep.error('E_STRAY_TOKEN', sid, 'токены вне опций: %s' % ' '.join(audit['stray_tokens'][:5]))
 
-    # профили
+def _audit_profiles(sid, tokens, rep, audit):
     profiles = split_profiles(tokens)
     audit['trailing_new'] = len(profiles) > 1 and not profiles[-1]
     audit['empty_profiles'] = sum(1 for p in profiles[:-1] if not p)
@@ -399,6 +434,136 @@ def check_strategy(item, text, items, grammar, rep):
     return audit
 
 
+# ---------------------------------------------------------------- стратегии nfqws2 (zapret2)
+
+ROUTER_LUA_DIR = '/usr/share/zaprett/lua'
+LUA_BASE_LIBS = ('zapret-lib', 'zapret-antidpi', 'zapret-auto')   # генератор добавляет их сам, если в стратегии нет --lua-init
+BUILTIN_BLOBS = ('fake_default_tls', 'fake_default_http', 'fake_default_quic')
+BLOB_ARGS = ('blob', 'seqovl_pattern', 'pattern', 'fallback')
+MARKER_ARGS = ('pos', 'midhost', 'disorder_after')
+HEX_RE = re.compile(r'^0x(?:[0-9a-fA-F]{2})+$')
+AUTOTTL_RE = re.compile(r'^-?[0-9]+,[0-9]+-[0-9]+$')
+RANGE_RE = re.compile(r'^(?:a|x|(?:[ndbs][0-9]+)?(?:[-<](?:[ndbs][0-9]+)?)?)$')
+BLOB_DEF_RE = re.compile(r'^([A-Za-z_][A-Za-z0-9_]*):(0x(?:[0-9a-fA-F]{2})+|(?:\+[0-9]+)?@\S+)$')
+
+
+def _marker_ok(value, markers):
+    m = re.match(r'^(?:(-?[0-9]+)|([a-z]+)([+-][0-9]+)?)$', value)
+    return bool(m) and (m.group(1) is not None or m.group(2) in markers)
+
+
+def _check_lua_desync(sid, pidx, value, grammar2, funcs, blobs, rep):
+    """Один --lua-desync=fn[:k[=v]...]. Возвращает (имя функции, номер strategy или None)."""
+    fn, _, rest = value.partition(':')
+    if fn not in funcs:
+        known = any(fn in f for f in grammar2['lua'].values())
+        rep.error('E_LUA_FUNC', sid, 'профиль #%d: функции %r нет%s' % (
+            pidx, fn, ' в подключённых --lua-init' if known else ' в Lua-библиотеках zapret2'))
+    strategy = None
+    for arg in rest.split(':') if rest else []:
+        key, eq, val = arg.partition('=')
+        if not key:
+            rep.error('E_LUA_ARG', sid, 'профиль #%d: пустой аргумент в %s' % (pidx, value))
+            continue
+        if key in BLOB_ARGS and eq:
+            if not (HEX_RE.match(val) or val in blobs or val in BUILTIN_BLOBS):
+                rep.error('E_BLOB_UNDEFINED', sid, 'профиль #%d: блоб %r не задан через --blob' % (pidx, val))
+        elif key in MARKER_ARGS or (key == 'seqovl' and fn in ('multidisorder', 'multidisorder_legacy', 'fakeddisorder')):
+            for mk in val.split(',') if key == 'pos' else [val]:
+                if not _marker_ok(mk, grammar2['markers']):
+                    rep.error('E_MARKER', sid, 'профиль #%d: неверный маркер %s=%r' % (pidx, key, mk))
+        elif key == 'seqovl' and not re.match(r'^[0-9]+$', val):
+            rep.error('E_LUA_ARG', sid, 'профиль #%d: seqovl у %s — только число' % (pidx, fn))
+        elif key in ('ip_autottl', 'ip6_autottl') and not AUTOTTL_RE.match(val):
+            rep.error('E_LUA_ARG', sid, 'профиль #%d: %s=%r не в формате delta,min-max' % (pidx, key, val))
+        elif key == 'payload':
+            for p in val.lstrip('~').split(','):
+                if p not in grammar2['payloads']:
+                    rep.error('E_PAYLOAD', sid, 'профиль #%d: пейлоада %r нет' % (pidx, p))
+        elif key == 'strategy':
+            if not re.match(r'^[1-9][0-9]*$', val):
+                rep.error('E_CIRCULAR', sid, 'профиль #%d: strategy=%r не номер' % (pidx, val))
+            else:
+                strategy = int(val)
+    return fn, strategy
+
+
+def check_strategy2(item, text, items, grammar2, rep):
+    """Проверка стратегии nfqws2: плейсхолдеры, опции, Lua-функции и их библиотеки, блобы, маркеры, пейлоады,
+    протоколы, нумерация circular. Ловит то, что `nfqws2 --intercept=0` не видит (блоб по имени проверяется только
+    при обработке пакета). Возвращает аудит в формате check_strategy."""
+    sid = item['id']
+    tokens, info = tokenize_strategy(text)
+    audit = _new_audit(sid, info)
+    _check_placeholders(item, text, tokens, info, items, rep, audit)
+
+    libs = []
+    blobs = set()
+    for tk in tokens:
+        if tk.startswith('--lua-init='):
+            val = tk[len('--lua-init='):]
+            m = re.match(r'^@%s/([a-z0-9-]+)\.lua$' % re.escape(ROUTER_LUA_DIR), val)
+            if not m or m.group(1) not in grammar2['lua']:
+                rep.error('E_LUA_INIT', sid, '--lua-init только @%s/<библиотека zapret2>.lua: %r' % (ROUTER_LUA_DIR, val))
+            else:
+                libs.append(m.group(1))
+        elif tk.startswith('--blob='):
+            m = BLOB_DEF_RE.match(tk[len('--blob='):])
+            if not m:
+                rep.error('E_BLOB_DEF', sid, 'неверный %s' % tk[:60])
+            elif m.group(1) in blobs or m.group(1) in BUILTIN_BLOBS:
+                rep.error('E_BLOB_DEF', sid, 'блоб %s задан повторно' % m.group(1))
+            else:
+                blobs.add(m.group(1))
+    if libs and not all(b in libs for b in LUA_BASE_LIBS):
+        rep.error('E_LUA_INIT', sid, 'свои --lua-init отменяют базовые: подключите и %s' % ', '.join(LUA_BASE_LIBS))
+    funcs = set()
+    for lib in libs or LUA_BASE_LIBS:
+        funcs |= grammar2['lua'].get(lib, set())
+
+    for tk in tokens:
+        if not tk.startswith('--'):
+            if tk not in ('${hostlists}', '${ipsets}'):
+                audit['stray_tokens'].append(tk)
+            continue
+        opt, eq, val = tk[2:].partition('=')
+        if opt not in grammar2['options']:
+            rep.error('E_OPTION_UNKNOWN', sid, 'опции --%s нет в nfqws2' % opt)
+        elif opt == 'payload':
+            for p in val.lstrip('~').split(','):
+                if p not in grammar2['payloads']:
+                    rep.error('E_PAYLOAD', sid, 'пейлоада %r нет в nfqws2' % p)
+        elif opt == 'filter-l7':
+            for p in val.split(','):
+                if p not in grammar2['l7']:
+                    rep.error('E_L7', sid, 'протокола %r нет в nfqws2' % p)
+        elif opt in ('in-range', 'out-range') and not RANGE_RE.match(val):
+            rep.error('E_RANGE', sid, 'неверный диапазон --%s=%s' % (opt, val))
+    if audit['stray_tokens']:
+        rep.error('E_STRAY_TOKEN', sid, 'токены вне опций: %s' % ' '.join(audit['stray_tokens'][:5]))
+
+    for pidx, prof in enumerate([p for p in split_profiles(tokens) if p], 1):
+        has_circular, numbers = False, set()
+        for tk in prof:
+            if not tk.startswith('--lua-desync='):
+                continue
+            fn, num = _check_lua_desync(sid, pidx, tk[len('--lua-desync='):], grammar2, funcs, blobs, rep)
+            has_circular |= fn == 'circular'
+            if num is not None:
+                numbers.add(num)
+        if numbers and not has_circular:
+            rep.error('E_CIRCULAR', sid, 'профиль #%d: strategy=N без оркестратора circular' % pidx)
+        if has_circular and numbers != set(range(1, len(numbers) + 1)):
+            rep.error('E_CIRCULAR', sid, 'профиль #%d: номера strategy %s должны идти подряд с 1' % (pidx, sorted(numbers)))
+        if has_circular and not numbers:
+            rep.error('E_CIRCULAR', sid, 'профиль #%d: circular без инстансов strategy=N' % pidx)
+    _audit_profiles(sid, tokens, rep, audit)
+    desync = [tk for tk in tokens if tk.startswith('--lua-desync=')]
+    audit['autottl'] = any(re.search(r':ip6?_autottl=', tk) for tk in desync)
+    audit['syndata'] = any(tk.startswith('--lua-desync=syndata') for tk in desync)
+    return audit
+
+
 # ---------------------------------------------------------------- манифесты и bundle
 
 def router_to_local(bundle_dir, router_path):
@@ -415,10 +580,25 @@ def check_manifest(path, rel_dir, bundle_dir, rep):
     except (UnicodeDecodeError, ValueError) as exc:
         rep.error('E_MANIFEST_JSON', where, 'не JSON: %s' % exc)
         return None
-    if not isinstance(m, dict) or tuple(m.keys()) != MANIFEST_KEYS:
-        rep.error('E_MANIFEST_KEYS', where, 'ключи %s, ожидались %s' % (list(m)[:14] if isinstance(m, dict) else type(m), list(MANIFEST_KEYS)))
+    keys = tuple(m.keys()) if isinstance(m, dict) else ()
+    extra = keys[len(MANIFEST_KEYS):]
+    if (keys[:len(MANIFEST_KEYS)] != MANIFEST_KEYS
+            or extra != tuple(k for k in MANIFEST_OPTIONAL_KEYS if k in extra)):
+        rep.error('E_MANIFEST_KEYS', where, 'ключи %s, ожидались %s + необязательные %s' % (
+            list(m)[:16] if isinstance(m, dict) else type(m), list(MANIFEST_KEYS), list(MANIFEST_OPTIONAL_KEYS)))
         return None
     ok = True
+    for key in extra:
+        if not isinstance(m[key], str) or not m[key].strip():
+            rep.error('E_MANIFEST_FIELD', where, 'пустое поле %s' % key); ok = False
+    for key, limit in (('name', MAX_NAME_BYTES), ('description', MAX_DESCRIPTION_BYTES),
+                       ('name_en', MAX_NAME_BYTES), ('description_en', MAX_DESCRIPTION_BYTES),
+                       ('name_zh', MAX_NAME_BYTES), ('description_zh', MAX_DESCRIPTION_BYTES)):
+        if isinstance(m.get(key), str) and len(m[key].encode('utf-8')) > limit:
+            rep.error('E_MANIFEST_LONG', where, '%s длиннее %d байт' % (key, limit)); ok = False
+    ok = check_lang_pairs(m, where, rep) and ok
+    if m.get('author') == OWN_LIST_AUTHOR and m.get('type') in ('list', 'ipset'):
+        ok = _check_own_meta(m, extra, where, rep) and ok
     stem = os.path.basename(path)[:-5]
     if m['schema'] != 1:
         rep.error('E_MANIFEST_FIELD', where, 'schema != 1'); ok = False
@@ -458,6 +638,45 @@ def check_manifest(path, rel_dir, bundle_dir, rep):
     return m if ok else None
 
 
+def check_lang_pairs(obj, where, rep):
+    """§14.6: у каждого поля *_en есть *_zh и наоборот; *_zh — по-китайски, без ASCII-кавычек (глоссарий)."""
+    ok = True
+    for en, zh in LANG_PAIRS:
+        if (en in obj) != (zh in obj):
+            rep.error('E_LANG_PAIR', where, 'есть %s, но нет %s' % ((en, zh) if en in obj else (zh, en)))
+            ok = False
+        elif zh in obj and isinstance(obj[zh], str):
+            # имя может быть латиницей (YouTube, nfqws2：general), описание и заметка — только по-китайски
+            if zh != 'name_zh' and not CJK_RE.search(obj[zh]):
+                rep.error('E_ZH_TEXT', where, '%s без китайских символов' % zh)
+                ok = False
+            if '"' in obj[zh]:
+                rep.error('E_ZH_TEXT', where, '%s содержит ASCII-кавычки' % zh)
+                ok = False
+    return ok
+
+
+def _check_own_meta(m, extra, where, rep):
+    """Собственный список проекта (§16.2): обязательны service, variant, generated, method, license, *_en."""
+    missing = [k for k in OWN_LIST_KEYS if k not in extra]
+    if missing:
+        rep.error('E_OWN_META', where, 'у собственного списка нет полей %s' % missing)
+        return False
+    ok = True
+    if not SERVICE_ID_RE.match(m['service']):
+        rep.error('E_OWN_META', where, 'service %r некорректен' % m['service']); ok = False
+    if m['variant'] not in LIST_VARIANTS:
+        rep.error('E_OWN_META', where, 'variant %r не из %s' % (m['variant'], LIST_VARIANTS)); ok = False
+    if not DATE_RE.match(m['generated']):
+        rep.error('E_OWN_META', where, 'generated %r не YYYY-MM-DD' % m['generated']); ok = False
+    if m['license'] != 'MIT':
+        rep.error('E_OWN_META', where, 'license %r, ожидалась MIT' % m['license']); ok = False
+    base = 'zaprett-' + m['service'].replace('_', '-')
+    if m['id'] != base and not m['id'].startswith(base + '-'):
+        rep.error('E_OWN_META', where, 'id %s не вида %s или %s-<вариант>' % (m['id'], base, base)); ok = False
+    return ok
+
+
 def _walk_files(root):
     out = []
     for dirpath, _dirs, files in os.walk(root):
@@ -466,8 +685,10 @@ def _walk_files(root):
     return sorted(out)
 
 
-def validate_bundle(bundle_dir, grammar, rep):
-    """Полная проверка bundle. Возвращает (items по id, листы, аудит стратегий)."""
+def validate_bundle(bundle_dir, grammar, rep, grammar2=None):
+    """Полная проверка bundle. Возвращает (items по id, листы, аудит стратегий nfqws и nfqws2).
+
+    grammar2 — грамматика nfqws2 (load_nfqws2_grammar); без неё стратегии nfqws2 считаются ошибкой."""
     items = {}
     manifests_root = os.path.join(bundle_dir, 'manifests')
     files_root = os.path.join(bundle_dir, 'files')
@@ -516,8 +737,18 @@ def validate_bundle(bundle_dir, grammar, rep):
             content[sid] = check_ipset(text, sid, rep)
         elif m['type'] == 'nfqws':
             audits[sid] = check_strategy(m, text, items, grammar, rep)
+        elif m['type'] == 'nfqws2':
+            if grammar2 is None:
+                rep.error('E_NO_GRAMMAR2', sid, 'нет грамматики nfqws2 для проверки')
+            else:
+                audits[sid] = check_strategy2(m, text, items, grammar2, rep)
         if m['type'] in LIST_TYPES + IPSET_TYPES and not content[sid]:
             rep.error('E_EMPTY_LIST', sid, 'в листе нет ни одной записи')
+        if m['type'] == 'ipset':
+            for net in content[sid]:
+                bad = [x for x in SPECIAL_NETS if x.version == net.version and x.overlaps(net)]
+                if bad:
+                    rep.error('E_CIDR_SPECIAL', sid, '%s пересекается с сетью специального назначения %s' % (net, bad[0]))
 
     _check_include_vs_exclude(items, content, rep)
     _check_index(bundle_dir, items, rep)
@@ -573,9 +804,21 @@ def _is_str_list(v):
 def _check_service(svc, items, tiers, ref_sizes, rep):
     sid = svc.get('id') if isinstance(svc, dict) else None
     where = 'presets:%s' % sid
-    if not isinstance(svc, dict) or tuple(svc.keys()) != SERVICE_KEYS:
+    keys = tuple(svc.keys()) if isinstance(svc, dict) else ()
+    extra = keys[len(SERVICE_KEYS):]
+    if (keys[:len(SERVICE_KEYS)] != SERVICE_KEYS or len(set(extra)) != len(extra)
+            or any(k not in SERVICE_OPTIONAL_KEYS for k in extra)):
         rep.error('E_PRESET_KEYS', where, 'ключи сервиса не по схеме §9')
         return
+    check_lang_pairs(svc, where, rep)
+    for key in extra:
+        if key == 'needs_dns':
+            if not isinstance(svc[key], bool):
+                rep.error('E_PRESET_FIELD', where, 'needs_dns не true/false')
+        elif key == 'variants':
+            _check_variants(svc, items, tiers, where, rep)
+        elif not isinstance(svc[key], str) or not svc[key].strip():
+            rep.error('E_PRESET_FIELD', where, 'пустое поле %s' % key)
     if not isinstance(sid, str) or not SERVICE_ID_RE.match(sid):
         rep.error('E_PRESET_FIELD', where, 'некорректный id')
     for key in ('name', 'description', 'note'):
@@ -627,6 +870,61 @@ def _check_service(svc, items, tiers, ref_sizes, rep):
             rep.error('E_TARGET_MIN', where, '%s: min_bytes %d вне (%d, %d)' % (url, mb, FREEZE_BYTES, ref))
 
 
+def _check_variants(svc, items, tiers, where, rep):
+    """Необязательные варианты сервиса (§16.3): альтернативные наборы листов."""
+    variants = svc['variants']
+    if not isinstance(variants, list) or not variants:
+        rep.error('E_PRESET_VARIANT', where, 'variants не непустой список')
+        return
+    if svc.get('works') == 'no':
+        rep.error('E_PRESET_VARIANT', where, 'варианты у сервиса works=no')
+    seen = set()
+    main = (sorted(svc.get('lists') or []), sorted(svc.get('ipsets') or []))
+    for v in variants:
+        vw = '%s/variant:%s' % (where, v.get('id') if isinstance(v, dict) else None)
+        if not isinstance(v, dict) or tuple(v.keys()) != VARIANT_KEYS:
+            rep.error('E_PRESET_VARIANT', vw, 'ключи варианта не %s' % list(VARIANT_KEYS))
+            continue
+        if not isinstance(v['id'], str) or not SERVICE_ID_RE.match(v['id']) or v['id'] in seen:
+            rep.error('E_PRESET_VARIANT', vw, 'id варианта некорректен или повторяется')
+        seen.add(v['id'])
+        check_lang_pairs(v, vw, rep)
+        for key in ('name', 'name_en', 'name_zh', 'description', 'description_en', 'description_zh'):
+            if not isinstance(v[key], str) or not v[key].strip():
+                rep.error('E_PRESET_VARIANT', vw, 'пустое поле %s' % key)
+        if isinstance(v['description'], str) and not CYRILLIC_RE.search(v['description']):
+            rep.error('E_PRESET_NOT_RU', vw, 'описание варианта не на русском')
+        ok_refs = True
+        for key, rtype in (('lists', 'list'), ('ipsets', 'ipset')):
+            if not _is_str_list(v[key]):
+                rep.error('E_PRESET_VARIANT', vw, '%s не список строк' % key)
+                ok_refs = False
+                continue
+            for ref in v[key]:
+                if ref not in items or items[ref]['type'] != rtype:
+                    rep.error('E_PRESET_REF', vw, '%s: нет элемента %s типа %s в bundle' % (key, ref, rtype))
+        if ok_refs and not (v['lists'] or v['ipsets']):
+            rep.error('E_PRESET_VARIANT', vw, 'вариант без листов')
+        if ok_refs and (sorted(v['lists']), sorted(v['ipsets'])) == main:
+            rep.error('E_PRESET_VARIANT', vw, 'вариант совпадает с основным набором')
+        if v['tier'] not in tiers:
+            rep.error('E_PRESET_VARIANT', vw, 'tier %r нет в tiers' % v['tier'])
+
+
+def _check_own_lists(services, items, rep):
+    """Собственные списки (§16.2): service существует в presets, у сервиса минимум два списка."""
+    ids = {s.get('id') for s in services if isinstance(s, dict)}
+    per_service = {}
+    for m in items.values():
+        if m.get('author') == OWN_LIST_AUTHOR and m['type'] in ('list', 'ipset') and 'service' in m:
+            per_service.setdefault(m['service'], []).append(m['id'])
+            if m['service'] not in ids:
+                rep.error('E_LIST_SERVICE', m['id'], 'service %r нет в presets.json' % m['service'])
+    for sid, lst in sorted(per_service.items()):
+        if len(lst) < 2:
+            rep.error('E_LIST_SERVICE', sid, 'у сервиса меньше двух собственных списков: %s' % lst)
+
+
 def validate_presets(presets, items, audits, ref_sizes, rep):
     if not isinstance(presets, dict) or tuple(presets.keys()) != PRESET_TOP_KEYS or presets['schema'] != 1:
         rep.error('E_PRESET_KEYS', 'presets', 'верхний уровень не по схеме §9')
@@ -646,6 +944,7 @@ def validate_presets(presets, items, audits, ref_sizes, rep):
         rep.error('E_PRESET_DUP', 'presets', 'повторяющиеся id сервисов')
     for svc in services:
         _check_service(svc, items, tiers, ref_sizes, rep)
+    _check_own_lists(services, items, rep)
 
     always = presets['always']
     if not isinstance(always, dict) or tuple(always.keys()) != ('exclude_lists', 'exclude_ipsets'):
@@ -661,9 +960,11 @@ def validate_presets(presets, items, audits, ref_sizes, rep):
 
 def _check_defaults(defaults, services, items, audits, rep):
     where = 'presets:defaults'
-    if not isinstance(defaults, dict) or tuple(defaults.keys()) != ('services', 'strategy', 'quick_test_strategies'):
+    if not isinstance(defaults, dict) or tuple(defaults.keys()) not in (DEFAULTS_KEYS, DEFAULTS_KEYS + DEFAULTS_NFQWS2_KEYS):
         rep.error('E_PRESET_KEYS', where, 'ключи defaults не по схеме')
         return
+    if 'strategy_nfqws2' in defaults:
+        _check_defaults_nfqws2(defaults, items, audits, rep)
     by_id = {s['id']: s for s in services if isinstance(s, dict) and 'id' in s}
     for sid in defaults['services'] if _is_str_list(defaults['services']) else [None]:
         if sid not in by_id or by_id[sid].get('works') == 'no':
@@ -680,6 +981,27 @@ def _check_defaults(defaults, services, items, audits, rep):
     for sid in quick:
         if sid not in items or items[sid]['type'] != 'nfqws':
             rep.error('E_QUICK_REF', where, '%s: нет стратегии nfqws в bundle' % sid)
+            continue
+        if rep.errors_for(sid):
+            rep.error('E_QUICK_BROKEN', where, '%s: у стратегии есть ошибки проверки' % sid)
+        if audits.get(sid, {}).get('profiles_all_traffic'):
+            rep.error('E_QUICK_GLOBAL', where, '%s: есть профиль на весь трафик порта' % sid)
+
+
+def _check_defaults_nfqws2(defaults, items, audits, rep):
+    where = 'presets:defaults'
+    strategy = defaults['strategy_nfqws2']
+    if strategy not in items or items[strategy]['type'] != 'nfqws2':
+        rep.error('E_PRESET_DEFAULTS', where, 'стратегии nfqws2 по умолчанию %r нет в bundle' % strategy)
+    quick = defaults['quick_test_strategies_nfqws2']
+    if not _is_str_list(quick) or not QUICK2_MIN <= len(quick) <= QUICK2_MAX or len(set(quick)) != len(quick):
+        rep.error('E_QUICK_COUNT', where, 'quick_test_strategies_nfqws2: нужно %d–%d уникальных id' % (QUICK2_MIN, QUICK2_MAX))
+        return
+    if strategy not in quick:
+        rep.error('E_QUICK_DEFAULT', where, 'стратегия nfqws2 по умолчанию не входит в быстрый набор')
+    for sid in quick:
+        if sid not in items or items[sid]['type'] != 'nfqws2':
+            rep.error('E_QUICK_REF', where, '%s: нет стратегии nfqws2 в bundle' % sid)
             continue
         if rep.errors_for(sid):
             rep.error('E_QUICK_BROKEN', where, '%s: у стратегии есть ошибки проверки' % sid)
@@ -704,3 +1026,36 @@ def load_nfqws_grammar(nfq_dir):
         if must not in modes:
             raise RuntimeError('разбор режимов desync сломан: нет %s' % must)
     return options, modes
+
+
+def _c_string_array(src, name):
+    body = src.split(name + '[] = {', 1)[1].split('};', 1)[0]
+    return set(re.findall(r'"([a-z0-9_]+)"', body))
+
+
+def load_nfqws2_grammar(nfq2_dir, lua_dir):
+    """Грамматика nfqws2 (zapret2): опции из long_options[] (nfq2/nfqws.c), типы пейлоадов, протоколы и маркеры
+    позиций (nfq2/protocol.c), desync-функции `function <имя>(ctx, desync)` по Lua-библиотекам lua/zapret-*.lua."""
+    src = read_bytes(os.path.join(nfq2_dir, 'nfqws.c')).decode('utf-8', 'replace')
+    block = src.split('long_options[] = {', 1)[1].split('\n};', 1)[0]
+    options = set(re.findall(r'\{"([a-z0-9-]+)",\s*(?:no|required|optional)_argument', block))
+    psrc = read_bytes(os.path.join(nfq2_dir, 'protocol.c')).decode('utf-8', 'replace')
+    lua = {}
+    for fname in sorted(os.listdir(lua_dir)):
+        m = re.match(r'^(zapret-[a-z0-9]+)\.lua$', fname)
+        if m:
+            text = read_bytes(os.path.join(lua_dir, fname)).decode('utf-8', 'replace')
+            lua[m.group(1)] = set(re.findall(r'(?m)^function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*ctx\s*,\s*desync\s*\)', text))
+    grammar = {'options': options, 'payloads': _c_string_array(psrc, 'l7payload_name'),
+               'l7': _c_string_array(psrc, 'l7proto_name'), 'markers': _c_string_array(psrc, 'posmarker_names'),
+               'lua': lua}
+    for must in ('lua-desync', 'lua-init', 'blob', 'payload', 'new', 'hostlist', 'filter-l7', 'out-range'):
+        if must not in options:
+            raise RuntimeError('разбор long_options nfqws2 сломан: нет --%s' % must)
+    for key, must in (('payloads', 'tls_client_hello'), ('l7', 'quic'), ('markers', 'midsld')):
+        if must not in grammar[key]:
+            raise RuntimeError('разбор protocol.c сломан: нет %s в %s' % (must, key))
+    for lib, fn in (('zapret-antidpi', 'multisplit'), ('zapret-auto', 'circular'), ('zapret-lib', 'luaexec')):
+        if fn not in lua.get(lib, ()):
+            raise RuntimeError('разбор Lua сломан: нет %s в %s' % (fn, lib))
+    return grammar

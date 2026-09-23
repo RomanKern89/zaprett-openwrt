@@ -13,5 +13,9 @@
   "source": "bundle",
   "sha256": "1102fa4a112b1fc3327d2946b241ae003aca812d8038f91bcf9cafdb7344cd6a",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-general-fake-tls-auto-alt.json",
+  "name_en": "strategy-general-fake-tls-auto-alt",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-general-fake-tls-auto-alt",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

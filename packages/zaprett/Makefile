@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=zaprett
-PKG_VERSION:=1.0.0
+PKG_VERSION:=1.1.0
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=zaprett-openwrt
@@ -77,8 +77,8 @@ if [ -z "$${IPKG_INSTROOT}" ] && [ "$${PKG_UPGRADE}" != "1" ] && [ "$$1" != "upg
 		uci -q delete firewall.zaprett
 		uci -q commit firewall
 	fi
-	if [ -f /etc/crontabs/root ] && grep -q '# zaprett-autoupdate' /etc/crontabs/root; then
-		sed -i '/# zaprett-autoupdate/d' /etc/crontabs/root
+	if [ -f /etc/crontabs/root ] && grep -q '# zaprett-' /etc/crontabs/root; then
+		sed -i -e '/# zaprett-autoupdate/d' -e '/# zaprett-watchdog/d' -e '/# zaprett-monitor/d' /etc/crontabs/root
 		/etc/init.d/cron restart >/dev/null 2>&1
 	fi
 	rm -rf /var/run/zaprett
@@ -101,6 +101,12 @@ if [ -z "$${IPKG_INSTROOT}" ] && [ "$${PKG_UPGRADE}" != "1" ] && [ "$$1" != "upg
 			rmdir "$$d" 2>/dev/null
 		done
 	done
+	# the user of the automatic selection checks (uci-defaults, contract v1.6 §17): only its own lines
+	lock /var/lock/passwd
+	for f in /etc/passwd /etc/shadow /etc/group; do
+		[ -f "$$f" ] && grep -q '^zaprett-test:' "$$f" && sed -i '/^zaprett-test:/d' "$$f"
+	done
+	lock -u /var/lock/passwd
 fi
 exit 0
 endef

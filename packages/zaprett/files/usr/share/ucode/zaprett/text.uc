@@ -20,8 +20,33 @@ export const WARNINGS = {
 	wide_port_range: 'стратегия перехватывает широкий диапазон портов — возможна повышенная нагрузка на процессор',
 	config_was_invalid: 'конфигурация и до изменения была с ошибками',
 	source_not_downloaded: 'включённая подписка ещё не загружена — выполните zaprett sources update',
-	profile_unfiltered: 'часть профилей стратегии действует на весь трафик своих портов, без списков'
+	profile_unfiltered: 'часть профилей стратегии действует на весь трафик своих портов, без списков',
+	ipv6_wan_unhandled: 'у WAN есть IPv6, а обработка IPv6 выключена — IPv6-соединения идут без обхода',
+	low_memory: 'включённые сервисы или подписки тяжелы для памяти этого роутера',
+	monitor_degraded: 'монитор доступности: сервисы открываются плохо несколько проверок подряд',
+	flowtable_failed: 'собственная flowtable zaprett не установлена (нет устройств или ядро её не приняло) — соединения идут без ускорения',
+	game_filter_no_ipsets: 'игровой фильтр включён, но нет ни одного включённого списка IP-сетей — игровой профиль не добавлен',
+	dns_plain: 'включён сервис, которому нужен шифрованный DNS, а на роутере обычный DNS (zaprett dns setup)'
 };
+
+const VERDICT_TEXT = {
+	ok: 'открывается',
+	dns_spoof: 'подмена DNS',
+	ip_block: 'блокировка по IP',
+	tls_block: 'обрыв TLS',
+	throttle: 'замедление (замирает на 14–24 КБ)',
+	http_block: 'заглушка провайдера',
+	unknown: 'не удалось определить'
+};
+
+const ENSURE_TEXT = {
+	none: 'Сторож: всё в порядке',
+	started: 'Сторож: движок не работал и запущен заново',
+	fw_applied: 'Сторож: правила nftables восстановлены',
+	skipped: 'Сторож: идёт автоподбор, проверка пропущена'
+};
+
+const MONITOR_STATE = { unknown: 'нет данных', ok: 'в порядке', degraded: 'плохая доступность', repairing: 'идёт автоподбор' };
 
 export function warning_text(code) {
 	return WARNINGS[code] ?? code;
@@ -49,7 +74,10 @@ function fmt_status(r) {
 	s += sprintf('IP-сети:       %s\n', length(r.ipsets) ? join(', ', r.ipsets) : '—');
 	s += sprintf('Правила nft:   %s\n', r.nft_applied ? 'установлены' : 'не установлены');
 	s += sprintf('WAN:           %s\n', length(r.wan) ? join(', ', r.wan) : '—');
-	s += sprintf('Ускорение fw4: %s (режим %s)\n', r.flow_offload?.fw4 ? 'включено' : 'выключено', r.flow_offload?.mode);
+	s += sprintf('Ускорение fw4: %s (режим %s%s)\n', r.flow_offload?.fw4 ? 'включено' : 'выключено', r.flow_offload?.mode,
+		r.flow_offload?.own ? ', своя flowtable установлена' : '');
+	if (r.dns)
+		s += sprintf('Шифрованный DNS: %s\n', r.dns.encrypted ? ('да, ' + r.dns.provider) : 'нет');
 	s += sprintf('Версия:        %s\n', r.version);
 	return s + warn_block(r.warnings);
 }
@@ -95,15 +123,68 @@ function fmt_job(j) {
 	return sprintf('Задача %s (%s): %s, %d%%\n%s\n', j.name, j.id, j.state, j.progress ?? 0, j.message ?? '');
 }
 
+// Reasons of mode exclusive of an automatic selection (contract v1.6 §17).
+const MODE_REASON_TEXT = {
+	forced: 'выбран флагом --exclusive',
+	engine_not_running: 'служба не работала',
+	no_test_user: 'нет пользователя zaprett-test',
+	qnum_out_of_range: 'номер очереди 65535 — нет места для второй очереди',
+	mark_conflict: 'метки desync_mark/postnat_mark пересекаются с меткой проверки',
+	write_failed: 'не удалось записать файлы проверки',
+	nft_rejected: 'nftables не принял правила проверки',
+	instance_failed: 'второй экземпляр движка не запустился'
+};
+
 function fmt_test(r) {
 	let s = fmt_job(r.job);
 	let res = r.results;
 	if (!res)
 		return s + 'Результатов автоподбора нет.\n';
+	if (res.mode == 'isolated')
+		s += 'Режим: обход для сети не отключался (проверка отдельным экземпляром движка)\n';
+	else if (res.mode == 'exclusive')
+		s += sprintf('Режим: на время подбора движок останавливался (%s)\n', MODE_REASON_TEXT[res.mode_reason] ?? res.mode_reason ?? '—');
 	if (res.baseline)
 		s += sprintf('Без обхода доступно: %d из %d\n', res.baseline.ok, res.baseline.total);
 	for (let x in (res.results ?? []))
 		s += sprintf('  %-45s %s %d/%d%s\n', x.id, x.status, x.ok, x.total, (x.avg_ms != null) ? sprintf(' %d мс', x.avg_ms) : '');
+	return s;
+}
+
+function fmt_probe(p) {
+	if (!p)
+		return 'Проверок сервисов ещё не было. Запуск: zaprett probe\n';
+	let s = sprintf('Доступно %d из %d адресов (движок %s)\n', p.ok, p.total, p.engine_running ? 'работает' : 'не работает');
+	for (let x in (p.services ?? [])) {
+		s += sprintf('  %-20s %d/%d%s\n', x.id, x.ok, x.total, (x.avg_ms != null) ? sprintf(' %d мс', x.avg_ms) : '');
+		for (let t in (x.targets ?? []))
+			s += sprintf('    %s %s%s\n', t.ok ? 'OK  ' : 'FAIL', t.url, t.error ? (' — ' + t.error) : '');
+	}
+	return s;
+}
+
+function fmt_dns(d) {
+	return d?.encrypted ? sprintf('Шифрованный DNS работает: %s\n', d.provider) :
+		'Шифрованного DNS нет: запросы идут открытым текстом. Включить: zaprett dns setup\n';
+}
+
+function fmt_diagnose(d) {
+	if (!d)
+		return 'Диагностики ещё не было. Запуск: zaprett diagnose\n';
+	let s = sprintf('Итог: %s (движок %s)\n', VERDICT_TEXT[d.summary?.verdict] ?? d.summary?.verdict,
+		d.engine_running ? 'работает' : 'не работает');
+	for (let t in (d.targets ?? []))
+		s += sprintf('  %-14s %s\n      %s\n', t.verdict, t.url, t.detail ?? '');
+	return s;
+}
+
+function fmt_monitor(m) {
+	let s = sprintf('Монитор: %s, состояние: %s\n', m.enabled ? 'включён' : 'выключен', MONITOR_STATE[m.state] ?? m.state);
+	s += sprintf('Раз в %d мин, порог %d, авторемонт: %s\n', m.interval, m.threshold, m.auto_repair ? 'да' : 'нет');
+	if (m.checked_at != null)
+		s += sprintf('Последняя проверка: доступно %d из %d, неудачных подряд: %d\n', m.ok, m.total, m.consecutive_failures);
+	if (m.last_repair)
+		s += sprintf('Последний авторемонт: задача %s\n', m.last_repair.job_id);
 	return s;
 }
 
@@ -143,6 +224,23 @@ export function render(cmd, r) {
 		return r.log + '\n';
 	case 'test status':
 		return fmt_test(r);
+	case 'ensure':
+		return (ENSURE_TEXT[r.action] ?? r.action) + '\n';
+	case 'probe status':
+		return fmt_probe(r.probe);
+	case 'monitor status':
+		return fmt_monitor(r.monitor);
+	case 'dns status':
+		return fmt_dns(r.dns);
+	case 'diagnose status':
+		return fmt_diagnose(r.diagnose);
+	case 'monitor run':
+		return r.skipped ? sprintf('Проверка пропущена: %s\n', r.skipped) :
+			sprintf('Доступно %d из %d, состояние: %s\n', r.reachable, r.total, MONITOR_STATE[r.state] ?? r.state);
+	case 'log':
+		return length(r.lines) ? (join('\n', r.lines) + '\n') : 'В журнале нет строк zaprett.\n';
+	case 'page':
+		return sprintf('%.J\n', r);
 	case 'version':
 		return sprintf('zaprett %s\nnfqws: %s\nnfqws2: %s\n', r.version, r.nfqws ?? '—', r.nfqws2 ?? '—');
 	case 'presets': {
@@ -152,6 +250,8 @@ export function render(cmd, r) {
 		return s;
 	}
 	}
+	if (cmd == 'dns setup' && r.changed === false && !r.job)
+		return fmt_dns(r.dns);
 	let s = (r.message ?? 'Готово') + '\n' + warn_block(r.warnings);
 	if (r.job)
 		s = sprintf('Задача запущена: %s (%s). Ход выполнения: zaprett job status\n', r.job.name, r.job.id);

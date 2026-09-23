@@ -1,0 +1,15 @@
+{
+ "code_hosts": [],
+ "fetched": "2026-09-23",
+ "requested_hosts": [
+  "accounts.google.com",
+  "accounts.youtube.com",
+  "fonts.gstatic.com",
+  "play.google.com",
+  "www.gstatic.com"
+ ],
+ "scenario": "login",
+ "scripts_scanned": 0,
+ "service": "youtube",
+ "url": "https://accounts.google.com/ServiceLogin?service=youtube"
+}

@@ -1,0 +1,9 @@
+--blob=quic_google:@${bin:quic_initial_www_google_com}
+--blob=tls_google:@${bin:tls_clienthello_www_google_com}
+--blob=z64:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+--filter-udp=443 --filter-l7=quic ${hostlists} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --payload=discord_ip_discovery,stun --lua-desync=fake:blob=z64:repeats=6 --new
+--filter-tcp=80,443 ${hostlists} --payload=tls_client_hello,http_req --lua-desync=multidisorder:pos=midsld:seqovl=midsld-1:seqovl_pattern=tls_google --new
+--filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --payload=tls_client_hello --lua-desync=multidisorder:pos=midsld:seqovl=midsld-1:seqovl_pattern=tls_google --new
+--filter-udp=443 --filter-l7=quic ${ipsets} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-tcp=80,443 ${ipsets} --payload=tls_client_hello,http_req --lua-desync=multidisorder:pos=midsld:seqovl=midsld-1:seqovl_pattern=tls_google

@@ -1753,6 +1753,362 @@
       "autottl": true,
       "any_protocol_no_cutoff": false,
       "unused_dependencies": []
+    },
+    {
+      "id": "z2-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 8,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-alt2",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 8,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-alt3",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-circular",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-circular-nofake",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-discord",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-disorder-seqovl",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 6,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-fake-tls-auto",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-fake-tls-auto-alt",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-general",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-hostfakesplit",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 6,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": false,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-simple-fake",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 7,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [
+        "#2 udp=19294-19344,50000-50100 l7:discord,stun"
+      ],
+      "wide_udp": [],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-ultimatefix",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${bin:tls_clienthello_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
+    },
+    {
+      "id": "z2-ultimatefix-universal",
+      "placeholders": [
+        "${bin:quic_initial_www_google_com}",
+        "${hostlists}",
+        "${ipsets}"
+      ],
+      "deprecated_modes": {},
+      "comment_blocks": 0,
+      "comment_junk_tokens": 0,
+      "trailing_backslashes": 0,
+      "stray_tokens": [],
+      "profiles": 4,
+      "empty_profiles": 0,
+      "trailing_new": false,
+      "profiles_all_traffic": [],
+      "profiles_l7_only": [],
+      "wide_udp": [
+        "#2 udp=50000-65535"
+      ],
+      "syndata": false,
+      "autottl": true,
+      "any_protocol_no_cutoff": false,
+      "unused_dependencies": []
     }
   ]
 }

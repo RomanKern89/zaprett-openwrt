@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "e5938780152169f720383f80eabb309e9477369b83b5ec40cc137c397f862cde",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_www_google_com.json",
+  "name_en": "tls_clienthello_www_google_com",
+  "description_en": "Fake packet file: tls_clienthello_www_google_com",
+  "name_zh": "tls_clienthello_www_google_com",
+  "description_zh": "伪造数据包文件：tls_clienthello_www_google_com"
 }

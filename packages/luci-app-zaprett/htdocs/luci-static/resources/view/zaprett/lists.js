@@ -27,13 +27,24 @@ const USER_LISTS = {
 return view.extend({
 	load() {
 		return Promise.all([
-			zc.run(zc.callStatus).catch(err => err),
-			zc.run(zc.callItems).catch(err => err),
-			zc.run(zc.callSourcesList).catch(err => err),
-			zc.run(zc.callJobStatus).then(res => res.job ?? null, () => null),
-			uci.load('zaprett').catch(() => null),
-			zc.run(zc.callPresets).catch(() => null)
-		]);
+			zc.loadPage('lists', {
+				status: () => zc.run(zc.callStatus),
+				job: () => zc.run(zc.callJobStatus),
+				items: () => zc.run(zc.callItems),
+				sources: () => zc.run(zc.callSourcesList),
+				presets: () => zc.run(zc.callPresets)
+			}),
+			uci.load('zaprett').catch(() => null)
+		]).then(data => {
+			const page = data[0];
+
+			return [
+				page.status, page.items, page.sources,
+				(page.job instanceof Error) ? null : (page.job.job ?? null),
+				data[1],
+				(page.presets instanceof Error) ? null : page.presets
+			];
+		});
 	},
 
 	render(data) {
@@ -137,8 +148,9 @@ return view.extend({
 		];
 
 		const order = { user: 0, bundle: 1, repo: 2, url: 3 };
+		const nameOf = it => zc.localized(it, 'name') ?? it.id;
 		const sorted = list.slice().sort((a, b) =>
-			((order[a.source] ?? 9) - (order[b.source] ?? 9)) || String(a.name ?? a.id).localeCompare(String(b.name ?? b.id)));
+			((order[a.source] ?? 9) - (order[b.source] ?? 9)) || String(nameOf(a)).localeCompare(String(nameOf(b))));
 
 		for (const it of sorted)
 			rows.push(this.renderRow(it));
@@ -159,11 +171,12 @@ return view.extend({
 
 		box.addEventListener('change', () => this.handleToggle(it, box, note));
 
+		const description = zc.localized(it, 'description');
 		const info = [
-			E('strong', {}, txt(it.name ?? it.id)),
+			E('strong', {}, txt(zc.localized(it, 'name') ?? it.id)),
 			E('br'),
 			E('small', {}, txt(it.id)),
-			it.description ? E('div', { 'class': 'cbi-value-description' }, txt(it.description)) : ''
+			description ? E('div', { 'class': 'cbi-value-description' }, txt(description)) : ''
 		];
 
 		if (usedBy.length)
@@ -181,19 +194,19 @@ return view.extend({
 			source.push(E('small', {}, txt(_('version %s').format(it.version))));
 
 		return E('tr', { 'class': 'tr' }, [
-			E('td', { 'class': 'td' }, [ box, ' ', note ]),
-			E('td', { 'class': 'td' }, info),
-			E('td', { 'class': 'td' }, txt((it.entries != null) ? String(it.entries) : '—')),
-			E('td', { 'class': 'td' }, source),
-			E('td', { 'class': 'td right' }, [
+			zc.td(_('Enabled'), [ box, ' ', note ]),
+			zc.td(_('List'), info),
+			zc.td(_('Entries'), (it.entries != null) ? String(it.entries) : '—'),
+			zc.td(_('Source'), source),
+			zc.td(null, [
 				isUser ? zc.button(_('Edit'), ui.createHandlerFn(this, 'handleEdit', it), 'edit') : ''
-			])
+			], 'right')
 		]);
 	},
 
 	handleToggle(it, box, note) {
 		const enabled = box.checked;
-		const name = it.name ?? it.id;
+		const name = zc.localized(it, 'name') ?? it.id;
 
 		box.disabled = true;
 		dom.content(note, E('em', {}, txt(_('saving…'))));
@@ -414,30 +427,30 @@ return view.extend({
 			state.push(E('div', { 'class': 'cbi-value-description' }, txt(src.message)));
 
 		return E('tr', { 'class': 'tr' }, [
-			E('td', { 'class': 'td' }, [ enabledBox ]),
-			E('td', { 'class': 'td' }, [
+			zc.td(_('Download'), [ enabledBox ]),
+			zc.td(_('Subscription'), [
 				E('strong', {}, txt(title)),
 				E('br'),
 				E('small', {}, txt('%s · %s'.format(zc.typeLabel(src.type), src.name))),
 				E('div', { 'class': 'cbi-value-description', 'style': 'word-break:break-all' }, txt(src.url ?? '')),
 				E('div', { 'class': 'cbi-value-description' }, txt(_('Update every %d h').format(+src.interval_hours || 0)))
 			]),
-			E('td', { 'class': 'td' }, state),
-			E('td', { 'class': 'td' }, txt((src.entries != null) ? '%d (%s)'.format(+src.entries, zc.formatBytes(src.size)) : '—')),
-			E('td', { 'class': 'td' }, (+src.ram_mib > 0)
+			zc.td(_('Last update'), state),
+			zc.td(_('Entries'), (src.entries != null) ? '%d (%s)'.format(+src.entries, zc.formatBytes(src.size)) : '—'),
+			zc.td(_('Memory'), (+src.ram_mib > 0)
 				? [
 					E((+src.ram_mib >= LARGE_RAM_MIB) ? 'strong' : 'span', {}, txt(_('≈ %d MiB').format(Math.ceil(+src.ram_mib)))),
 					(this.memory.recommended == 'light' && +src.ram_mib >= LARGE_RAM_MIB)
 						? E('div', { 'class': 'cbi-value-description' }, txt(_('too much for this router')))
 						: ''
 				]
-				: txt('—')),
-			E('td', { 'class': 'td' }, [ useBox, ' ', note ]),
-			E('td', { 'class': 'td right' }, [
+				: '—'),
+			zc.td(_('Use'), [ useBox, ' ', note ]),
+			zc.td(null, [
 				zc.button(_('Update now'), ui.createHandlerFn(this, 'handleSourcesUpdate', src.name), 'reload'), ' ',
 				zc.button(_('Edit'), ui.createHandlerFn(this, 'openSourceEditor', src), 'edit'), ' ',
 				zc.button(_('Delete'), ui.createHandlerFn(this, 'handleSourceDelete', src), 'remove')
-			])
+			], 'right')
 		]);
 	},
 

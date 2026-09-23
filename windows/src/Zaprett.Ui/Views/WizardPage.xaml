@@ -1,0 +1,300 @@
+<Page
+    x:Class="Zaprett.Ui.Views.WizardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels"
+    Background="Transparent">
+
+    <Page.Resources>
+        <DataTemplate x:Key="TileTemplate" x:DataType="vm:ServiceTile">
+            <Grid CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AutomationProperties.Name="{x:Bind Automation}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border ui:StateColor.Background="{x:Bind Kind}" />
+                <StackPanel Grid.Column="1" Padding="16,12" Spacing="2">
+                    <TextBlock Text="{x:Bind Name}" Style="{StaticResource CardTitle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" ui:StateColor.Foreground="{x:Bind Kind}" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Bind Result}" FontSize="24" FontWeight="SemiBold" ui:StateColor.Foreground="{x:Bind Kind}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind Detail}" Style="{StaticResource Secondary}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- left rail: where the user is -->
+        <Grid Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" BorderThickness="0,0,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <StackPanel Padding="28,28,20,20" Spacing="22">
+                <StackPanel Spacing="6">
+                    <Image Source="ms-appx:///Assets/zaprett-256.png" Width="44" Height="44" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock Text="{x:Bind loc:L.T('Wizard.Title')}" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Bind Vm.StepCaption, Mode=OneWay}" Style="{StaticResource Secondary}" />
+                </StackPanel>
+                <ItemsRepeater ItemsSource="{x:Bind Vm.Rail}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="14" /></ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RailStep">
+                            <StackPanel Orientation="Horizontal" Spacing="12" Opacity="{x:Bind Weight, Mode=OneWay}">
+                                <Grid Width="28" Height="28">
+                                    <Ellipse ui:StateColor.Fill="{x:Bind ui:Conv.Tint(Kind), Mode=OneWay}" />
+                                    <TextBlock Text="{x:Bind Mark, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                                               ui:StateColor.Foreground="{x:Bind Kind, Mode=OneWay}" />
+                                </Grid>
+                                <TextBlock Text="{x:Bind Title}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="170" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ScrollViewer x:Name="Scroller">
+                <StackPanel MaxWidth="880" Padding="44,34,44,28" Spacing="16" HorizontalAlignment="Stretch">
+                    <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                             Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" />
+
+                    <!-- 1: what it is and what it does not do -->
+                    <StackPanel Spacing="18" Visibility="{x:Bind Vm.IsIntro, Mode=OneWay}">
+                        <TextBlock Text="{x:Bind loc:L.T('Wizard.Intro.Title')}" FontFamily="{StaticResource DisplayFont}" FontSize="36" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level1" />
+                        <TextBlock Style="{StaticResource Body}" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind loc:L.T('Wizard.Intro.Lead')}" />
+                        <Grid ColumnSpacing="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <FontIcon Glyph="&#xE73E;" FontSize="18" ui:StateColor.Foreground="ok" />
+                                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Wizard.Intro.Does')}" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.Does1')}" />
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.Does2')}" />
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.Does3')}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource Card}">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <FontIcon Glyph="&#xE711;" FontSize="18" ui:StateColor.Foreground="fail" />
+                                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Wizard.Intro.DoesNot')}" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.DoesNot1')}" />
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.DoesNot2')}" />
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind loc:L.T('Wizard.Intro.DoesNot3')}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon Glyph="&#xE72E;" FontSize="16" ui:StateColor.Foreground="none" />
+                            <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Wizard.Intro.Privacy')}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- 2: services -->
+                    <StackPanel Spacing="14" Visibility="{x:Bind Vm.IsServices, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Wizard.Services.Title')}" AutomationProperties.HeadingLevel="Level1" />
+                        <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind loc:L.T('Wizard.Services.Lead')}" />
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.Services}">
+                            <ItemsRepeater.Layout><StackLayout Spacing="10" /></ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ServiceChoice">
+                                    <ui:ServiceCard Choice="{x:Bind}" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </StackPanel>
+
+                    <!-- 3: conflicts -->
+                    <StackPanel Spacing="14" Visibility="{x:Bind Vm.IsConflicts, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Wizard.Conflicts.Title')}" AutomationProperties.HeadingLevel="Level1" />
+                        <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind loc:L.T('Wizard.Conflicts.Lead')}" />
+                        <ProgressRing IsActive="{x:Bind ui:Conv.Not(Vm.ConflictsLoaded), Mode=OneWay}" Visibility="{x:Bind ui:Conv.Hide(Vm.ConflictsLoaded), Mode=OneWay}" HorizontalAlignment="Left" />
+                        <Border Style="{StaticResource Card}" Visibility="{x:Bind Vm.NoConflicts, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <FontIcon Glyph="&#xE73E;" FontSize="22" ui:StateColor.Foreground="ok" />
+                                <TextBlock Style="{StaticResource Body}" VerticalAlignment="Center" Text="{x:Bind loc:L.T('Diag.NoConflicts')}" />
+                            </StackPanel>
+                        </Border>
+                        <InfoBar IsOpen="{x:Bind Vm.HasBlockingConflicts, Mode=OneWay}" IsClosable="False" Severity="Error"
+                                 Title="{x:Bind loc:L.T('Wizard.Conflicts.Blocking')}" Message="{x:Bind loc:L.T('Wizard.Conflicts.BlockingText')}" />
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.Conflicts}">
+                            <ItemsRepeater.Layout><StackLayout Spacing="8" /></ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ConflictItem">
+                                    <ui:ConflictCard Item="{x:Bind}" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <Button Content="{x:Bind loc:L.T('Diag.Rescan')}" Command="{x:Bind Vm.LoadConflictsCommand}" />
+                    </StackPanel>
+
+                    <!-- 4: apply, start, check -->
+                    <StackPanel Spacing="14" Visibility="{x:Bind Vm.IsApply, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Wizard.Apply.Title')}" AutomationProperties.HeadingLevel="Level1" />
+                        <Border Style="{StaticResource Card}">
+                            <ItemsRepeater ItemsSource="{x:Bind Vm.ApplySteps}">
+                                <ItemsRepeater.Layout><StackLayout Spacing="12" /></ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:StepItem">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="28" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Width="28" Height="28">
+                                                <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="16" ui:StateColor.Foreground="{x:Bind Kind, Mode=OneWay}"
+                                                          Visibility="{x:Bind ui:Conv.Hide(IsRunning), Mode=OneWay}" />
+                                                <ProgressRing IsActive="{x:Bind IsRunning, Mode=OneWay}" Width="20" Height="20" />
+                                            </Grid>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind Title}" Style="{StaticResource Body}" />
+                                                <TextBlock Text="{x:Bind Detail, Mode=OneWay}" Style="{StaticResource Secondary}" FontSize="12"
+                                                           Visibility="{x:Bind ui:Conv.ShowText(Detail), Mode=OneWay}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </Border>
+                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind Vm.ApplyNotes, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.ApplyNotes), Mode=OneWay}" />
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.Results}" ItemTemplate="{StaticResource TileTemplate}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout MinItemWidth="200" MinItemHeight="100" MinColumnSpacing="10" MinRowSpacing="10" ItemsStretch="Fill" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                        <InfoBar IsOpen="{x:Bind Vm.ShowAllGood, Mode=OneWay}" IsClosable="False" Severity="Success"
+                                 Title="{x:Bind loc:L.T('Wizard.AllGood')}" Message="{x:Bind loc:L.T('Wizard.AllGoodText')}" />
+                        <InfoBar IsOpen="{x:Bind Vm.ShowFixHint, Mode=OneWay}" IsClosable="False" Severity="Warning"
+                                 Title="{x:Bind Vm.FailedText, Mode=OneWay}" Message="{x:Bind Vm.FixHintText, Mode=OneWay}">
+                            <InfoBar.ActionButton>
+                                <Button Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Wizard.GoFix')}" Command="{x:Bind Vm.GoFixCommand}"
+                                        Visibility="{x:Bind Vm.CanGoFix, Mode=OneWay}" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                    </StackPanel>
+
+                    <!-- 5: something does not open -->
+                    <StackPanel Spacing="14" Visibility="{x:Bind Vm.IsFix, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Wizard.Fix.Title')}" AutomationProperties.HeadingLevel="Level1" />
+                        <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind loc:L.T('Wizard.Fix.Lead')}" />
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel Spacing="10">
+                                <Grid>
+                                    <StackPanel Spacing="4" Margin="0,0,200,0">
+                                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Diag.How')}" />
+                                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Wizard.Fix.HowText')}" />
+                                    </StackPanel>
+                                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Content="{x:Bind loc:L.T('Diag.Run')}" Command="{x:Bind Vm.DiagnoseCommand}" />
+                                </Grid>
+                                <StackPanel Spacing="8" Visibility="{x:Bind Vm.HasDiagnose, Mode=OneWay}">
+                                    <TextBlock Text="{x:Bind Vm.DiagnoseTitle, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                               ui:StateColor.Foreground="{x:Bind Vm.DiagnoseKind, Mode=OneWay}" />
+                                    <TextBlock Style="{StaticResource Body}" FontSize="13" Text="{x:Bind Vm.DiagnoseAdvice, Mode=OneWay}" />
+                                    <ItemsRepeater ItemsSource="{x:Bind Vm.DiagnoseRows}">
+                                        <ItemsRepeater.Layout><StackLayout Spacing="4" /></ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:DiagnoseRow">
+                                                <Grid Padding="12,8" ColumnSpacing="12" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="180" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{x:Bind Host}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    <StackPanel Grid.Column="1" Spacing="2">
+                                                        <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" FontSize="13" ui:StateColor.Foreground="{x:Bind Kind}" />
+                                                        <TextBlock Text="{x:Bind Dns}" Style="{StaticResource Secondary}" FontSize="12" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                    <Button Content="{x:Bind loc:L.T('Dns.TurnOn')}" Command="{x:Bind Vm.TurnOnDnsCommand}" Visibility="{x:Bind Vm.CanTurnOnDns, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel Spacing="10">
+                                <Grid>
+                                    <StackPanel Spacing="4" Margin="0,0,220,0">
+                                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Wizard.Fix.Select')}" />
+                                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Wizard.Fix.SelectText')}" />
+                                    </StackPanel>
+                                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource AccentButtonStyle}"
+                                            Content="{x:Bind loc:L.T('Wizard.Fix.SelectRun')}" Command="{x:Bind Vm.AutoSelectCommand}" />
+                                </Grid>
+                                <StackPanel Spacing="6" Visibility="{x:Bind Vm.Job.IsVisible, Mode=OneWay}">
+                                    <TextBlock Style="{StaticResource CardTitle}" FontSize="13" Text="{x:Bind Vm.Job.Title, Mode=OneWay}" />
+                                    <ProgressBar Value="{x:Bind Vm.Job.Percent, Mode=OneWay}" />
+                                    <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.Job.Message, Mode=OneWay}" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{x:Bind Vm.TestResultText, Mode=OneWay}" Visibility="{x:Bind Vm.HasTestResult, Mode=OneWay}" />
+                            </StackPanel>
+                        </Border>
+                        <Grid>
+                            <TextBlock Style="{StaticResource SectionTitle}" FontSize="17" Text="{x:Bind loc:L.T('Home.Sites')}" VerticalAlignment="Center" />
+                            <Button HorizontalAlignment="Right" Content="{x:Bind loc:L.T('Wizard.Recheck')}" Command="{x:Bind Vm.RecheckCommand}" />
+                        </Grid>
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.Results}" ItemTemplate="{StaticResource TileTemplate}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout MinItemWidth="200" MinItemHeight="100" MinColumnSpacing="10" MinRowSpacing="10" ItemsStretch="Fill" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </StackPanel>
+
+                    <!-- 6: done -->
+                    <StackPanel Spacing="18" Visibility="{x:Bind Vm.IsDone, Mode=OneWay}" Padding="0,24,0,0">
+                        <Grid Width="84" Height="84" HorizontalAlignment="Left">
+                            <Ellipse ui:StateColor.Fill="{x:Bind ui:Conv.Tint(Vm.DoneKind), Mode=OneWay}" />
+                            <FontIcon Glyph="&#xE73E;" FontSize="36" ui:StateColor.Foreground="{x:Bind Vm.DoneKind, Mode=OneWay}" />
+                        </Grid>
+                        <TextBlock Text="{x:Bind Vm.DoneTitle, Mode=OneWay}" FontFamily="{StaticResource DisplayFont}" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource Body}" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Vm.DoneText, Mode=OneWay}" MaxWidth="640" HorizontalAlignment="Left" />
+                        <ui:SettingCard Glyph="&#xE7E8;" Header="{x:Bind loc:L.T('Settings.Autostart')}" Description="{x:Bind loc:L.T('Wizard.AutostartText')}" MaxWidth="640" HorizontalAlignment="Left">
+                            <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.IsAutostart, Mode=TwoWay}" MinWidth="0" />
+                        </ui:SettingCard>
+                        <Button x:Name="FinishButton" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Wizard.Finish')}" Command="{x:Bind Vm.FinishCommand}" Padding="28,8" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- bottom navigation of the wizard -->
+            <Grid Grid.Row="1" Padding="44,14" ColumnSpacing="10" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  Visibility="{x:Bind Vm.ShowNext, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <HyperlinkButton Content="{x:Bind loc:L.T('Wizard.Skip')}" Command="{x:Bind Vm.SkipCommand}" Visibility="{x:Bind Vm.CanSkip, Mode=OneWay}" />
+                <Button Grid.Column="2" Content="{x:Bind loc:L.T('Common.Back')}" Command="{x:Bind Vm.BackCommand}" Visibility="{x:Bind Vm.CanGoBack, Mode=OneWay}" />
+                <Button x:Name="NextButton" AutomationProperties.Name="{x:Bind Vm.NextLabel, Mode=OneWay}" Grid.Column="3" Style="{StaticResource AccentButtonStyle}" MinWidth="140" Command="{x:Bind Vm.NextCommand}" IsEnabled="{x:Bind Vm.CanNext, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}" Width="16" Height="16" />
+                        <TextBlock Text="{x:Bind Vm.NextLabel, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

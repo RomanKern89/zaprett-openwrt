@@ -5,9 +5,9 @@ import * as fs from 'fs';
 import * as ubus from 'ubus';
 import { P, run, run_quiet, mkdir_p, atomic_write, fail, ok } from 'zaprett.util';
 import * as V from 'zaprett.validate';
+import { CLIENT_MARK, TEST_MARK } from 'zaprett.config';
 
 export const TABLE = 'zaprett';
-export const CLIENT_MARK = 0x08000000;
 export const NOZAPRETT4 = [ '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16',
 	'172.16.0.0/12', '192.168.0.0/16', '224.0.0.0/3' ];
 export const NOZAPRETT6 = [ '::1/128', 'fc00::/7', 'fe80::/10', 'ff00::/8' ];
@@ -48,12 +48,39 @@ export function wan_devices(dump, wan_names) {
 	return { v4: sort(v4), v6: sort(v6) };
 };
 
+// Pure: does the WAN have IPv6 (an interface that is up with a default route ::/0)? With wan_names only those
+// interfaces count, plus interfaces on the same device (wan6 next to wan).
+export function wan_ipv6_default(dump, wan_names) {
+	let ifaces = (type(dump) == 'object' && type(dump.interface) == 'array') ? dump.interface : [];
+	let named = length(wan_names ?? []) > 0, devs = [];
+	for (let i in ifaces)
+		if (type(i) == 'object' && named && index(wan_names, i.interface) >= 0)
+			push(devs, i.l3_device ?? i.device);
+	for (let i in ifaces) {
+		if (type(i) != 'object' || !i.up)
+			continue;
+		if (named && index(wan_names, i.interface) < 0 && index(devs, i.l3_device ?? i.device) < 0)
+			continue;
+		for (let r in (type(i.route) == 'array' ? i.route : []))
+			if (type(r) == 'object' && r.table == null && r.mask == 0 && r.target == '::')
+				return true;
+	}
+	return false;
+};
+
 export function query_wan(cfg) {
 	let conn = ubus.connect();
 	let dump = conn ? conn.call('network.interface', 'dump', {}) : null;
 	if (conn)
 		conn.disconnect();
-	return wan_devices(dump, cfg.wan);
+	let w = wan_devices(dump, cfg.wan);
+	w.ipv6_default = wan_ipv6_default(dump, cfg.wan);
+	return w;
+};
+
+// Text of the ruleset applied last (the file is removed by `fw remove`), or null.
+export function applied_text() {
+	return fs.readfile(nft_path(), 1048576);
 };
 
 function elements(items, quote) {
@@ -71,43 +98,15 @@ function pkt_range(n) {
 	return (n == 1) ? '1' : sprintf('1-%d', n);
 }
 
-// Pure: renders the whole script. ports = { tcp: ["80","443"], udp: [...] }, wan = { v4: [...], v6: [...] }.
-export function render(cfg, ports, wan, opts) {
-	opts = opts ?? {};
-	let dm = hexmark(cfg.desync_mark), pm = hexmark(cfg.postnat_mark), cm = hexmark(CLIENT_MARK);
-	let q = cfg.qnum;
-	let clients = (!opts.test_mode && cfg.clients_mode != 'all') ? cfg.clients_mode : null;
-	let cl = '';
-	if (clients == 'include')
-		cl = sprintf(' ct mark and %s != 0', cm);
-	else if (clients == 'exclude')
-		cl = sprintf(' ct mark and %s == 0', cm);
+// Pure: the packet count after which the own flowtable takes a connection (contract v1.4 §15.1): the engine has seen
+// every packet the postnat rules send to it.
+export function offload_after(cfg) {
+	return (cfg.tcp_pkt_out > cfg.udp_pkt_out) ? cfg.tcp_pkt_out : cfg.udp_pkt_out;
+};
 
-	let L = [];
-	push(L, 'table inet zaprett', 'delete table inet zaprett', 'table inet zaprett {');
-	push(L, '\tset wanif { type ifname; ' + elements(wan.v4 ?? [], true) + '}');
-	if (cfg.ipv6)
-		push(L, '\tset wanif6 { type ifname; ' + elements(wan.v6 ?? [], true) + '}');
-	push(L, '\tset nozaprett { type ipv4_addr; flags interval; auto-merge; ' + elements(NOZAPRETT4, false) + '}');
-	if (cfg.ipv6)
-		push(L, '\tset nozaprett6 { type ipv6_addr; flags interval; auto-merge; ' + elements(NOZAPRETT6, false) + '}');
-
-	if (clients) {
-		push(L, '\tset clients4 { type ipv4_addr; flags interval; auto-merge; ' + elements(cfg.clients4, false) + '}');
-		push(L, '\tset clientsmac { type ether_addr; ' + elements(cfg.clients_mac, false) + '}');
-		push(L, '\tchain clients_mark {');
-		push(L, '\t\ttype filter hook prerouting priority -150; policy accept;');
-		push(L, sprintf('\t\tiifname != @wanif ip saddr @clients4 ct mark set ct mark or %s', cm));
-		push(L, sprintf('\t\tiifname != @wanif ether saddr @clientsmac ct mark set ct mark or %s', cm));
-		push(L, '\t}');
-	}
-
-	push(L, '\tchain postnat_hook {');
-	push(L, '\t\ttype filter hook postrouting priority 101; policy accept;');
-	push(L, sprintf('\t\tmeta mark and %s == 0 jump postnat', dm));
-	push(L, '\t}');
-
-	push(L, '\tchain postnat {');
+// Outgoing rules to queue q (ports null = none). cl: client filter expression.
+function push_postnat(L, cfg, ports, cl, q) {
+	let dm = hexmark(cfg.desync_mark), pm = hexmark(cfg.postnat_mark);
 	for (let proto in [ 'tcp', 'udp' ]) {
 		let n = cfg[proto + '_pkt_out'], pl = ports?.[proto] ?? [];
 		if (n <= 0 || !length(pl))
@@ -118,10 +117,11 @@ export function render(cfg, ports, wan, opts) {
 		if (cfg.ipv6)
 			push(L, sprintf('\t\toifname @wanif6 %s dport %s ct original packets %s ip6 daddr != @nozaprett6%s', proto, set, pkt_range(n), tail));
 	}
-	push(L, '\t}');
+}
 
-	push(L, '\tchain prenat {');
-	push(L, '\t\ttype filter hook prerouting priority -101; policy accept;');
+// Incoming (reply) rules to queue q.
+function push_prenat(L, cfg, ports, cl, q) {
+	let dm = hexmark(cfg.desync_mark);
 	for (let proto in [ 'tcp', 'udp' ]) {
 		let n = cfg[proto + '_pkt_in'], pl = ports?.[proto] ?? [];
 		if (n <= 0 || !length(pl))
@@ -132,7 +132,98 @@ export function render(cfg, ports, wan, opts) {
 		if (cfg.ipv6)
 			push(L, sprintf('\t\tiifname @wanif6 %s sport %s ct reply packets %s ip6 saddr != @nozaprett6%s', proto, set, pkt_range(n), tail));
 	}
+}
+
+// Pure: renders the whole script. ports = { tcp: ["80","443"], udp: [...] }, wan = { v4: [...], v6: [...] }.
+// opts: { test_mode, flowtable: null | { devices: [...], hw: bool } — the own flowtable of mode own (§15.1),
+// isolation: null | { uid, qnum, ports } — test chains of the isolated automatic selection (v1.6 §17) }.
+export function render(cfg, ports, wan, opts) {
+	opts = opts ?? {};
+	let dm = hexmark(cfg.desync_mark), pm = hexmark(cfg.postnat_mark), cm = hexmark(CLIENT_MARK);
+	let q = cfg.qnum;
+	let clients = (!opts.test_mode && cfg.clients_mode != 'all') ? cfg.clients_mode : null;
+	let client_expr = (mode) => (mode == 'include') ? sprintf(' ct mark and %s != 0', cm) :
+		((mode == 'exclude') ? sprintf(' ct mark and %s == 0', cm) : '');
+	let cl = client_expr(clients);
+	// the QUIC block serves LAN clients only, so it keeps the client filter during an automatic selection too
+	let qclients = (cfg.quic_block && cfg.clients_mode != 'all') ? cfg.clients_mode : null;
+	let qcl = client_expr(qclients);
+
+	let L = [];
+	push(L, 'table inet zaprett', 'delete table inet zaprett', 'table inet zaprett {');
+	push(L, '\tset wanif { type ifname; ' + elements(wan.v4 ?? [], true) + '}');
+	if (cfg.ipv6)
+		push(L, '\tset wanif6 { type ifname; ' + elements(wan.v6 ?? [], true) + '}');
+	push(L, '\tset nozaprett { type ipv4_addr; flags interval; auto-merge; ' + elements(NOZAPRETT4, false) + '}');
+	if (cfg.ipv6)
+		push(L, '\tset nozaprett6 { type ipv6_addr; flags interval; auto-merge; ' + elements(NOZAPRETT6, false) + '}');
+
+	if (clients || qclients) {
+		push(L, '\tset clients4 { type ipv4_addr; flags interval; auto-merge; ' + elements(cfg.clients4, false) + '}');
+		push(L, '\tset clientsmac { type ether_addr; ' + elements(cfg.clients_mac, false) + '}');
+		push(L, '\tchain clients_mark {');
+		push(L, '\t\ttype filter hook prerouting priority -150; policy accept;');
+		push(L, sprintf('\t\tiifname != @wanif ip saddr @clients4 ct mark set ct mark or %s', cm));
+		push(L, sprintf('\t\tiifname != @wanif ether saddr @clientsmac ct mark set ct mark or %s', cm));
+		push(L, '\t}');
+	}
+
+	let ft = opts.flowtable;
+	if (ft && length(ft.devices)) {
+		push(L, '\tflowtable ft {');
+		push(L, '\t\thook ingress priority filter;');
+		push(L, '\t\tdevices = { ' + join(', ', map(ft.devices, (d) => sprintf('"%s"', d))) + ' };');
+		push(L, '\t\tcounter;');
+		if (ft.hw)
+			push(L, '\t\tflags offload;');
+		push(L, '\t}');
+		push(L, '\tchain forward_offload {');
+		push(L, '\t\ttype filter hook forward priority filter + 1; policy accept;');
+		push(L, sprintf('\t\tmeta l4proto { tcp, udp } ct original packets > %d flow add @ft', offload_after(cfg)));
+		push(L, '\t}');
+	}
+
+	// QUIC of LAN clients (contract v1.4 §15.2): browsers fall back to TCP, where the bypass works. Only forwarded
+	// traffic, so the router's own traffic is not touched; the client filter applies as in postnat.
+	if (cfg.quic_block) {
+		push(L, '\tchain forward_quic {');
+		push(L, '\t\ttype filter hook forward priority filter - 1; policy accept;');
+		push(L, sprintf('\t\tiifname != @wanif oifname @wanif udp dport 443%s counter drop', qcl));
+		if (cfg.ipv6)
+			push(L, sprintf('\t\tiifname != @wanif6 oifname @wanif6 udp dport 443%s counter drop', qcl));
+		push(L, '\t}');
+	}
+
+	push(L, '\tchain postnat_hook {');
+	push(L, '\t\ttype filter hook postrouting priority 101; policy accept;');
+	push(L, sprintf('\t\tmeta mark and %s == 0 jump postnat', dm));
 	push(L, '\t}');
+
+	// isolated automatic selection (contract v1.6 §17): connections of the test user get TEST_MARK and leave the main
+	// rules through goto; their own chains send them to the test queue (no rules at all during the baseline)
+	let iso = opts.isolation, tm = hexmark(TEST_MARK);
+	push(L, '\tchain postnat {');
+	if (iso)
+		push(L, sprintf('\t\tmeta skuid %d ct mark set ct mark or %s goto postnat_test', iso.uid, tm));
+	push_postnat(L, cfg, ports, cl, q);
+	push(L, '\t}');
+	if (iso) {
+		push(L, '\tchain postnat_test {');
+		push_postnat(L, cfg, iso.ports, '', iso.qnum);
+		push(L, '\t}');
+	}
+
+	push(L, '\tchain prenat {');
+	push(L, '\t\ttype filter hook prerouting priority -101; policy accept;');
+	if (iso)
+		push(L, sprintf('\t\tct mark and %s != 0 goto prenat_test', tm));
+	push_prenat(L, cfg, ports, cl, q);
+	push(L, '\t}');
+	if (iso) {
+		push(L, '\tchain prenat_test {');
+		push_prenat(L, cfg, iso.ports, '', iso.qnum);
+		push(L, '\t}');
+	}
 
 	push(L, '\tchain prerouting_icmp {');
 	push(L, '\t\ttype filter hook prerouting priority -99; policy accept;');
@@ -198,6 +289,11 @@ export function remove() {
 	if (r.rc != 0)
 		return fail('nft_remove_failed', 'Не удалось удалить таблицу inet zaprett: ' + trim(r.stderr));
 	return ok({ removed: true });
+};
+
+// Pure: does a listing of table inet zaprett contain the own flowtable?
+export function has_flowtable(text) {
+	return type(text) == 'string' && match(text, /\n[ \t]*flowtable ft \{/) != null;
 };
 
 export function list_table() {

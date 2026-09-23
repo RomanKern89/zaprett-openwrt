@@ -34,8 +34,21 @@ const USAGE = `Использование: zaprett <команда> [аргум�
   sources delete <имя>
   sources defaults                вернуть подписки по умолчанию, кроме удалённых пользователем
 Быстрая настройка и автоподбор:
-  presets | wizard apply <сервис>...
-  test start [--strategies id,id] [--quick] | test status | test stop | test apply <id>
+  presets | wizard apply <сервис>[:<вариант>]...   варианты сервиса — в presets (поле variants)
+  test start [--strategies id,id] [--quick] [--apply-if-better] [--exclusive] | test status [--brief] | test stop | test apply <id>
+                                  автоподбор идёт рядом с работающим обходом; --exclusive — с остановкой движка
+Проверка и наблюдение:
+  ensure                          сторож: запустить движок или правила, если они пропали (для cron)
+  probe [--services id,id]        проверить доступность сервисов, не трогая движок (задача)
+  probe status                    результат последней проверки
+  monitor run | monitor status    одна проверка монитора (для cron) / состояние и история
+  log [--tail N]                  строки системного журнала zaprett и nfqws (по умолчанию 200, не больше 1000)
+  page overview|lists|strategies|diagnostics   данные страницы веб-интерфейса одним вызовом
+  diagnose [--services id,id]     чем блокирует провайдер: DNS, IP, TLS, замедление, заглушка (задача)
+  diagnose status                 результат последней диагностики
+Шифрованный DNS:
+  dns status                      работает ли шифрованный DNS (https-dns-proxy, stubby, dnscrypt-proxy)
+  dns setup                       установить и запустить https-dns-proxy (задача)
 Фоновые задачи:
   job status | job log [--tail N] | job cancel
 Прочее:
@@ -45,10 +58,11 @@ const USAGE = `Использование: zaprett <команда> [аргум�
 Флаги: --json (вывод JSON), --foreground (выполнить задачу сразу), --quiet (без вывода при успехе)
 `;
 
-const TYPES_WITH_VALUE = { '--type': 'type', '--tail': 'tail', '--strategies': 'strategies' };
+const TYPES_WITH_VALUE = { '--type': 'type', '--tail': 'tail', '--strategies': 'strategies', '--services': 'services' };
 
 function parse_args(argv) {
-	let flags = { json: false, foreground: false, quiet: false, all: false, quick: false, if_running: false, if_applied: false, full: false };
+	let flags = { json: false, foreground: false, quiet: false, all: false, quick: false, if_running: false, if_applied: false, full: false,
+		apply_if_better: false, brief: false, exclusive: false };
 	let opts = {}, pos = [];
 	for (let i = 0; i < length(argv); i++) {
 		let a = argv[i];
@@ -68,6 +82,12 @@ function parse_args(argv) {
 			flags.if_applied = true;
 		else if (a == '--full')
 			flags.full = true;
+		else if (a == '--apply-if-better')
+			flags.apply_if_better = true;
+		else if (a == '--brief')
+			flags.brief = true;
+		else if (a == '--exclusive')
+			flags.exclusive = true;
 		else if (TYPES_WITH_VALUE[a]) {
 			if (i + 1 >= length(argv))
 				return { error: 'Не указано значение для ' + a };
@@ -84,6 +104,15 @@ function parse_args(argv) {
 			if (!is_id(id))
 				return { error: 'Недопустимый идентификатор стратегии: ' + id };
 		flags.strategies = ids;
+	}
+	if (opts.services != null) {
+		let ids = filter(split(opts.services, ','), (x) => x != '');
+		if (!length(ids))
+			return { error: 'Не указаны сервисы в --services' };
+		for (let id in ids)
+			if (!is_id(id))
+				return { error: 'Недопустимый идентификатор сервиса: ' + id };
+		flags.services = ids;
 	}
 	return { flags: flags, opts: opts, pos: pos };
 }
@@ -164,7 +193,8 @@ function dispatch(p) {
 		break;
 
 	case 'wizard':
-		if (sub == 'apply' && need(pos, 3) && ids_valid(slice(pos, 2)))
+		// <сервис> или <сервис>:<вариант> (контракт v1.7 §16.4)
+		if (sub == 'apply' && need(pos, 3) && length(filter(slice(pos, 2), (x) => CMD.parse_service_ref(x) == null)) == 0)
 			return [ 'wizard apply', CMD.wizard_apply(slice(pos, 2)) ];
 		break;
 
@@ -191,7 +221,7 @@ function dispatch(p) {
 
 	case 'test':
 		if (sub == 'start') return [ 'test start', CMD.run_job('test', [], flags) ];
-		if (sub == 'status') return [ 'test status', CMD.test_status() ];
+		if (sub == 'status') return [ 'test status', CMD.test_status(flags) ];
 		if (sub == 'stop') return [ 'test stop', CMD.test_stop() ];
 		if (sub == 'apply' && need(pos, 3)) return [ 'test apply', CMD.test_apply(pos[2]) ];
 		break;
@@ -210,6 +240,38 @@ function dispatch(p) {
 
 	case 'cron':
 		if (sub == 'sync') return [ 'cron sync', CMD.cron_sync() ];
+		break;
+
+	case 'ensure':
+		if (length(pos) == 1) return [ c, CMD.ensure() ];
+		break;
+
+	case 'probe':
+		if (sub == 'status' && length(pos) == 2) return [ 'probe status', CMD.probe_status() ];
+		if (length(pos) == 1) return [ 'probe', CMD.run_job('probe', [], flags) ];
+		break;
+
+	case 'monitor':
+		if (sub == 'run' && length(pos) == 2) return [ 'monitor run', CMD.monitor_run() ];
+		if (sub == 'status' && length(pos) == 2) return [ 'monitor status', CMD.monitor_status() ];
+		break;
+
+	case 'log':
+		if (length(pos) == 1) return [ c, CMD.log_lines(opts) ];
+		break;
+
+	case 'dns':
+		if (sub == 'status' && length(pos) == 2) return [ 'dns status', CMD.dns_status() ];
+		if (sub == 'setup' && length(pos) == 2) return [ 'dns setup', CMD.dns_setup(flags) ];
+		break;
+
+	case 'diagnose':
+		if (sub == 'status' && length(pos) == 2) return [ 'diagnose status', CMD.diagnose_status() ];
+		if (length(pos) == 1) return [ 'diagnose', CMD.run_job('diagnose', [], flags) ];
+		break;
+
+	case 'page':
+		if (length(pos) == 2 && CMD.PAGES[sub]) return [ 'page', CMD.page(sub) ];
 		break;
 	}
 	return [ c ?? '', usage_error() ];

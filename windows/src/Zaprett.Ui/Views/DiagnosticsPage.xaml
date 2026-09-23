@@ -1,0 +1,198 @@
+<Page
+    x:Class="Zaprett.Ui.Views.DiagnosticsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels"
+    Background="Transparent">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="18">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Diag.Title')}" AutomationProperties.HeadingLevel="Level1" />
+            <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind Vm.PlatformText, Mode=OneWay}" />
+            <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                     Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" />
+
+            <!-- how the provider blocks -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <StackPanel Spacing="4" Margin="0,0,220,0">
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.How')}" AutomationProperties.HeadingLevel="Level2" />
+                            <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Diag.HowText')}" />
+                        </StackPanel>
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Diag.Run')}" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.DiagnoseCommand}"
+                                IsEnabled="{x:Bind ui:Conv.Not(Vm.IsDiagnosing), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE721;" FontSize="14" />
+                                <TextBlock Text="{x:Bind loc:L.T('Diag.Run')}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <StackPanel Spacing="6" Visibility="{x:Bind Vm.Job.IsVisible, Mode=OneWay}">
+                        <TextBlock Style="{StaticResource CardTitle}" FontSize="13" Text="{x:Bind Vm.Job.Title, Mode=OneWay}" />
+                        <ProgressBar Value="{x:Bind Vm.Job.Percent, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <Grid CornerRadius="8" Padding="18,14">
+                        <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Vm.SummaryKind), Mode=OneWay}" CornerRadius="8" Margin="-18,-14" />
+                        <Border ui:StateColor.Background="{x:Bind Vm.SummaryKind, Mode=OneWay}" Width="4" HorizontalAlignment="Left" CornerRadius="2" Margin="-18,-14,0,-14" />
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{x:Bind Vm.SummaryTitle, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap"
+                                       ui:StateColor.Foreground="{x:Bind Vm.SummaryKind, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource Body}" Text="{x:Bind Vm.SummaryAdvice, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.SummaryAdvice), Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.SummaryCounts, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.SummaryCounts), Mode=OneWay}" />
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                                <Button Content="{x:Bind loc:L.T('Dns.TurnOn')}" Command="{x:Bind Vm.TurnOnDnsCommand}" Visibility="{x:Bind Vm.CanTurnOnDns, Mode=OneWay}" />
+                                <Button Content="{x:Bind loc:L.T('Diag.ToStrategies')}" Command="{x:Bind Vm.OpenCommand}" CommandParameter="strategies"
+                                        Visibility="{x:Bind Vm.SuggestStrategies, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="4" Visibility="{x:Bind Vm.HasRows, Mode=OneWay}">
+                        <Grid Padding="14,4" ColumnSpacing="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="170" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Diag.Col.Site')}" />
+                            <TextBlock Grid.Column="1" Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Diag.Col.Result')}" />
+                            <TextBlock Grid.Column="2" Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Diag.Col.Dns')}" />
+                        </Grid>
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.Rows}">
+                            <ItemsRepeater.Layout><StackLayout Spacing="4" /></ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DiagnoseRow">
+                                    <Grid Padding="14,10" ColumnSpacing="14" CornerRadius="6" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200" />
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind Host}" TextWrapping="Wrap" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                            <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Kind)}" CornerRadius="10" />
+                                            <TextBlock Text="{x:Bind Label}" FontSize="12" FontWeight="SemiBold" Margin="10,3" TextWrapping="Wrap"
+                                                       ui:StateColor.Foreground="{x:Bind Kind}" />
+                                        </Grid>
+                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Dns}" Style="{StaticResource Secondary}" FontSize="12" IsTextSelectionEnabled="True" />
+                                            <TextBlock Text="{x:Bind Detail}" FontSize="12" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.SummaryNote, Mode=OneWay}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- conflicting programs -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.Conflicts')}" AutomationProperties.HeadingLevel="Level2" />
+                        <Button HorizontalAlignment="Right" Content="{x:Bind loc:L.T('Diag.Rescan')}" Command="{x:Bind Vm.LoadConflictsCommand}" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Diag.ConflictsText')}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind Vm.NoConflicts, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE73E;" FontSize="16" ui:StateColor.Foreground="ok" />
+                        <TextBlock Text="{x:Bind loc:L.T('Diag.NoConflicts')}" ui:StateColor.Foreground="ok" />
+                    </StackPanel>
+                    <ItemsRepeater ItemsSource="{x:Bind Vm.Conflicts}">
+                        <ItemsRepeater.Layout><StackLayout Spacing="8" /></ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ConflictItem">
+                                <ui:ConflictCard Item="{x:Bind}" />
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </StackPanel>
+            </Border>
+
+            <!-- configuration check -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <StackPanel Spacing="4" Margin="0,0,220,0">
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.Check')}" AutomationProperties.HeadingLevel="Level2" />
+                            <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Diag.CheckText')}" />
+                        </StackPanel>
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Diag.CheckRun')}" HorizontalAlignment="Right" VerticalAlignment="Top" Command="{x:Bind Vm.CheckConfigCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ProgressRing IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}" Width="16" Height="16" />
+                                <TextBlock Text="{x:Bind loc:L.T('Diag.CheckRun')}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <StackPanel Spacing="8" Visibility="{x:Bind Vm.HasCheck, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="10" Height="10" VerticalAlignment="Center" ui:StateColor.Fill="{x:Bind Vm.CheckKind, Mode=OneWay}" />
+                            <TextBlock Text="{x:Bind Vm.CheckTitle, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{x:Bind Vm.CheckWarnings}" IsTabStop="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:WarningItem">
+                                    <InfoBar IsOpen="True" IsClosable="False" Severity="{x:Bind ui:Conv.Severity(Kind)}" Title="{x:Bind Title}" Message="{x:Bind Text}" Margin="0,0,0,6" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Style="{StaticResource SubtleCard}">
+                            <TextBlock Style="{StaticResource Mono}" Text="{x:Bind Vm.CheckOutput, Mode=OneWay}" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- log -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.Log')}" AutomationProperties.HeadingLevel="Level2" />
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                            <ToggleSwitch AutomationProperties.Name="{x:Bind loc:L.T('Diag.Debug')}" IsOn="{x:Bind Vm.IsDebug, Mode=TwoWay}" OnContent="{x:Bind loc:L.T('Diag.Debug')}" OffContent="{x:Bind loc:L.T('Diag.Debug')}" MinWidth="0" />
+                            <Button Content="{x:Bind loc:L.T('Common.Refresh')}" Command="{x:Bind Vm.LoadLogCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Style="{StaticResource SubtleCard}" Padding="0">
+                        <ScrollViewer MaxHeight="300" Padding="16,12" HorizontalScrollBarVisibility="Auto">
+                            <TextBlock Style="{StaticResource Mono}" TextWrapping="NoWrap" Text="{x:Bind Vm.LogText, Mode=OneWay}" />
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- report -->
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.Report')}" AutomationProperties.HeadingLevel="Level2" />
+                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Diag.ReportText')}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Common.Copy')}" Command="{x:Bind Vm.CopyReportCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                <TextBlock Text="{x:Bind loc:L.T('Common.Copy')}" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Common.SaveAs')}" Command="{x:Bind Vm.SaveReportCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74E;" FontSize="14" />
+                                <TextBlock Text="{x:Bind loc:L.T('Common.SaveAs')}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

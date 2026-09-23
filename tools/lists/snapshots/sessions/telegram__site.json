@@ -1,0 +1,13 @@
+{
+ "code_hosts": [
+  "telegram.org"
+ ],
+ "fetched": "2026-09-23",
+ "requested_hosts": [
+  "telegram.org"
+ ],
+ "scenario": "site",
+ "scripts_scanned": 7,
+ "service": "telegram",
+ "url": "https://telegram.org/"
+}

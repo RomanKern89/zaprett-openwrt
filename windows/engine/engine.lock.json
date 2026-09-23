@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "comment": "Pinned engine files for the Windows MSI (ARCHITECTURE-WIN W-6). windows/build/fetch-engine.ps1 downloads each archive, checks its sha256, checks the release sha256sum.txt (sha256 of that file is pinned too) and every extracted file against this lock. Files are shipped as is, never re-signed.",
+  "engines": [
+    {
+      "id": "winws",
+      "project": "bol-van/zapret",
+      "version": "v72.13",
+      "released_at": "2026-07-21T06:25:03Z",
+      "dest": "engine",
+      "archive": {
+        "name": "zapret-v72.13.zip",
+        "url": "https://github.com/bol-van/zapret/releases/download/v72.13/zapret-v72.13.zip",
+        "size": 7959200,
+        "sha256": "c493e33a0dc4eba23a8686efdaba55f59755ad6ade3564aebd9d13f4c65e2e0c",
+        "sha256_source": "GitHub release asset digest (api.github.com/repos/bol-van/zapret/releases/tags/v72.13), 2026-09-23"
+      },
+      "checksums": {
+        "url": "https://github.com/bol-van/zapret/releases/download/v72.13/sha256sum.txt",
+        "sha256": "3fbb8e0a99c6cd7cdc1acc316bdb6dd279e5595587f1398d3baef25e66cd4d5d",
+        "note": "Release sha256sum.txt lists the files inside the archive, not the archive itself."
+      },
+      "files": [
+        { "path": "zapret-v72.13/binaries/windows-x86_64/winws.exe", "dest": "winws.exe", "size": 223232, "sha256": "a14bff1df6234ea555d2e0c61b589f0707c0b12d6c9b7eeccda76012154996e8", "in_checksums": true },
+        { "path": "zapret-v72.13/binaries/windows-x86_64/cygwin1.dll", "dest": "cygwin1.dll", "size": 2954293, "sha256": "103104a52e5293ce418944725df19e2bf81ad9269b9a120d71d39028e821499b", "in_checksums": true },
+        { "path": "zapret-v72.13/binaries/windows-x86_64/WinDivert.dll", "dest": "WinDivert.dll", "size": 47616, "sha256": "c1e060ee19444a259b2162f8af0f3fe8c4428a1c6f694dce20de194ac8d7d9a2", "in_checksums": true },
+        { "path": "zapret-v72.13/binaries/windows-x86_64/WinDivert64.sys", "dest": "WinDivert64.sys", "size": 94144, "sha256": "8da085332782708d8767bcace5327a6ec7283c17cfb85e40b03cd2323a90ddc2", "in_checksums": true }
+      ]
+    },
+    {
+      "id": "winws2",
+      "project": "bol-van/zapret2",
+      "version": "v1.0.5.2",
+      "released_at": "2026-09-15T12:33:41Z",
+      "dest": "engine2",
+      "archive": {
+        "name": "zapret2-v1.0.5.2.zip",
+        "url": "https://github.com/bol-van/zapret2/releases/download/v1.0.5.2/zapret2-v1.0.5.2.zip",
+        "size": 9967425,
+        "sha256": "f585590bea6da82ac2c74926f6ac17e6204ee8b53e455c2ba2edae0c58c5d4ac",
+        "sha256_source": "GitHub release asset digest (api.github.com/repos/bol-van/zapret2/releases/tags/v1.0.5.2), 2026-09-23"
+      },
+      "checksums": {
+        "url": "https://github.com/bol-van/zapret2/releases/download/v1.0.5.2/sha256sum.txt",
+        "sha256": "12557a74d31b1a3a3a951d5bb896a4accd2c423ef32fde413cd0661b5c34bc72",
+        "note": "Covers binaries only; the lua files are pinned here and match the lua/*.lua.gz of zapret2-v1.0.5.2-openwrt-embedded.tar.gz (the router package source, PKG_HASH 9a2b08ec...)."
+      },
+      "cross_check": {
+        "repo": "bol-van/zapret-win-bundle",
+        "commit": "6eb463a6758fb48cd101bc55dfd057e6e9d98af1",
+        "path": "zapret-winws/winws2.exe",
+        "git_blob_sha1": "8ffd2def2df7dc3e8b1623fdb9a67a94e916fa21",
+        "note": "winws2.exe, cygwin1.dll, WinDivert.dll, WinDivert64.sys of this release are byte-identical to zapret-win-bundle at this commit. The bundle's zapret-lib.lua is newer than the release and is NOT used: lua stays in step with the router."
+      },
+      "files": [
+        { "path": "zapret2-v1.0.5.2/binaries/windows-x86_64/winws2.exe", "dest": "winws2.exe", "size": 656384, "sha256": "eb9807972c15f05a00416b0549d766a71c9186f8101d406e3cc6c16278164d9e", "in_checksums": true },
+        { "path": "zapret2-v1.0.5.2/binaries/windows-x86_64/cygwin1.dll", "dest": "cygwin1.dll", "size": 2954293, "sha256": "103104a52e5293ce418944725df19e2bf81ad9269b9a120d71d39028e821499b", "in_checksums": true },
+        { "path": "zapret2-v1.0.5.2/binaries/windows-x86_64/WinDivert.dll", "dest": "WinDivert.dll", "size": 47616, "sha256": "16abd6a029e65557c6a309bea7b13bf81fff4e193567582e1cddbf6719f323e0", "in_checksums": true },
+        { "path": "zapret2-v1.0.5.2/binaries/windows-x86_64/WinDivert64.sys", "dest": "WinDivert64.sys", "size": 94144, "sha256": "8da085332782708d8767bcace5327a6ec7283c17cfb85e40b03cd2323a90ddc2", "in_checksums": true },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-lib.lua", "dest": "lua/zapret-lib.lua", "size": 92970, "sha256": "b67a470f23b00a8d6e732c4e5135a39b224511e0b71809d5f4616adf62674980", "in_checksums": false },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-antidpi.lua", "dest": "lua/zapret-antidpi.lua", "size": 51782, "sha256": "31c9dd75b0bd55e98e5306293f2be81e9d2ecadcbbf9157394ff37dcff7dc85a", "in_checksums": false },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-auto.lua", "dest": "lua/zapret-auto.lua", "size": 20988, "sha256": "c2028f544134b0dec33f054ac54fe4f2315d969ba034601456f72017fd5f8528", "in_checksums": false },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-obfs.lua", "dest": "lua/zapret-obfs.lua", "size": 18850, "sha256": "e9581bfbca846630ada78193641d834e25abc11337ba85467d642c2d8c6fa47f", "in_checksums": false },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-pcap.lua", "dest": "lua/zapret-pcap.lua", "size": 1441, "sha256": "6866c37c92fbc62075accf94228da48af618c7f416edc682eba99b2196e05f45", "in_checksums": false },
+        { "path": "zapret2-v1.0.5.2/lua/zapret-tests.lua", "dest": "lua/zapret-tests.lua", "size": 37399, "sha256": "82664cb50a751a531b63dce094ac03de5045b16b489e726ff32a9a1034811459", "in_checksums": false }
+      ]
+    }
+  ]
+}

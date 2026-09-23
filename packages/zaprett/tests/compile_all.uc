@@ -16,6 +16,12 @@ import * as tester from 'zaprett.tester';
 import * as commands from 'zaprett.commands';
 import * as text from 'zaprett.text';
 import * as sources from 'zaprett.sources';
+import * as cron from 'zaprett.cron';
+import * as health from 'zaprett.health';
+import * as dns from 'zaprett.dns';
+import * as diagnose from 'zaprett.diagnose';
+import * as isolate from 'zaprett.isolate';
+import * as engine_options from 'zaprett.engine_options';
 
 print(sprintf('modules: %d\n', length([ util, validate, config, store, strategy, nft, offload, service, job, net,
-	repo, tester, commands, text, sources ])));
+	repo, tester, commands, text, sources, cron, health, dns, diagnose, isolate, engine_options ])));

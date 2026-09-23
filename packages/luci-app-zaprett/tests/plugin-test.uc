@@ -45,7 +45,9 @@ const hints = {
 	sources_update: { names: 'array' },
 	source_save: { name: 'string', title: 'string', type: 'string', url: 'string', interval_hours: 'int', min_entries: 'int', enabled: 'bool' },
 	source_delete: { name: 'string' },
-	test_start: { strategies: 'array', quick: 'bool' }, test_apply: { id: 'string' }, job_log: { tail: 'int' }
+	test_start: { strategies: 'array', quick: 'bool', apply_if_better: 'bool' }, test_apply: { id: 'string' }, job_log: { tail: 'int' },
+	test_status: { brief: 'bool' }, probe_start: { services: 'array' }, log: { tail: 'int' }, page: { name: 'string' },
+	diagnose_start: { services: 'array' }
 };
 
 for (let m, def in plugin) {
@@ -58,7 +60,7 @@ for (let m, def in plugin) {
 	check('signature ' + m, sprintf('%J', have) == sprintf('%J', want), { have, want });
 }
 
-check('method count', length(keys(plugin)) == 30, keys(plugin));
+check('method count', length(keys(plugin)) == 39, keys(plugin));
 
 // --- basic reads
 let r = call('status');
@@ -224,6 +226,20 @@ check('sources_save during a job -> job_busy', is_err(call('source_save', { name
 call('job_cancel');
 call('job_status');
 check('wizard_apply preset_unavailable passes through', is_err(call('wizard_apply', { services: [ 'chatgpt_claude' ] }), 'preset_unavailable'), null);
+// variants (contract v1.7 §16.4): "id:variant", both parts follow the id rule
+r = call('wizard_apply', { services: [ 'youtube', 'discord:full' ] });
+check('wizard_apply with a variant', r.ok === true && r.variants?.discord == 'full' && r.variants?.youtube === null &&
+	index(r.lists, 'zaprett-discord-full') >= 0 && index(r.lists, 'zaprett-discord') < 0, r);
+r = call('presets');
+check('presets: enabled_variant', filter(r.services, s => s.id == 'discord')[0]?.enabled_variant == 'full', r.services);
+r = call('wizard_apply', { services: [ 'youtube', 'discord' ] });
+check('wizard_apply back to the core set', r.ok === true && r.variants?.discord === null && index(r.lists, 'zaprett-discord-full') < 0 &&
+	index(r.lists, 'zaprett-discord') >= 0, r);
+check('wizard_apply unknown_variant passes through', is_err(call('wizard_apply', { services: [ 'discord:nope' ] }), 'unknown_variant'), null);
+const long_id = join('', map(split(sprintf('%96s', ''), ''), () => 'a'));
+check('wizard_apply accepts parts of 96 characters', call('wizard_apply', { services: [ 'youtube:' + long_id ] }).error == 'unknown_variant', null);
+for (let bad in [ 'discord:', ':full', 'a:b:c', 'discord:fu ll', 'discord:../x', 'discord:full;reboot', 'discord::full', 'discord:' + long_id + 'a', long_id + 'a:full', 7, null ])
+	check(sprintf('wizard_apply rejects %J', bad), is_err(call('wizard_apply', { services: [ 'youtube', bad ] }), 'invalid_argument'), bad);
 check('test_start rejects comma id', is_err(call('test_start', { strategies: [ 'a,b' ] }), 'invalid_id'), null);
 check('test_start rejects string quick', is_err(call('test_start', { quick: 'yes' }), 'invalid_argument'), null);
 r = call('test_start', { quick: true, strategies: [ 'strategy-general', 'strategy-alt' ] });
@@ -261,6 +277,137 @@ for (let bad in [ 0, 5001, '5', 1.5 ])
 check('check', call('check').ok === true, null);
 r = call('diag');
 check('diag asks for the quick report', r.ok === true && type(r.text) == 'string' && r.full === false, r.full);
+
+// --- contract v1.3 (ARCHITECTURE §14.3, §14.7)
+
+// unknown arguments are refused (rpcd does the same before the call)
+check('extra argument -> invalid_argument', is_err(call('status', { foo: 1 }), 'invalid_argument'), null);
+check('extra argument next to a known one', is_err(call('page', { name: 'overview', tail: 5 }), 'invalid_argument'), null);
+check('ubus_rpc_session is accepted', call('status', { ubus_rpc_session: 'x' }).ok === true, null);
+
+r = call('status');
+check('status v1.3 fields pass through', exists(r, 'job') && r.monitor?.state == 'ok' && r.ipv6_wan === true &&
+	index(r.warnings, 'ipv6_wan_unhandled') >= 0, r);
+
+const page_parts = {
+	overview: [ 'status', 'job', 'presets', 'monitor', 'probe' ],
+	lists: [ 'status', 'job', 'items', 'sources', 'presets' ],
+	strategies: [ 'status', 'job', 'items', 'test' ],
+	diagnostics: [ 'status', 'job', 'monitor' ]
+};
+
+for (let name, parts in page_parts) {
+	r = call('page', { name: name });
+	check('page ' + name, r.ok === true && length(filter(parts, p => r[p]?.ok !== true)) == 0, r);
+}
+
+for (let bad in [ 'settings', 'repo', '', 'overview; id', 'Overview', null, 1, [ 'overview' ] ])
+	check('page rejects ' + sprintf('%J', bad), is_err(call('page', { name: bad }), 'invalid_argument'), bad);
+
+check('page without name', is_err(call('page'), 'invalid_argument'), null);
+
+// log
+r = call('log');
+check('log default tail', r.ok === true && length(r.lines) == 200 && index(r.lines[0], '<b>html</b>') >= 0, length(r.lines));
+r = call('log', { tail: 1000 });
+check('log tail 1000', r.ok === true && length(r.lines) == 1000, length(r.lines));
+check('log tail 1', call('log', { tail: 1 }).lines?.[0] != null, null);
+for (let bad in [ 0, 1001, -1, '200', 1.5, true ])
+	check('log rejects tail ' + sprintf('%J', bad), is_err(call('log', { tail: bad }), 'invalid_argument'), bad);
+
+// monitor
+r = call('monitor_status');
+check('monitor_status', r.ok === true && r.monitor?.state == 'ok' && length(r.monitor.history) == 48, r.monitor?.state);
+
+// probe
+for (let bad in [ [ 'a,b' ], 'youtube', [ '' ], [ 'x y' ], [ 1 ] ])
+	check('probe_start rejects ' + sprintf('%J', bad), is_err(call('probe_start', { services: bad }), 'invalid_argument'), bad);
+
+check('probe_start unknown service passes through', is_err(call('probe_start', { services: [ 'nosuchservice' ] }), 'unknown_service'), null);
+check('probe_status before a probe', call('probe_status').probe === null, null);
+r = call('probe_start', { services: [ 'youtube', 'discord', 'youtube' ] });
+check('probe_start starts a job', r.ok === true && r.job?.name == 'probe', r);
+check('probe during a job -> job_busy', is_err(call('probe_start'), 'job_busy'), null);
+system([ 'sleep', '3' ]);
+check('job of the probe is done', call('job_status').job?.state == 'done', null);
+r = call('probe_status');
+check('probe_status after the probe', r.ok === true && length(r.probe?.services) == 2 && r.probe.services[0].id == 'youtube' &&
+	r.probe.services[0].ok == 1 && r.probe.services[1].ok == 0, r.probe);
+r = call('probe_start');
+check('probe_start without services', r.ok === true && r.job?.name == 'probe', r);
+call('job_cancel');
+call('job_status');
+
+// test_status brief and --apply-if-better
+check('test_status rejects string brief', is_err(call('test_status', { brief: 'yes' }), 'invalid_argument'), null);
+check('test_start rejects string apply_if_better', is_err(call('test_start', { apply_if_better: 'yes' }), 'invalid_argument'), null);
+r = call('test_start', { quick: true, apply_if_better: true });
+check('test_start with apply_if_better', r.ok === true && r.job?.name == 'test', r);
+r = call('test_status', { brief: true });
+check('--apply-if-better reaches the CLI', index(r.mock_flags, '--apply-if-better') >= 0 && index(r.mock_flags, '--quick') >= 0, r.mock_flags);
+check('test_status brief has no targets', r.ok === true && r.results?.baseline != null && !exists(r.results.baseline, 'targets'), r.results?.baseline);
+check('test_status without brief has targets', length(call('test_status').results?.baseline?.targets) > 0, null);
+call('job_cancel');
+call('test_status');
+r = call('test_start', { quick: true, apply_if_better: false });
+check('apply_if_better false is not passed', r.ok === true && index(call('test_status').mock_flags, '--apply-if-better') < 0, null);
+call('job_cancel');
+call('test_status');
+
+r = call('test_start', { strategies: [ 'mock-big-results' ] });
+check('test_start big results for the page', r.ok === true, r);
+r = call('page', { name: 'strategies' });
+check('oversized page strategies is trimmed by the plugin', r.ok === true && r.test?.targets_trimmed === true &&
+	r.test.results?.results?.[0]?.targets == null && length(sprintf('%J', r)) <= 900000, r.test?.targets_trimmed);
+call('job_cancel');
+call('test_status');
+
+// --- contract v1.4 (ARCHITECTURE §15.3, §15.4, §15.7)
+
+// encrypted DNS
+r = call('dns_status');
+check('dns_status before setup', r.ok === true && r.dns?.encrypted === false && r.dns.provider === null, r);
+check('dns_status refuses arguments', is_err(call('dns_status', { provider: 'stubby' }), 'invalid_argument'), null);
+check('dns_setup refuses arguments', is_err(call('dns_setup', { package: 'x; id' }), 'invalid_argument'), null);
+check('status carries dns', call('status').dns?.encrypted === false, null);
+r = call('dns_setup');
+check('dns_setup starts a job', r.ok === true && r.job?.name == 'dns-setup', r);
+check('dns_setup during a job -> job_busy', is_err(call('dns_setup'), 'job_busy'), null);
+check('diagnose during a job -> job_busy', is_err(call('diagnose_start'), 'job_busy'), null);
+system([ 'sleep', '3' ]);
+check('job of dns setup is done', call('job_status').job?.state == 'done', null);
+r = call('dns_status');
+check('dns_status after setup', r.ok === true && r.dns?.encrypted === true && r.dns.provider == 'https-dns-proxy', r);
+r = call('dns_setup');
+check('dns_setup again -> changed false', r.ok === true && r.changed === false && r.job == null, r);
+
+// diagnosis of the blocking method
+for (let bad in [ [ 'a,b' ], 'youtube', [ '' ], [ 'x y' ], [ 1 ], [ '../x' ] ])
+	check('diagnose_start rejects ' + sprintf('%J', bad), is_err(call('diagnose_start', { services: bad }), 'invalid_argument'), bad);
+
+check('diagnose_start refuses unknown argument', is_err(call('diagnose_start', { services: [ 'youtube' ], full: true }), 'invalid_argument'), null);
+check('diagnose_start unknown service passes through', is_err(call('diagnose_start', { services: [ 'nosuchservice' ] }), 'unknown_service'), null);
+check('diagnose_status before a diagnosis', call('diagnose_status').diagnose === null, null);
+r = call('diagnose_start', { services: [ 'youtube', 'discord', 'telegram', 'discord' ] });
+check('diagnose_start starts a job', r.ok === true && r.job?.name == 'diagnose', r);
+system([ 'sleep', '3' ]);
+check('job of the diagnosis is done', call('job_status').job?.state == 'done', null);
+r = call('diagnose_status');
+check('diagnose_status after the diagnosis', r.ok === true && length(r.diagnose?.targets) == 3 &&
+	r.diagnose.targets[0].verdict == 'throttle' && r.diagnose.targets[1].verdict == 'dns_spoof' &&
+	r.diagnose.targets[1].dns?.spoofed === true && r.diagnose.targets[0].host == 'www.youtube.com' &&
+	r.diagnose.summary?.counts?.ip_block == 1, r.diagnose);
+r = call('diagnose_start');
+check('diagnose_start without services', r.ok === true && r.job?.name == 'diagnose', r);
+call('job_cancel');
+call('job_status');
+
+// pages of v1.4
+r = call('page', { name: 'diagnostics' });
+check('page diagnostics carries dns and diagnose', r.ok === true && r.dns?.ok === true && r.dns.dns?.encrypted === true &&
+	r.diagnose?.ok === true && exists(r.diagnose, 'diagnose'), r);
+r = call('page', { name: 'overview' });
+check('page overview carries dns', r.ok === true && r.dns?.dns?.encrypted === true && r.status?.flow_offload?.own === false, r.dns);
 
 // --- temporary files are cleaned up
 check('no temporary files left', length(fs.lsdir(DIR + '/run') ?? []) == 0, fs.lsdir(DIR + '/run'));

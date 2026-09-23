@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "d10110e695ec16cdbed292cfbba3e779b8f08acb92bfa1023ad56a8cccd3aae6",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_sberbank_ru.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_sberbank_ru.json",
+  "name_en": "tls_clienthello_sberbank_ru",
+  "description_en": "Fake packet: sberbank.ru",
+  "name_zh": "tls_clienthello_sberbank_ru",
+  "description_zh": "伪造数据包：sberbank.ru"
 }

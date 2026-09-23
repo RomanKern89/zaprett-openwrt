@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  zaprett for Windows: per-machine MSI (ARCHITECTURE-WIN §3, §10; research/04-windows-app-plan.md §7).
+  $(StageDir) is prepared by windows/build/build.ps1:
+    app\      zaprett-svc.exe, zaprett.exe, zaprett-ui.exe and the one self-contained .NET runtime they share
+    engine\   winws.exe, cygwin1.dll, WinDivert.dll, WinDivert64.sys  (engine.lock.json)
+    engine2\  winws2.exe, its cygwin1.dll / WinDivert*, lua\*.lua
+    data\     bundle\, guard\, presets.json  (one source of truth with the router package)
+    tools\    installer-actions.ps1
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="zaprett"
+           Manufacturer="zaprett-openwrt"
+           Version="$(ProductVersion)"
+           UpgradeCode="{6F1C3B52-8E2A-4C57-9B1D-2A7E5C0F4D91}"
+           ProductCode="$(ProductCode)"
+           Scope="perMachine"
+           Language="!(loc.ProductLanguage)">
+    <SummaryInformation Description="!(loc.ProductDescription)" Manufacturer="zaprett-openwrt" />
+
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Windows 10 2004 (build 19041) or newer, x64: same minimum as the app (TargetPlatformMinVersion); covers 20H2-22H2 and LTSC 2021 (19044). MSI reports VersionNT/WindowsBuild of Windows 8.1 on
+         Windows 10+, so the real build number is read from the registry. -->
+    <Property Id="ZAPRETT_WINBUILD">
+      <RegistrySearch Id="WinBuildSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+                      Name="CurrentBuildNumber" Type="raw" Bitness="always64" />
+    </Property>
+    <Launch Condition="Installed OR VersionNT64" Message="!(loc.RequiresX64)" />
+    <Launch Condition="Installed OR (ZAPRETT_WINBUILD &gt;= 19041)" Message="!(loc.RequiresWin10)" />
+
+    <!-- Public properties (msiexec /i zaprett.msi /qn AUTOSTART=1 SERVICES=youtube,discord) -->
+    <Property Id="AUTOSTART" Value="0" Secure="yes" />
+    <Property Id="SERVICES" Secure="yes" />
+    <Property Id="REMOVEDATA" Secure="yes" />
+    <Property Id="TRAYAUTOSTART" Value="1" Secure="yes" />
+    <!-- LANG = ru | en | zh-CN: ui.language of a NEW config.json (an existing one is never touched). Defaults to the
+         language of the installer UI (base ru-RU, transforms en-US / zh-CN), ARCHITECTURE-WIN §12.2. -->
+    <Property Id="LANG" Value="!(loc.DefaultUiLanguage)" Secure="yes" />
+
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <!-- Restart Manager must not touch the service or winws (tested: with an extra winws.exe from our engine\ running,
+         /x /qn ended with 1601 after RM stopped the service). The service stops winws itself (Job Object),
+         ZaprettStopUi closes the tray UI, ZaprettUninstallActions stops stray winws. -->
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/RomanKern89/zaprett-openwrt" />
+    <Property Id="ARPCOMMENTS" Value="!(loc.ProductDescription)" />
+
+    <!-- Install location: C:\Program Files\zaprett by default; another folder may be chosen in the UI or with
+         INSTALLFOLDER=... (ARCHITECTURE-WIN §12.1, S-2: spaces and non-ASCII are fine for winws). -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <!-- an upgrade stays in the folder of the installed version (written by the InstallOptions component) -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="PreviousInstallDir" Root="HKLM" Key="SOFTWARE\zaprett" Name="InstallDir" Type="raw" Bitness="always64" />
+    </Property>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="zaprett">
+        <Directory Id="ENGINEFOLDER" Name="engine" />
+        <Directory Id="ENGINE2FOLDER" Name="engine2" />
+        <Directory Id="TOOLSFOLDER" Name="tools" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="DATAFOLDER" Name="zaprett" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Core" Title="!(loc.FeatureCoreTitle)" Description="!(loc.FeatureCoreDescription)"
+             Level="1" AllowAbsent="no" Display="expand">
+      <ComponentGroupRef Id="CoreComponents" />
+    </Feature>
+    <Feature Id="Engine2" Title="!(loc.FeatureEngine2Title)" Description="!(loc.FeatureEngine2Description)" Level="1">
+      <ComponentGroupRef Id="Engine2Components" />
+    </Feature>
+    <!-- Placeholder for the local DoH proxy of Windows 10 (§5 dns.mode=doh): no content yet, never installed. -->
+    <Feature Id="DohProxy" Title="!(loc.FeatureDohTitle)" Description="!(loc.FeatureDohDescription)" Level="0" />
+
+    <ComponentGroup Id="CoreComponents">
+      <Component Id="ServiceExe" Directory="INSTALLFOLDER">
+        <File Id="ServiceExe" Source="$(StageDir)app\zaprett-svc.exe" KeyPath="yes" />
+        <ServiceInstall Id="ZaprettService" Name="zaprett" DisplayName="!(loc.ServiceDisplayName)"
+                        Description="!(loc.ServiceDescription)" Type="ownProcess" Start="auto"
+                        Account="LocalSystem" ErrorControl="normal" Vital="yes">
+          <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall="yes" />
+          <util:ServiceConfig FirstFailureActionType="restart" SecondFailureActionType="restart"
+                              ThirdFailureActionType="restart" RestartServiceDelayInSeconds="5"
+                              ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <ServiceControl Id="ZaprettServiceControl" Name="zaprett" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+      </Component>
+
+      <Files Directory="INSTALLFOLDER" Include="$(StageDir)app\**">
+        <Exclude Files="$(StageDir)app\zaprett-svc.exe" />
+        <Exclude Files="$(StageDir)app\zaprett-ui.exe" />
+      </Files>
+
+      <Component Id="UiExe" Directory="INSTALLFOLDER">
+        <!-- per-machine package (ALLUSERS=1): ProgramMenuFolder is the all-users Start menu; ICE43/ICE57 are
+             suppressed in the .wixproj because they assume a per-user folder -->
+        <File Id="UiExe" Source="$(StageDir)app\zaprett-ui.exe" KeyPath="yes">
+          <Shortcut Id="UiStartMenuShortcut" Directory="ProgramMenuFolder" Name="zaprett"
+                    Description="!(loc.ShortcutDescription)" WorkingDirectory="INSTALLFOLDER" />
+        </File>
+      </Component>
+
+      <Files Directory="ENGINEFOLDER" Include="$(StageDir)engine\**" />
+      <Files Directory="INSTALLFOLDER" Include="$(StageDir)data\**" />
+
+      <Component Id="InstallerActionsScript" Directory="TOOLSFOLDER">
+        <File Id="InstallerActionsPs1" Source="$(StageDir)tools\installer-actions.ps1" KeyPath="yes" />
+      </Component>
+
+      <!-- C:\ProgramData\zaprett: SYSTEM and Administrators full control, Users read, not inherited from ProgramData -->
+      <Component Id="DataFolder" Directory="DATAFOLDER" Guid="{2D8B5F0A-7C41-4E6B-A3D9-58E1F7B24C06}">
+        <CreateFolder>
+          <PermissionEx Sddl="D:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;0x1200a9;;;BU)" />
+        </CreateFolder>
+      </Component>
+
+      <!-- Install options for the service (read on its first start) -->
+      <Component Id="InstallOptions" Directory="INSTALLFOLDER">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\zaprett" ForceDeleteOnUninstall="yes">
+          <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+          <RegistryValue Name="Version" Type="string" Value="$(ProductVersion)" />
+          <RegistryValue Name="AutoStart" Type="string" Value="[AUTOSTART]" />
+        </RegistryKey>
+      </Component>
+      <Component Id="InstallOptionServices" Directory="INSTALLFOLDER" Condition="SERVICES">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\zaprett" Name="Services" Type="string" Value="[SERVICES]" KeyPath="yes" />
+      </Component>
+
+      <!-- Tray icon at every user logon (checkbox on the warning dialog, TRAYAUTOSTART=0 from the command line) -->
+      <Component Id="TrayAutostart" Directory="INSTALLFOLDER" Condition="TRAYAUTOSTART = &quot;1&quot;">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Name="zaprett"
+                       Type="string" Value="&quot;[INSTALLFOLDER]zaprett-ui.exe&quot; --tray" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <ComponentGroup Id="Engine2Components">
+      <Files Directory="ENGINE2FOLDER" Include="$(StageDir)engine2\**" />
+    </ComponentGroup>
+
+    <!-- Deferred actions (LocalSystem). '.' after the folder keeps its trailing '\' from escaping the quote.
+         ZAPRETT_PS holds the common prefix (the CustomAction.Target column is limited to 255 characters). -->
+    <SetProperty Id="ZAPRETT_PS" Sequence="execute" After="CostFinalize"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;[TOOLSFOLDER]installer-actions.ps1&quot;" />
+    <SetProperty Id="ZaprettInstallActions" Sequence="execute" Before="ZaprettInstallActions"
+                 Value="[ZAPRETT_PS] -Action Install -InstallDir &quot;[INSTALLFOLDER].&quot; -UserSid &quot;[UserSID]&quot; -DataDir &quot;[DATAFOLDER].&quot; -Language &quot;[LANG]&quot;" />
+    <CustomAction Id="ZaprettInstallActions" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="check" />
+    <!-- a first install that fails later takes the group it created with it (runs before the files are rolled back) -->
+    <SetProperty Id="ZaprettInstallRollback" Sequence="execute" Before="ZaprettInstallRollback"
+                 Value="[ZAPRETT_PS] -Action Rollback -InstallDir &quot;[INSTALLFOLDER].&quot; -DataDir &quot;[DATAFOLDER].&quot;" />
+    <CustomAction Id="ZaprettInstallRollback" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="rollback" Impersonate="no" Return="ignore" />
+
+    <SetProperty Id="ZaprettUninstallActions" Sequence="execute" Before="ZaprettUninstallActions"
+                 Value="[ZAPRETT_PS] -Action Uninstall -InstallDir &quot;[INSTALLFOLDER].&quot; -DataDir &quot;[DATAFOLDER].&quot; -RemoveData &quot;[REMOVEDATA]&quot;" />
+    <CustomAction Id="ZaprettUninstallActions" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <!-- Real removal: while the service still runs, return the adapters' DNS to what it was before dns.setup
+         (zaprett.exe dns off, quiet: rc 0 also when DNS was never switched, rc 3 when the service is not running;
+         either way the removal goes on). An upgrade keeps the user's DNS. -->
+    <SetProperty Id="ZaprettDnsOff" Sequence="execute" Before="ZaprettDnsOff"
+                 Value="&quot;[INSTALLFOLDER]zaprett.exe&quot; dns off --quiet" />
+    <CustomAction Id="ZaprettDnsOff" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <!-- The tray UI (one zaprett-ui.exe per signed-in user) holds its exe: close it before any file is replaced or
+         removed, so that neither upgrade nor removal needs a reboot. It must run before RemoveExistingProducts
+         (the old version's removal), which sits before InstallInitialize, so this action is immediate: WixQuietExec
+         then takes its command line from the property WixQuietExecCmdLine. Nothing to close is fine: exit 0 keeps
+         the "process not found" code 128 of taskkill out of the MSI log. -->
+    <SetProperty Id="WixQuietExecCmdLine" Sequence="execute" Before="ZaprettStopUi"
+                 Value="&quot;[System64Folder]cmd.exe&quot; /d /c &quot;&quot;[System64Folder]taskkill.exe&quot; /F /IM zaprett-ui.exe &gt;nul 2&gt;&amp;1 &amp; exit /b 0&quot;" />
+    <CustomAction Id="ZaprettStopUi" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="immediate" Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="ZaprettStopUi" Before="InstallValidate" />
+      <Custom Action="ZaprettInstallRollback" After="InstallFiles"
+              Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettInstallActions" After="ZaprettInstallRollback" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettDnsOff" Before="StopServices"
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="ZaprettUninstallActions" After="StopServices"
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+    </InstallExecuteSequence>
+
+    <UIRef Id="ZaprettUI" />
+    <!-- License.<culture>.rtf are generated by license/make_license_rtf.py -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(sys.SOURCEFILEDIR)!(loc.LicenseFile)" />
+  </Package>
+</Wix>

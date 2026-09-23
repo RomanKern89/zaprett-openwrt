@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "eefeaf09dde8d69b1f176212541f63c68b314a33a335eced99a8a29f17254da8",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_4pda_to.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_4pda_to.json",
+  "name_en": "tls_clienthello_4pda_to",
+  "description_en": "Fake packet file: tls_clienthello_4pda_to",
+  "name_zh": "tls_clienthello_4pda_to",
+  "description_zh": "伪造数据包文件：tls_clienthello_4pda_to"
 }

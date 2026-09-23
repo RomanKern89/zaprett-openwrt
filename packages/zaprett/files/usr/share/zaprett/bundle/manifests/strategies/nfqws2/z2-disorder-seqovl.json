@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-disorder-seqovl",
+  "type": "nfqws2",
+  "name": "nfqws2: disorder + seqovl",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Приём nfqws2 без фейков с фулингом. TLS и HTTP: запрос режется посередине домена, части уходят в обратном порядке, а вторая часть начинается с перекрытия, заполненного данными ClientHello www.google.com, — сервер перезаписывает его настоящими данными первой части. Не работает с серверами на Windows. QUIC и голос Discord — как в general.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-disorder-seqovl.txt",
+  "source": "bundle",
+  "sha256": "cf0d0e532daf388628df7a550f10915668fa10caaa99ce56b4676a1ff8028da4",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: disorder + seqovl",
+  "description_en": "An nfqws2 technique without fooled fakes. TLS and HTTP: the request is cut in the middle of the domain, parts go in reverse order, and the second part starts with an overlap filled with www.google.com ClientHello data that the server overwrites with the real first part. Does not work with Windows servers. QUIC and Discord voice as in general.",
+  "name_zh": "nfqws2：disorder + seqovl",
+  "description_zh": "不使用被干扰伪造包的 nfqws2 手法。TLS 和 HTTP：请求从域名中间切开，各部分倒序发送，第二部分以填充了 www.google.com ClientHello 数据的重叠区开头，服务器会用真实的第一部分覆盖它。不适用于 Windows 服务器。QUIC 和 Discord 语音与 general 相同。"
+}

@@ -1,0 +1,247 @@
+<Page
+    x:Class="Zaprett.Ui.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels"
+    Background="Transparent">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="20">
+
+            <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                     Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" />
+
+            <!-- hero: the big switch and the answer to "does it work now" -->
+            <Grid CornerRadius="14" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Vm.HeroKind), Mode=OneWay}" />
+                <Grid Padding="32,30" ColumnSpacing="36">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Spacing="10" VerticalAlignment="Center">
+                        <Grid Width="144" Height="144">
+                            <Ellipse ui:StateColor.Fill="{x:Bind ui:Conv.Tint(Vm.HeroKind), Mode=OneWay}" />
+                            <Button Width="112" Height="112" CornerRadius="56" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Style="{StaticResource AccentButtonStyle}" Visibility="{x:Bind Vm.IsOn, Mode=OneWay}"
+                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind Vm.ToggleLabel, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind Vm.ToggleLabel, Mode=OneWay}">
+                                <FontIcon Glyph="&#xE7E8;" FontSize="42" />
+                            </Button>
+                            <Button Width="112" Height="112" CornerRadius="56" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Visibility="{x:Bind ui:Conv.Hide(Vm.IsOn), Mode=OneWay}"
+                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind Vm.ToggleLabel, Mode=OneWay}"
+                                    ToolTipService.ToolTip="{x:Bind Vm.ToggleLabel, Mode=OneWay}">
+                                <FontIcon Glyph="&#xE7E8;" FontSize="42" />
+                            </Button>
+                        </Grid>
+                        <TextBlock Text="{x:Bind Vm.ToggleLabel, Mode=OneWay}" HorizontalAlignment="Center" Style="{StaticResource Secondary}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="12" VerticalAlignment="Center">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Glyph="{x:Bind Vm.HeroGlyph, Mode=OneWay}" FontSize="26" VerticalAlignment="Top" Margin="0,10,0,0"
+                                      ui:StateColor.Foreground="{x:Bind Vm.HeroKind, Mode=OneWay}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind Vm.HeroTitle, Mode=OneWay}" FontFamily="{StaticResource DisplayFont}" FontSize="34"
+                                       FontWeight="SemiBold" TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level1" />
+                        </Grid>
+                        <TextBlock Text="{x:Bind Vm.HeroText, Mode=OneWay}" Style="{StaticResource Body}" FontSize="15" MaxWidth="620" HorizontalAlignment="Left"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <!-- fixed chips: two rows, the second only while the engine runs -->
+                        <StackPanel Spacing="8" Margin="0,6,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Style="{StaticResource Chip}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Style="{StaticResource ChipLabel}" Text="{x:Bind loc:L.T('Home.Chip.Strategy')}" />
+                                    <TextBlock Style="{StaticResource ChipValue}" Text="{x:Bind Vm.StrategyText, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Chip}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Style="{StaticResource ChipLabel}" Text="{x:Bind loc:L.T('Home.Chip.Engine')}" />
+                                    <TextBlock Style="{StaticResource ChipValue}" Text="{x:Bind Vm.EngineText, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind Vm.IsOn, Mode=OneWay}">
+                            <Border Style="{StaticResource Chip}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Style="{StaticResource ChipLabel}" Text="{x:Bind loc:L.T('Home.Chip.Uptime')}" />
+                                    <TextBlock Style="{StaticResource ChipValue}" Text="{x:Bind Vm.UptimeText, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Chip}" Visibility="{x:Bind Vm.HasPackets, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Style="{StaticResource ChipLabel}" Text="{x:Bind loc:L.T('Home.Chip.Packets')}" />
+                                    <TextBlock Style="{StaticResource ChipValue}" Text="{x:Bind Vm.PacketsText, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- warnings of the service, each with its action -->
+            <ItemsControl ItemsSource="{x:Bind Vm.Warnings}" Visibility="{x:Bind Vm.HasWarnings, Mode=OneWay}" IsTabStop="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Spacing="8" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:WarningItem">
+                        <InfoBar IsOpen="True" IsClosable="False" Severity="{x:Bind ui:Conv.Severity(Kind)}" Title="{x:Bind Title}" Message="{x:Bind Text}">
+                            <InfoBar.ActionButton>
+                                <Button Content="{x:Bind ActionLabel}" Command="{x:Bind ActCommand}" Visibility="{x:Bind HasAction}" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- live check of the services -->
+            <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Home.Sites')}" AutomationProperties.HeadingLevel="Level2" />
+                    <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind Vm.ProbeSummary, Mode=OneWay}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <ProgressBar Width="120" Value="{x:Bind Vm.ProbePercent, Mode=OneWay}" Visibility="{x:Bind Vm.IsProbing, Mode=OneWay}" VerticalAlignment="Center" />
+                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Home.CheckNow')}" Command="{x:Bind Vm.CheckNowCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsProbing), Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                            <TextBlock Text="{x:Bind loc:L.T('Home.CheckNow')}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <ItemsRepeater ItemsSource="{x:Bind Vm.Tiles}" Visibility="{x:Bind Vm.HasTiles, Mode=OneWay}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="210" MinItemHeight="118" MinColumnSpacing="12" MinRowSpacing="12" ItemsStretch="Fill" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ServiceTile">
+                        <Grid CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AutomationProperties.Name="{x:Bind Automation}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border ui:StateColor.Background="{x:Bind Kind}" />
+                            <StackPanel Grid.Column="1" Padding="18,14,16,14" Spacing="4">
+                                <TextBlock Text="{x:Bind Name}" Style="{StaticResource CardTitle}" TextTrimming="CharacterEllipsis" />
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" VerticalAlignment="Center" ui:StateColor.Foreground="{x:Bind Kind}" />
+                                    <TextBlock Text="{x:Bind Result}" FontFamily="{StaticResource DisplayFont}" FontSize="30" FontWeight="SemiBold"
+                                               ui:StateColor.Foreground="{x:Bind Kind}" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind Detail}" Style="{StaticResource Secondary}" TextTrimming="CharacterEllipsis" MaxLines="2" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <Border Style="{StaticResource SubtleCard}" Visibility="{x:Bind ui:Conv.Hide(Vm.HasTiles), Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock Style="{StaticResource Body}" VerticalAlignment="Center" Text="{x:Bind loc:L.T('Home.NoServices')}" />
+                    <Button Content="{x:Bind loc:L.T('Home.ChooseServices')}" Command="{x:Bind Vm.OpenCommand}" CommandParameter="services" />
+                </StackPanel>
+            </Border>
+
+            <!-- monitor and what is processed -->
+            <Grid ColumnSpacing="16" Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <TextBlock Style="{StaticResource SectionTitle}" FontSize="17" Text="{x:Bind loc:L.T('Monitor.Title')}" AutomationProperties.HeadingLevel="Level2" />
+                            <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Vm.MonitorKind), Mode=OneWay}" CornerRadius="12" />
+                                <TextBlock Text="{x:Bind Vm.MonitorTitle, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Margin="12,4"
+                                           ui:StateColor.Foreground="{x:Bind Vm.MonitorKind, Mode=OneWay}" />
+                            </Grid>
+                        </Grid>
+                        <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind Vm.MonitorText, Mode=OneWay}" />
+                        <ItemsRepeater ItemsSource="{x:Bind Vm.History}" AutomationProperties.Name="{x:Bind Vm.HistorySummary, Mode=OneWay}">
+                            <ItemsRepeater.Layout>
+                                <!-- 48 cells always in one row, stretched to the card width -->
+                                <UniformGridLayout MaximumRowsOrColumns="48" MinItemWidth="4" MinItemHeight="36" MinColumnSpacing="3" ItemsStretch="Fill" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:HistoryCell">
+                                    <Border Height="36" CornerRadius="2" ui:StateColor.Background="{x:Bind Kind}"
+                                            ToolTipService.ToolTip="{x:Bind Tooltip}" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <Grid ColumnSpacing="16" RowSpacing="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Width="9" Height="12" CornerRadius="2" ui:StateColor.Background="ok" />
+                                <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Monitor.Legend.Ok')}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                <Border Width="9" Height="12" CornerRadius="2" ui:StateColor.Background="fail" />
+                                <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Monitor.Legend.Fail')}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
+                                <Border Width="9" Height="12" CornerRadius="2" ui:StateColor.Background="none" />
+                                <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Monitor.Legend.None')}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.HistorySummary, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Style="{StaticResource SectionTitle}" FontSize="17" Text="{x:Bind loc:L.T('Home.What')}" AutomationProperties.HeadingLevel="Level2" />
+                        <TextBlock Style="{StaticResource Body}" Text="{x:Bind Vm.ModeText, Mode=OneWay}" />
+                        <StackPanel Spacing="4">
+                            <HyperlinkButton AutomationProperties.Name="{x:Bind loc:L.T('Home.OpenServices')}" Padding="0,4" Command="{x:Bind Vm.OpenCommand}" CommandParameter="services">
+                                <TextBlock Text="{x:Bind loc:L.T('Home.OpenServices')}" TextWrapping="Wrap" />
+                            </HyperlinkButton>
+                            <HyperlinkButton AutomationProperties.Name="{x:Bind loc:L.T('Home.OpenLists')}" Padding="0,4" Command="{x:Bind Vm.OpenCommand}" CommandParameter="lists">
+                                <TextBlock Text="{x:Bind loc:L.T('Home.OpenLists')}" TextWrapping="Wrap" />
+                            </HyperlinkButton>
+                            <HyperlinkButton AutomationProperties.Name="{x:Bind loc:L.T('Home.OpenStrategies')}" Padding="0,4" Command="{x:Bind Vm.OpenCommand}" CommandParameter="strategies">
+                                <TextBlock Text="{x:Bind loc:L.T('Home.OpenStrategies')}" TextWrapping="Wrap" />
+                            </HyperlinkButton>
+                        </StackPanel>
+                        <StackPanel Spacing="6" Visibility="{x:Bind Vm.Job.IsVisible, Mode=OneWay}">
+                            <TextBlock Style="{StaticResource CardTitle}" FontSize="13" Text="{x:Bind Vm.Job.Title, Mode=OneWay}" />
+                            <ProgressBar Value="{x:Bind Vm.Job.Percent, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.Job.Message, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

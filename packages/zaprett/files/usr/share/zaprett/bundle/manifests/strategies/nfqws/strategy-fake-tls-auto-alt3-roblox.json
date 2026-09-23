@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "5d17cfadc40727881fcd38f2305b75a103b8451504ab777462ac146f70322627",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fake-tls-auto-alt3-roblox.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-fake-tls-auto-alt3-roblox.json",
+  "name_en": "strategy-fake-tls-auto-alt3-roblox",
+  "description_en": "The fake-tls-auto-alt3 strategy from the zapret for Windows repository, modified to bypass the Roblox block",
+  "name_zh": "strategy-fake-tls-auto-alt3-roblox",
+  "description_zh": "来自 Windows 版 zapret 仓库的 fake-tls-auto-alt3 策略，已修改以绕过 Roblox 封锁"
 }

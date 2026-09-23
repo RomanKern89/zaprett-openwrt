@@ -135,7 +135,7 @@ return view.extend({
 		if (f.updates && it.update_available !== true)
 			return false;
 
-		if (f.query && [ it.id, it.name, it.author, it.description ].join(' ').toLowerCase().indexOf(f.query) < 0)
+		if (f.query && [ it.id, it.name, it.name_en, it.author, it.description, it.description_en ].join(' ').toLowerCase().indexOf(f.query) < 0)
 			return false;
 
 		return true;
@@ -179,14 +179,14 @@ return view.extend({
 		this.updateSelection();
 	},
 
+	columns() {
+		return [ _('Name'), _('Author'), _('Version'), _('Size'), _('State') ];
+	},
+
 	renderHeader() {
 		return E('tr', { 'class': 'tr table-titles' }, [
 			E('th', { 'class': 'th', 'style': 'width:2em' }, txt('')),
-			E('th', { 'class': 'th' }, txt(_('Name'))),
-			E('th', { 'class': 'th' }, txt(_('Author'))),
-			E('th', { 'class': 'th' }, txt(_('Version'))),
-			E('th', { 'class': 'th' }, txt(_('Size'))),
-			E('th', { 'class': 'th' }, txt(_('State'))),
+			...this.columns().map(t => E('th', { 'class': 'th' }, txt(t))),
 			E('th', { 'class': 'th right' }, txt(''))
 		]);
 	},
@@ -229,19 +229,23 @@ return view.extend({
 			? _('%s → %s').format(it.installed_version, it.version)
 			: (it.version ?? '');
 
+		const titles = this.columns();
+		const name = zc.localized(it, 'name') ?? it.id;
+		const description = zc.localized(it, 'description');
+
 		return E('tr', { 'class': 'tr' }, [
-			E('td', { 'class': 'td' }, [ box ]),
-			E('td', { 'class': 'td' }, [
-				E('strong', {}, txt(it.name ?? it.id)),
-				(it.name && it.name != it.id) ? E('small', {}, txt(' %s'.format(it.id))) : '',
-				it.description ? E('div', { 'class': 'cbi-value-description' }, txt(it.description)) : '',
+			zc.td(_('Select'), [ box ]),
+			zc.td(titles[0], [
+				E('strong', {}, txt(name)),
+				(name != it.id) ? E('small', {}, txt(' %s'.format(it.id))) : '',
+				description ? E('div', { 'class': 'cbi-value-description' }, txt(description)) : '',
 				it.error ? E('div', { 'class': 'cbi-value-description' }, [ E('strong', {}, txt(_('Catalog error: %s').format(it.error))) ]) : ''
 			]),
-			E('td', { 'class': 'td' }, txt(it.author ?? '')),
-			E('td', { 'class': 'td' }, txt(version)),
-			E('td', { 'class': 'td' }, txt((+it.size > 0) ? zc.formatBytes(it.size) : '—')),
-			E('td', { 'class': 'td' }, [ state ]),
-			E('td', { 'class': 'td right' }, actions)
+			zc.td(titles[1], it.author ?? ''),
+			zc.td(titles[2], version),
+			zc.td(titles[3], (+it.size > 0) ? zc.formatBytes(it.size) : '—'),
+			zc.td(titles[4], [ state ]),
+			zc.td(null, actions, 'right')
 		]);
 	},
 
@@ -260,15 +264,22 @@ return view.extend({
 		this.renderList();
 	},
 
-	/* Starts watching a job returned by a repository command. */
+	/* Starts watching a job returned by a repository command; the stop
+	 * function is kept, so a second command does not start a second poll. */
 	watch(job) {
 		this.setBusy(true);
 		this.job.update(Object.assign({ state: 'running', progress: 0, message: '' }, job));
 
-		zc.watchJob(j => {
+		const previous = this.stopWatch;
+
+		if (previous)
+			previous();
+
+		this.stopWatch = zc.watchJob(j => {
 			if (j)
 				this.job.update(j);
 		}, j => {
+			this.stopWatch = null;
 			this.setBusy(false);
 
 			if (j?.state == 'done')

@@ -3,16 +3,27 @@
 
 import * as fs from 'fs';
 import { P, run, read_json, write_json, mkdir_p, atomic_write, is_file, is_id, sha256_file, df_avail_kib,
-	uniq_name, log, ok, fail, MODE_FILE, NULL_CTX } from 'zaprett.util';
+	uniq_name, log, ok, fail, MODE_FILE, NULL_CTX, meminfo_mib, download_concurrency } from 'zaprett.util';
 import * as V from 'zaprett.validate';
 import * as S from 'zaprett.store';
 import * as N from 'zaprett.net';
 
-export const MAX_INDEX_BYTES = 1048576;
+// Every download has a hard size limit (contract v1.3 §14.5): probe.sh cuts a larger file with `ulimit -f`.
+export const MAX_INDEX_BYTES = 2097152;
 export const MAX_MANIFEST_BYTES = 65536;
 export const MAX_ITEMS = 2000;
 export const MAX_ARTIFACT_BYTES = 33554432;
 export const RESERVE_KIB = 256;
+// parallel artifact downloads, one at a time below LOW_MEM_MIB of MemAvailable
+export const ARTIFACT_CONCURRENCY = 4;
+export const LOW_MEM_MIB = 64;
+export const MANIFEST_CONCURRENCY = 8;
+
+// Download function: N.probe, or a fake one from unit tests (opts.probe).
+function fetcher(opts) {
+	let f = opts?.probe ?? N.probe;
+	return f;
+}
 
 export function cache_path() {
 	return P.run + '/repo/index.json';
@@ -132,27 +143,24 @@ export function read_cache() {
 	return (type(c) == 'object' && type(c.items) == 'array') ? c : null;
 };
 
-function download_one(url, key, timeout) {
-	let p = N.probe([ { key: key, url: url } ], { concurrency: 1, timeout: timeout });
-	return p;
-}
-
-// Downloads index.json and all manifests into the tmpfs cache.
-export function fetch(cfg, ctx) {
+// Downloads index.json and all manifests into the tmpfs cache. opts.probe: fake downloader (unit tests).
+export function fetch(cfg, ctx, opts) {
 	ctx = ctx ?? NULL_CTX;
+	let download = fetcher(opts);
 	let url = cfg.repo.url;
 	ctx.progress(2, 'Загрузка индекса репозитория: ' + url);
-	let p = download_one(url, 'index', 30);
+	let p = download([ { key: 'index', url: url } ], { concurrency: 1, timeout: 30, max_bytes: MAX_INDEX_BYTES });
 	let r = p.results.index;
+	// checked before the exit code: a file cut by the limit ends with SIGXFSZ, not with a download error
+	if (r && r.bytes > MAX_INDEX_BYTES) {
+		N.cleanup(p.dir);
+		return fail('too_large', 'Индекс репозитория больше 2 МиБ — загрузка прервана', { url: url });
+	}
 	let cls = N.classify(r?.rc, r?.err, r?.bytes, 2);
 	if (!cls.ok || !r.body) {
 		N.cleanup(p.dir);
 		return fail('download_failed', sprintf('Не удалось загрузить индекс репозитория (%s). %s',
 			N.ERROR_TEXT[cls.error] ?? cls.error, r?.summary ?? ''), { url: url });
-	}
-	if (r.bytes > MAX_INDEX_BYTES) {
-		N.cleanup(p.dir);
-		return fail('too_large', 'Индекс репозитория больше 1 МиБ');
 	}
 	let obj = null;
 	try {
@@ -172,14 +180,18 @@ export function fetch(cfg, ctx) {
 	let tasks = [];
 	for (let i = 0; i < length(idx.items); i++)
 		push(tasks, { key: 'm' + i, url: idx.items[i].manifest_url });
-	let pm = N.probe(tasks, { concurrency: 8, timeout: 20 });
+	let pm = download(tasks, { concurrency: MANIFEST_CONCURRENCY, timeout: 20, max_bytes: MAX_MANIFEST_BYTES });
 	let items = [], errors = 0;
 	for (let i = 0; i < length(idx.items); i++) {
 		let it = idx.items[i], res = pm.results['m' + i];
 		let entry = { id: it.id, type: it.type, manifest_url: it.manifest_url, manifest: null, error: null };
 		let c = N.classify(res?.rc, res?.err, res?.bytes, 2);
-		if (!c.ok || !res.body || res.bytes > MAX_MANIFEST_BYTES) {
-			entry.error = c.ok ? 'too_large' : c.error;
+		if (res && res.bytes > MAX_MANIFEST_BYTES) {
+			entry.error = 'too_large';
+			errors++;
+		}
+		else if (!c.ok || !res.body) {
+			entry.error = c.error;
 			errors++;
 		}
 		else {
@@ -293,7 +305,7 @@ export function install(cfg, ids, ctx, opts) {
 	opts = opts ?? {};
 	let cache = read_cache();
 	if (!cache || opts.refetch) {
-		let f = fetch(cfg, ctx);
+		let f = fetch(cfg, ctx, opts);
 		if (!f.ok)
 			return f;
 		cache = read_cache();
@@ -344,7 +356,9 @@ export function install(cfg, ids, ctx, opts) {
 	let tasks = [];
 	for (let i = 0; i < length(plan); i++)
 		push(tasks, { key: 'a' + i, url: plan[i].manifest.artifact.url });
-	let dl = N.probe(tasks, { concurrency: 4, timeout: 30 });
+	let download = fetcher(opts);
+	let conc = download_concurrency(ARTIFACT_CONCURRENCY, LOW_MEM_MIB, opts.mem_available_mib ?? meminfo_mib('MemAvailable'));
+	let dl = download(tasks, { concurrency: conc, timeout: 30, max_bytes: MAX_ARTIFACT_BYTES });
 	if (ctx.cancelled()) {
 		N.cleanup(dl.dir);
 		return fail('cancelled', 'Отменено');
@@ -353,14 +367,14 @@ export function install(cfg, ids, ctx, opts) {
 	let total_kib = 0;
 	for (let i = 0; i < length(plan); i++) {
 		let e = plan[i], res = dl.results['a' + i];
+		if (res && res.bytes > MAX_ARTIFACT_BYTES) {
+			N.cleanup(dl.dir);
+			return fail('too_large', sprintf('Файл «%s» больше 32 МиБ — загрузка прервана', e.id));
+		}
 		let c = N.classify(res?.rc, res?.err, res?.bytes, 0);
 		if (!c.ok || !res.body) {
 			N.cleanup(dl.dir);
 			return fail('download_failed', sprintf('Не удалось скачать «%s»: %s. %s', e.id, N.ERROR_TEXT[c.error] ?? c.error ?? 'нет файла', res?.summary ?? ''));
-		}
-		if (res.bytes > MAX_ARTIFACT_BYTES) {
-			N.cleanup(dl.dir);
-			return fail('too_large', sprintf('Файл «%s» слишком большой для роутера (%d байт)', e.id, res.bytes));
 		}
 		let sum = sha256_file(res.body);
 		if (sum != e.manifest.artifact.sha256) {
@@ -437,7 +451,7 @@ export function upgrade(cfg, ids, ctx, opts) {
 	ctx = ctx ?? NULL_CTX;
 	opts = opts ?? {};
 	if (!opts.no_fetch) {
-		let f = fetch(cfg, ctx);
+		let f = fetch(cfg, ctx, opts);
 		if (!f.ok)
 			return f;
 	}
@@ -468,7 +482,8 @@ export function upgrade(cfg, ids, ctx, opts) {
 	}
 	if (!length(targets))
 		return ok({ installed: [], up_to_date: up_to_date, message: 'Обновлений нет' });
-	let r = install(cfg, uniq(targets), ctx, { upgrade_deps: true, only_updates: false });
+	let r = install(cfg, uniq(targets), ctx, { upgrade_deps: true, only_updates: false, probe: opts.probe,
+		mem_available_mib: opts.mem_available_mib });
 	r.up_to_date = up_to_date;
 	return r;
 };

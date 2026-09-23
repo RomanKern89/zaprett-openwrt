@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Desktop interface of zaprett for Windows: WinUI 3 (Windows App SDK), unpackaged and self-contained
+       (ARCHITECTURE-WIN W-3, checked by building and starting a window with dotnet build on 2026-09-23).
+       The folder Core holds view models and services without WinUI types; tests compile it directly. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <RootNamespace>Zaprett.Ui</RootNamespace>
+    <AssemblyName>zaprett-ui</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\zaprett.ico</ApplicationIcon>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <SelfContained>true</SelfContained>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <!-- CA1515 (make public types internal) does not fit x:Bind view models; CA1848/CA2007 are for libraries. -->
+    <NoWarn>$(NoWarn);CA1515;CA2007;CA1848;CA1720</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Core\Strings\*.json" LogicalName="Zaprett.Ui.Strings.%(Filename).json" />
+    <!-- Presets of the product for the fake service (W-5: one source of truth with the router). -->
+    <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\presets.json" LogicalName="Zaprett.Ui.DevFakes.presets.json" />
+    <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\bundle\manifests\**\*.json" LogicalName="Zaprett.Ui.DevFakes.manifest.%(Filename).json" />
+    <Content Include="Assets\*.ico;Assets\*.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <!-- component packages instead of the Microsoft.WindowsAppSDK metapackage (ARCHITECTURE-WIN §12.1, SPIKE-M1 §7):
+         no AI/ML runtime in the output -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.3.9" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.DWrite" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zaprett.Ipc\Zaprett.Ipc.csproj" />
+  </ItemGroup>
+
+</Project>

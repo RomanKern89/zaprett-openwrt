@@ -9,10 +9,13 @@ import * as V from 'zaprett.validate';
 // (24.10: uclient 88ae8f20, 25.12: uclient daad21fa):
 //   0 success; 1 generic/unknown error; 2 write to output failed (25.12); 3 cannot open output file;
 //   4 "Connection error: Connection failed" / "Connection error: Connection timed out" /
-//     "Connection reset prematurely" / "Failed to send request: ..." (+ "SSL error: ..." on TLS failure);
+//     "Connection reset prematurely" / "Failed to send request: ..." (+ "SSL error: ..." on TLS failure; on 24.10 a
+//     refused TCP connection also prints "SSL error: NET - Sending information through the socket failed");
 //   5 "Connection error: Invalid SSL certificate" / "... Server hostname does not match SSL certificate"
 //     (+ "SSL verify error: ..."); 8 "HTTP error <code>", redirect or range errors.
 // Without -q the tool also prints "Downloading", "Connecting to", "Writing to", "Download completed".
+export const SEND_FAILED = 'Sending information through the socket failed';
+
 export function classify(rc, err_text, bytes, min_bytes) {
 	let t = err_text ?? '';
 	let hm = match(t, /HTTP error ([0-9]{3})/);
@@ -45,6 +48,10 @@ export function classify(rc, err_text, bytes, min_bytes) {
 	else if (index(t, 'SSL verify error') >= 0 || index(t, 'Invalid SSL certificate') >= 0 ||
 	         index(t, 'does not match SSL certificate') >= 0)
 		res.error = 'tls_cert';
+	// 24.10 (mbedtls): a refused or reset TCP connection shows up as an SSL error of the first send — the ClientHello
+	// never left, so this is no TLS problem (checked with a local TCP reset on 24.10.8)
+	else if (index(t, SEND_FAILED) >= 0)
+		res.error = 'connect_failed';
 	else if (index(t, 'SSL error') >= 0)
 		res.error = 'tls_error';
 	else if (index(t, 'Connection failed') >= 0 || index(t, 'Failed to send request') >= 0)
@@ -99,8 +106,18 @@ export function probe(tasks, opts) {
 	let conc = opts.concurrency ?? 4, tmo = opts.timeout ?? 10;
 	let batches = int((length(lines) + conc - 1) / conc);
 	let limit_ms = (batches * (tmo * 3 + 5) + 30) * 1000;
-	let r = run([ '/bin/sh', P.probe, tfile, dir, '' + conc, '' + tmo, opts.ipv4only ? '1' : '0', '' + int(opts.max_bytes ?? 0) ],
-		{ timeout: limit_ms, limit: 16384 });
+	let pargs = [ tfile, dir, '' + conc, '' + tmo, opts.ipv4only ? '1' : '0', '' + int(opts.max_bytes ?? 0) ];
+	let argv = [ '/bin/sh', P.probe ];
+	// opts.user: the downloads run as that user (isolated automatic selection, contract v1.6 §17). start-stop-daemon
+	// executes the script itself, so its "already running" match (argv[0] == the script) never hits a running shell.
+	if (opts.user) {
+		if (!fs.chown(dir, opts.user, opts.user))
+			return { dir: dir, results: {}, error: 'tmp_failed' };
+		argv = [ P.ssd, '-S', '-c', opts.user, '-x', P.probe, '--' ];
+	}
+	for (let a in pargs)
+		push(argv, a);
+	let r = run(argv, { timeout: limit_ms, limit: 16384 });
 	let results = {};
 	for (let t in tasks) {
 		let res = fs.readfile(dir + '/' + t.key + '.res', 64);

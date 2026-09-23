@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-discord",
+  "type": "nfqws2",
+  "name": "nfqws2: Discord",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-discord с добавленным правилом голоса по протоколу. TLS: фейк www.google.com с неверными номерами последовательности и autottl (6 повторов) и fakedsplit; голос: фейк из нулей для пакетов Discord IP Discovery и STUN на портах 19294–19344 и 50000–50100, а для адресов из IP-списков — фейк на первые 2 пакета любого UDP на 50000–50100. HTTP не трогает.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-discord.txt",
+  "source": "bundle",
+  "sha256": "e0399e7e7a327cca944645f054ae4c2f75e68db3cb80b35d695afa92a7b24b29",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: Discord",
+  "description_en": "Port of strategy-discord with an extra protocol-based voice rule. TLS: a www.google.com fake with bad sequence numbers and autottl (6 repeats) plus fakedsplit; voice: a zero-filled fake for Discord IP Discovery and STUN packets on ports 19294–19344 and 50000–50100, and for addresses from IP lists a fake on the first 2 packets of any UDP on 50000–50100. HTTP is left alone.",
+  "name_zh": "nfqws2：Discord",
+  "description_zh": "strategy-discord 的移植版，另加按协议识别的语音规则。TLS：带错误序列号和 autottl 的 www.google.com 伪造包（重复 6 次）加 fakedsplit；语音：对端口 19294–19344 和 50000–50100 上的 Discord IP Discovery 和 STUN 数据包发送全零伪造包，对 IP 列表中的地址，在 50000–50100 上任何 UDP 的前 2 个数据包发送伪造包。HTTP 不处理。"
+}

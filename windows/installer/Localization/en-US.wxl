@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-US" Codepage="1252" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ProductLanguage" Value="1033" />
+  <String Id="DefaultUiLanguage" Value="en" />
+  <String Id="LicenseFile" Value="License.en-US.rtf" />
+  <String Id="ProductDescription" Value="zaprett: DPI circumvention with the zapret engine for this PC" />
+  <String Id="DowngradeError" Value="A newer version of zaprett is already installed. Setup will now exit." />
+  <String Id="RequiresX64" Value="zaprett runs on 64-bit Windows (x64) only." />
+  <String Id="RequiresWin10" Value="zaprett requires Windows 10 version 2004 (build 19041) or newer." />
+  <String Id="ServiceDisplayName" Value="zaprett" />
+  <String Id="ServiceDescription" Value="zaprett service: runs the DPI circumvention engine (winws) and keeps the settings." />
+  <String Id="ShortcutDescription" Value="Control zaprett DPI circumvention" />
+  <String Id="FeatureCoreTitle" Value="zaprett" />
+  <String Id="FeatureCoreDescription" Value="Service, user interface, command line, winws engine, strategies and lists." />
+  <String Id="FeatureEngine2Title" Value="zapret2 engine (winws2)" />
+  <String Id="FeatureEngine2Description" Value="Second engine with Lua strategies." />
+  <String Id="FeatureDohTitle" Value="Local DoH proxy" />
+  <String Id="FeatureDohDescription" Value="Encrypted DNS for Windows 10 (in development)." />
+  <String Id="ZaprettWarningDlg_Title" Value="zaprett Setup" />
+  <String Id="ZaprettWarningDlgTitle" Value="{\WixUI_Font_Title}Before you install" />
+  <String Id="ZaprettWarningDlgDescription" Value="How zaprett works and what an antivirus may notice" />
+  <String Id="ZaprettWarningDlgText" Value="zaprett intercepts network packets with the WinDivert driver (from the zapret project) and alters them so that the provider's DPI does not recognise a blocked site. Nothing is sent to third-party servers and there is no telemetry.&#xD;&#xA;&#xD;&#xA;Some antivirus products flag WinDivert and winws.exe as a hacking tool or a potentially unwanted application because the driver can intercept traffic. The engine files come unchanged from the official zapret releases and their checksums are verified at build time. If your antivirus removes them, add the zaprett install folder (C:\Program Files\zaprett by default) to its exclusions.&#xD;&#xA;&#xD;&#xA;GoodbyeDPI, another copy of zapret and other programs that use WinDivert must not run at the same time as zaprett." />
+  <String Id="ZaprettWarningDlgTray" Value="Show the zaprett icon in the notification area at sign-in" />
+</WixLocalization>

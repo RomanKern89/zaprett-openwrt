@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "f6dcda38ea4ed246f932c0a3b4fef2f6b575f383082a55266537ba4801274529",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot-alt.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-shizapret-dot-alt.json",
+  "name_en": "strategy-shizapret-dot-alt",
+  "description_en": "The shizapret strategy from the sch-izo/shizapret repository for Windows",
+  "name_zh": "strategy-shizapret-dot-alt",
+  "description_zh": "来自 Windows 版 sch-izo/shizapret 仓库的 shizapret 策略"
 }

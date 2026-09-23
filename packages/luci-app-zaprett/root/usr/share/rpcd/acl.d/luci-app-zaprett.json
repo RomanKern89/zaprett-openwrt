@@ -15,7 +15,13 @@
 					"test_status",
 					"job_status",
 					"job_log",
-					"diag"
+					"diag",
+					"probe_status",
+					"monitor_status",
+					"log",
+					"page",
+					"dns_status",
+					"diagnose_status"
 				]
 			},
 			"uci": [ "zaprett" ]
@@ -40,7 +46,10 @@
 					"test_start",
 					"test_stop",
 					"test_apply",
-					"job_cancel"
+					"job_cancel",
+					"probe_start",
+					"dns_setup",
+					"diagnose_start"
 				]
 			},
 			"uci": [ "zaprett" ]

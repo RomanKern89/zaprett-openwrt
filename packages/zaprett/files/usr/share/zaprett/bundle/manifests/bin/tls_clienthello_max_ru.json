@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "e4a94cec50b3c048eb988a513ee28191e4d7544dd5f98a9bf94f37ee02d2568e",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_max_ru.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/bin/tls_clienthello_max_ru.json",
+  "name_en": "tls_clienthello_max_ru",
+  "description_en": "Fake packet file: tls_clienthello_max_ru",
+  "name_zh": "tls_clienthello_max_ru",
+  "description_zh": "伪造数据包文件：tls_clienthello_max_ru"
 }

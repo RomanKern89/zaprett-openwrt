@@ -1,0 +1,4 @@
+signal.group
+signal.link
+signal.me
+signal.org

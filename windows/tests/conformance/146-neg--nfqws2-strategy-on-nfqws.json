@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "name": "neg/nfqws2-strategy-on-nfqws",
+  "engine": "nfqws",
+  "main": {
+    "list_mode": "whitelist",
+    "lists": [
+      "zaprett-youtube",
+      "zaprett-discord",
+      "user-hosts"
+    ],
+    "exclude_lists": [
+      "zaprett-exclude",
+      "user-hosts-exclude"
+    ],
+    "ipsets": [],
+    "exclude_ipsets": [
+      "zaprett-exclude-ipset",
+      "user-ipset-exclude"
+    ],
+    "ipv6": "0",
+    "debug": "0",
+    "game_filter": "0",
+    "game_ports_tcp": "1024-65535",
+    "game_ports_udp": "1024-65535"
+  },
+  "strategy": "z2-general",
+  "text": null,
+  "item_id": null,
+  "user_files": {},
+  "config_bad_options": [],
+  "generated_by": {
+    "openwrt": "OpenWrt 25.12.5 r33051-f5dae5ece4",
+    "zaprett": "1.1.0",
+    "generator": "repository strategy.uc 0e18745fdfde7834",
+    "path_rewrite": {
+      "/tmp/zaprett-conf/sbx/etc": "/etc/zaprett",
+      "/tmp/zaprett-conf/sbx/run": "/var/run/zaprett"
+    },
+    "at": "2026-09-23T07:53:59Z"
+  },
+  "expected": {
+    "ok": false,
+    "error": "strategy_not_found",
+    "message": "Стратегия «z2-general» для движка nfqws не найдена"
+  }
+}

@@ -1,0 +1,132 @@
+<Page
+    x:Class="Zaprett.Ui.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    Background="Transparent">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer>
+            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="6">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Settings.Title')}" AutomationProperties.HeadingLevel="Level1" />
+                <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                         Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" Margin="0,8,0,0" />
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Bypass')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xE7E8;" Header="{x:Bind loc:L.T('Settings.Autostart')}" Description="{x:Bind loc:L.T('Settings.AutostartText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Autostart, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE945;" Header="{x:Bind loc:L.T('Settings.Engine')}" Description="{x:Bind loc:L.T('Settings.EngineText')}">
+                    <ComboBox ItemsSource="{x:Bind Vm.Engines}" SelectedItem="{x:Bind Vm.Engine, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE81D;" Header="{x:Bind loc:L.T('Settings.Watchdog')}" Description="{x:Bind loc:L.T('Settings.WatchdogText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Watchdog, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE909;" Header="{x:Bind loc:L.T('Settings.Ipv6')}" Description="{x:Bind loc:L.T('Settings.Ipv6Text')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Ipv6, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Traffic')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xE72E;" Header="{x:Bind loc:L.T('Settings.Dns')}" Description="{x:Bind Vm.DnsState, Mode=OneWay}">
+                    <ComboBox ItemsSource="{x:Bind Vm.DnsModes}" SelectedItem="{x:Bind Vm.DnsMode, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.DnsSupported, Mode=OneWay}" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE8CE;" Header="{x:Bind loc:L.T('Settings.Quic')}" Description="{x:Bind loc:L.T('Settings.QuicText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.QuicBlock, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE7FC;" Header="{x:Bind loc:L.T('Settings.Game')}" Description="{x:Bind loc:L.T('Settings.GameText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.GameFilter, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <Grid ColumnSpacing="12" Padding="58,4,18,8" Visibility="{x:Bind Vm.GameFilter, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Header="{x:Bind loc:L.T('Settings.GameTcp')}" Text="{x:Bind Vm.GamePortsTcp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" />
+                    <TextBox Grid.Column="1" Header="{x:Bind loc:L.T('Settings.GameUdp')}" Text="{x:Bind Vm.GamePortsUdp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" />
+                </Grid>
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Networks')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xE701;" Header="{x:Bind loc:L.T('Settings.Net')}" Description="{x:Bind loc:L.T('Settings.NetText')}">
+                    <ComboBox ItemsSource="{x:Bind Vm.NetworkModes}" SelectedItem="{x:Bind Vm.NetworkMode, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <TextBox Header="{x:Bind loc:L.T('Settings.Ssids')}" Text="{x:Bind Vm.Ssids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                         MinHeight="72" Margin="58,4,18,8" Visibility="{x:Bind Vm.IsSsidMode, Mode=OneWay}" PlaceholderText="{x:Bind loc:L.T('Settings.SsidsHint')}" />
+                <ui:SettingCard Glyph="&#xE821;" Header="{x:Bind loc:L.T('Settings.Corporate')}" Description="{x:Bind loc:L.T('Settings.CorporateText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.SkipCorporate, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Monitor.Title')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xE9D9;" Header="{x:Bind loc:L.T('Settings.Monitor')}" Description="{x:Bind loc:L.T('Settings.MonitorText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.MonitorEnabled, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE823;" Header="{x:Bind loc:L.T('Settings.Interval')}" Description="{x:Bind loc:L.T('Settings.IntervalText')}">
+                    <ComboBox ItemsSource="{x:Bind Vm.IntervalChoices}" SelectedItem="{x:Bind Vm.MonitorInterval, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE7BA;" Header="{x:Bind loc:L.T('Settings.Threshold')}" Description="{x:Bind loc:L.T('Settings.ThresholdText')}">
+                    <NumberBox Value="{x:Bind Vm.MonitorThreshold, Mode=TwoWay}" Minimum="1" Maximum="20" SpinButtonPlacementMode="Inline" MinWidth="140" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE90F;" Header="{x:Bind loc:L.T('Settings.AutoRepair')}" Description="{x:Bind loc:L.T('Settings.AutoRepairText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.AutoRepair, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Updates')}" AutomationProperties.HeadingLevel="Level2" />
+                <!-- the service of 0.1.0 cannot update the program: manual instructions instead of controls that do nothing -->
+                <ui:SettingCard Glyph="&#xE896;" Header="{x:Bind loc:L.T('Settings.Update.ManualTitle')}" Description="{x:Bind loc:L.T('Settings.Update.ManualText')}"
+                                Visibility="{x:Bind Vm.ShowUpdatesUnavailable, Mode=OneWay}">
+                    <HyperlinkButton Content="{x:Bind loc:L.T('Settings.Update.OpenReleases')}" NavigateUri="{x:Bind Vm.ReleasesUri}"
+                                     AutomationProperties.Name="{x:Bind loc:L.T('Settings.Update.OpenReleases')}"
+                                     ToolTipService.ToolTip="{x:Bind Vm.ReleasesUri}" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE895;" Header="{x:Bind loc:L.T('Settings.Channel')}" Description="{x:Bind loc:L.T('Settings.ChannelText')}"
+                                Visibility="{x:Bind Vm.ShowUpdateControls, Mode=OneWay}">
+                    <ComboBox ItemsSource="{x:Bind Vm.Channels}" SelectedItem="{x:Bind Vm.Channel, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE896;" Header="{x:Bind loc:L.T('Settings.CheckUpdates')}" Description="{x:Bind Vm.UpdateText, Mode=OneWay}"
+                                Visibility="{x:Bind Vm.ShowUpdateControls, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Bind loc:L.T('Settings.Update.Install')}" Command="{x:Bind Vm.InstallUpdateCommand}" Visibility="{x:Bind Vm.UpdateAvailable, Mode=OneWay}" />
+                        <Button Content="{x:Bind loc:L.T('Settings.Update.CheckNow')}" Command="{x:Bind Vm.CheckForUpdatesCommand}" />
+                        <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.CheckUpdates, Mode=TwoWay}" MinWidth="0" AutomationProperties.Name="{x:Bind loc:L.T('Settings.CheckUpdates')}" />
+                    </StackPanel>
+                </ui:SettingCard>
+
+                <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Interface')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xF2B7;" Header="{x:Bind loc:L.T('Settings.Language')}" Description="{x:Bind loc:L.T('Settings.LanguageText')}">
+                    <ComboBox ItemsSource="{x:Bind Vm.Languages}" SelectedItem="{x:Bind Vm.Language, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE790;" Header="{x:Bind loc:L.T('Settings.Theme')}" Description="{x:Bind loc:L.T('Settings.ThemeText')}">
+                    <ComboBox ItemsSource="{x:Bind Vm.Themes}" SelectedItem="{x:Bind Vm.Theme, Mode=TwoWay}" MinWidth="220" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xEA8F;" Header="{x:Bind loc:L.T('Settings.Notifications')}" Description="{x:Bind loc:L.T('Settings.NotificationsText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Notifications, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE8A7;" Header="{x:Bind loc:L.T('Settings.CloseToTray')}" Description="{x:Bind loc:L.T('Settings.CloseToTrayText')}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.CloseToTray, Mode=TwoWay}" MinWidth="0" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE82D;" Header="{x:Bind loc:L.T('Nav.Wizard')}" Description="{x:Bind loc:L.T('Settings.WizardText')}">
+                    <Button Content="{x:Bind loc:L.T('Settings.WizardRun')}" Command="{x:Bind Vm.RunWizardCommand}" />
+                </ui:SettingCard>
+                <TextBlock Style="{StaticResource Secondary}" FontSize="12" Margin="2,14,0,0" Text="{x:Bind Vm.VersionText, Mode=OneWay}" IsTextSelectionEnabled="True" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- save bar appears when service settings changed -->
+        <Grid Grid.Row="1" Visibility="{x:Bind Vm.IsDirty, Mode=OneWay}" Padding="40,12" ColumnSpacing="10"
+              Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock VerticalAlignment="Center" Style="{StaticResource Body}" Text="{x:Bind loc:L.T('Settings.Unsaved')}" />
+            <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Revert')}" Command="{x:Bind Vm.RevertCommand}" />
+            <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Common.Save')}" Command="{x:Bind Vm.SaveCommand}" />
+        </Grid>
+    </Grid>
+</Page>

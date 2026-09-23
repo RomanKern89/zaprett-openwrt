@@ -20,6 +20,43 @@ interface, 64 ready-made strategies and curated site lists.
 
 ---
 
+## Windows app (beta)
+
+No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.0** does the same on a
+Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC: a first-run wizard, site checks, automatic
+strategy selection that does not stop the bypass, a monitor, diagnostics, own lists and subscriptions. One MSI
+installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines); the interface is in
+English, Russian and Chinese.
+
+| | |
+|---|---|
+| [![Home](windows/docs/screenshots/light-en-01-home.png)](windows/docs/screenshots/light-en-01-home.png) | [![Setup wizard](windows/docs/screenshots/light-en-29-wizard-2-services.png)](windows/docs/screenshots/light-en-29-wizard-2-services.png) |
+| **Home**: bypass state and site check | **Wizard**: choose services in a couple of minutes |
+
+It is a beta: the installer is not signed with a code-signing certificate, so Windows shows a SmartScreen warning.
+Installation, SHA256 verification and all features — **[zaprett for Windows guide](windows/README.en.md)**
+([Русский](windows/README.md), [简体中文](windows/README.zh-CN.md)).
+
+---
+
+## What is new in 1.1
+
+- **Availability monitor** checks the sites on schedule and, on a lasting failure, can select a strategy by itself;
+  the **watchdog** brings the engine and the rules back if they disappear.
+- **"How the provider blocks" diagnosis**: DNS spoofing, IP blocking, drops by site name, throttling, block pages —
+  and what will help; encrypted DNS with one button.
+- **The project's own lists** for YouTube, Discord, Telegram, RuTracker, Roblox, Signal and sites behind Cloudflare,
+  with variants (main, extended, IP networks, Discord voice).
+- **Automatic selection without stopping the bypass**: strategies are tested by a separate test engine.
+- Own flow offload table, QUIC blocking, game filter, 14 strategies for the zapret2 engine.
+- Names and descriptions of services, lists and strategies in English and Chinese (the Chinese ones are used by the
+  Windows app).
+- **Security fix.** In 1.0.0 the validation of options in custom strategies was incomplete: an option could be written
+  in a form the check did not recognise. In 1.1.0 every option is first brought to its full name using the engine's
+  own option tables, and unknown or ambiguous options are rejected. **Everyone on 1.0.0 is advised to upgrade.**
+
+---
+
 ## Is this for you?
 
 **It helps when** a network reads the site name from your connections and acts on it — the classic
@@ -57,7 +94,22 @@ law. You are responsible for how you use it.
 - **Strategy auto-selection.** Different inspection boxes need different tricks, so the product
   probes them for you: first it checks the targets **without** the bypass to learn what is actually
   broken, then tries each strategy, ranks the results and offers the best one. 12 recommended
-  strategies take a few minutes; all 64 take longer.
+  strategies take a few minutes; all 64 take longer. **Your devices keep the bypass during the check:**
+  candidate strategies run in a separate test engine that sees only the test requests. 14 extra strategies
+  for the zapret2 engine are included, among them an orchestrator that switches tricks per site by itself.
+- **See whether it works right now.** "Check now" opens the addresses of the enabled services through the
+  running bypass and shows what opened. A **monitor** does the same on a schedule, keeps a history and can
+  run the auto-selection by itself when sites stop opening (it applies a new strategy only if it is better).
+  A **watchdog** restores the engine and the firewall rules every 5 minutes if they are gone.
+- **What exactly your ISP blocks.** The diagnosis tells DNS spoofing, IP blocking, SNI-based resets,
+  throttling and block pages apart, and says what helps: a strategy, encrypted DNS or only a VPN.
+  Encrypted DNS (https-dns-proxy) is one button away.
+- **Our own lists.** For YouTube, Discord, Telegram, RuTracker, Roblox, Signal and Cloudflare-hosted sites —
+  several variants each (core, full, IP networks, Discord voice), built by the project's generator from
+  primary sources (service docs, certificates, real browser sessions, client code, AS announcements); every
+  entry is verified and explained in the build log ([docs/LISTS.md](docs/LISTS.md)).
+- **Fast on small routers.** Its own flow-offload table instead of disabling offloading for the whole router,
+  one-click QUIC blocking, a game filter for UDP games, bounded downloads and memory use.
 - **Lists under your control.** Built-in lists (cleaned, domains verified to resolve), your own
   domains and IP networks, exclusion lists that apply in both modes, and **subscriptions** to
   external lists over HTTPS with scheduled refresh, a 16 MiB download cap, sanity checks against
@@ -69,8 +121,10 @@ law. You are responsible for how you use it.
 - **Polite to your router.** Rules live in their own nftables table `inet zaprett` and never rewrite
   your firewall; they are restored after `reload`, `restart`, a full firewall stop and after a
   reboot. The engine runs as the unprivileged `daemon` user. Flow offloading — which would let
-  packets skip the firewall entirely — is switched off while the service runs and restored afterwards.
-- **Works without GitHub access:** the engine, 64 strategies and the base lists ship inside the package.
+  packets skip the firewall entirely — is either replaced by zaprett's own offload table (the first
+  packets of each connection still go through the bypass) or switched off while the service runs, and
+  restored afterwards.
+- **Works without GitHub access:** the engine, 64 + 14 strategies and our own lists ship inside the package.
 
 | | |
 |---|---|
@@ -84,10 +138,10 @@ translation ships as a separate package (`luci-i18n-zaprett-ru`), which LuCI use
 interface language is Russian. Verified on the test bench: with `LuCI language = English` all six
 pages render in English.
 
-**One honest gap:** metadata that comes from the data bundle — the names, descriptions and notes of
-the built-in services in Quick setup and of the built-in lists — is currently **Russian only**. The
-list contents themselves are domains and IP networks, so they are language-neutral, and your own
-lists and subscriptions are named by you. Translating the bundled catalogue is an open task.
+Since 1.1 the names, descriptions and notes of the built-in services in Quick setup and of the
+built-in lists are shown in English too, and so are the descriptions of the built-in strategies (including the
+64 taken from the zaprett repository). **What is still Russian only:** the names of the default list subscriptions. The
+list contents themselves are domains and IP networks, so they are language-neutral.
 
 ---
 
@@ -119,8 +173,8 @@ Then on the router:
 
 ```sh
 cd /tmp
-tar -xzf zaprett-1.0.0-r1-25.12-x86_64.tar.gz
-cd zaprett-1.0.0-r1-25.12-x86_64
+tar -xzf zaprett-1.1.0-r1-25.12-x86_64.tar.gz
+cd zaprett-1.1.0-r1-25.12-x86_64
 sh install.sh
 ```
 
@@ -131,8 +185,9 @@ Russian translation package is installed as well but is inactive unless the inte
 Russian; remove it with `apk del luci-i18n-zaprett-ru` / `opkg remove luci-i18n-zaprett-ru` if you
 prefer.
 
-Then open LuCI → **Services → zaprett** → *Quick setup* → tick the services → **Apply the
-selection** → *Strategies* → **Start selection** → **Apply the best strategy**.
+Then open LuCI → **Services → zaprett** → *Quick setup* → tick the services → **Apply and start**.
+The wizard enables the lists, starts the bypass and checks whether the sites open; if a service does
+not open, it offers **Find a working strategy** or, first, **Find out how the provider blocks**.
 
 Uninstall: `sh install.sh --uninstall` (add `--purge` to remove settings and lists as well).
 Installation details, upgrades, firmware upgrades and a GUI-only path are in
@@ -168,9 +223,10 @@ Tested on x86 virtual machines running OpenWrt 25.12.5 and 24.10.8, through a re
 - the published bundle was downloaded from this repository onto a router, checksum verified,
   installed from scratch and started successfully.
 
-**Not verified:** a full sweep of all 64 strategies (the result file lived in tmpfs and was lost);
-live downloads of the external list subscriptions; package upgrades in place (r1 → r2) on a
-router; browsers other than Chromium. The complete list is in
+**Not verified:** real MIPS/ARM hardware (packages are built but untested); a full sweep of all 64
+strategies (the result file lived in tmpfs and was lost); live downloads of the external list
+subscriptions; package upgrades in place (r1 → r2) on a router; coexistence with a VPN or
+policy-based routing on the same router; browsers other than Chromium. The complete list is in
 [tests/RESULTS.md](tests/RESULTS.md) (Russian).
 
 ## Documentation

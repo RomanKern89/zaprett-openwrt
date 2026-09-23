@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="Zaprett.Ui.Controls.ConflictCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc">
+
+    <!-- A conflicting program: severity, what is wrong and what to do (ARCHITECTURE-WIN §8). -->
+    <Grid CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border ui:StateColor.Background="{x:Bind Item.Kind, Mode=OneWay}" />
+        <StackPanel Grid.Column="1" Padding="16,12" Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{x:Bind Item.Name, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Grid VerticalAlignment="Center">
+                    <Border ui:StateColor.Background="{x:Bind ui:Conv.Tint(Item.Kind), Mode=OneWay}" CornerRadius="10" />
+                    <TextBlock Text="{x:Bind Item.SeverityLabel, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Margin="10,2"
+                               ui:StateColor.Foreground="{x:Bind Item.Kind, Mode=OneWay}" />
+                </Grid>
+            </StackPanel>
+            <TextBlock Text="{x:Bind Item.Detail, Mode=OneWay}" Style="{StaticResource Body}" FontSize="13" />
+            <TextBlock FontSize="13" TextWrapping="Wrap" Visibility="{x:Bind Item.HasFix, Mode=OneWay}" IsTextSelectionEnabled="True">
+                <Run Text="{x:Bind loc:L.T('Conflict.Fix')}" FontWeight="SemiBold" /><Run Text="{x:Bind loc:L.T('Fmt.Gap')}" /><Run Text="{x:Bind Item.Fix, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,95 @@
+<Page
+    x:Class="Zaprett.Ui.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    Background="Transparent">
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- own title bar: mark, name, state pill -->
+        <Grid x:Name="AppTitleBar" Padding="16,0,150,0" Background="Transparent">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Image Source="ms-appx:///Assets/zaprett-256.png" Width="20" Height="20" AutomationProperties.AccessibilityView="Raw" />
+                <TextBlock Text="zaprett" FontFamily="{StaticResource DisplayFont}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+                <Border Style="{StaticResource Chip}" Padding="10,3" VerticalAlignment="Center"
+                        AutomationProperties.Name="{x:Bind Vm.PillText, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="7">
+                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" ui:StateColor.Fill="{x:Bind Vm.PillKind, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind Vm.PillText, Mode=OneWay}" FontSize="12" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <Border Visibility="{x:Bind Vm.IsFake, Mode=OneWay}" CornerRadius="4" Padding="6,1" VerticalAlignment="Center"
+                        ui:StateColor.Background="warn">
+                    <TextBlock Text="{x:Bind loc:L.T('Shell.Demo')}" FontSize="11" FontWeight="SemiBold" ui:StateColor.Foreground="onaccent" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <NavigationView x:Name="Nav" Grid.Row="1" IsBackButtonVisible="Collapsed" PaneDisplayMode="Left"
+                        OpenPaneLength="232" IsSettingsVisible="False" IsTitleBarAutoPaddingEnabled="False"
+                        SelectionChanged="OnNavSelectionChanged" ItemInvoked="OnNavItemInvoked">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Tag="home" Content="{x:Bind loc:L.T('Nav.Home')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="services" Content="{x:Bind loc:L.T('Nav.Services')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="strategies" Content="{x:Bind loc:L.T('Nav.Strategies')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE945;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="lists" Content="{x:Bind loc:L.T('Nav.Lists')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE8FD;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="diagnostics" Content="{x:Bind loc:L.T('Nav.Diagnostics')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Tag="wizard" Content="{x:Bind loc:L.T('Nav.Wizard')}" SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE82D;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="settings" Content="{x:Bind loc:L.T('Nav.Settings')}">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+            <Frame x:Name="ContentFrame" />
+        </NavigationView>
+
+        <!-- first-run wizard covers the navigation -->
+        <Frame x:Name="WizardFrame" Grid.Row="1" Visibility="Collapsed" />
+
+        <!-- the service is not reachable -->
+        <Grid Grid.Row="1" Visibility="{x:Bind Vm.IsServiceDown, Mode=OneWay}"
+              Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Border Style="{StaticResource Card}" MaxWidth="560" Margin="24" Padding="36,32" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel Spacing="14">
+                    <Grid Width="64" Height="64" HorizontalAlignment="Left">
+                        <Ellipse ui:StateColor.Fill="fail-tint" />
+                        <FontIcon Glyph="&#xE7BA;" FontSize="30" ui:StateColor.Foreground="fail" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource PageTitle}" FontSize="26" Text="{x:Bind loc:L.T('Shell.Down.Title')}" />
+                    <TextBlock Style="{StaticResource Body}" Text="{x:Bind Vm.DownText, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Shell.Down.Hint')}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Shell.Down.Start')}" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.StartServiceCommand}"
+                                IsEnabled="{x:Bind ui:Conv.Not(Vm.IsStarting), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xEA18;" FontSize="16" />
+                                <TextBlock Text="{x:Bind loc:L.T('Shell.Down.Start')}" />
+                            </StackPanel>
+                        </Button>
+                        <Button Content="{x:Bind loc:L.T('Common.Retry')}" Command="{x:Bind Vm.RetryCommand}" />
+                        <ProgressRing IsActive="{x:Bind Vm.IsStarting, Mode=OneWay}" Width="20" Height="20" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

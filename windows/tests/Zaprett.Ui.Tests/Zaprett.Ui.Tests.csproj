@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The view-model layer of Zaprett.Ui (folder Core, no WinUI types) is compiled here directly, so the tests
+       run on plain net10.0 without starting the WinUI application. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Zaprett.Ui.Tests</RootNamespace>
+    <!-- test names are sentences with underscores; CA1515/CA2007 do not apply to tests -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA2007;CA1861</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Zaprett.Ui\Core\**\*.cs" Link="UiCore\%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\src\Zaprett.Ui\Core\Strings\*.json" LogicalName="Zaprett.Ui.Strings.%(Filename).json" />
+    <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\presets.json" LogicalName="Zaprett.Ui.DevFakes.presets.json" />
+    <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\bundle\manifests\**\*.json" LogicalName="Zaprett.Ui.DevFakes.manifest.%(Filename).json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Only the client contract is needed (no transport), so it is linked instead of referencing Zaprett.Ipc. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Zaprett.Ipc\IZaprettClient.cs" Link="Ipc\IZaprettClient.cs" />
+  </ItemGroup>
+
+</Project>

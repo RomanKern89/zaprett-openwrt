@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- test code: analyzer noise about test naming and literals is not useful here -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1861;CA2007;CA1822;CA1849;CA1031;CA2000;CA1305;CA1307;CA1310;CA1062;CA1001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Zaprett.Service\Zaprett.Service.csproj" />
+    <ProjectReference Include="..\..\src\Zaprett.Ipc\Zaprett.Ipc.csproj" />
+    <ProjectReference Include="..\..\src\Zaprett.Cli\Zaprett.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

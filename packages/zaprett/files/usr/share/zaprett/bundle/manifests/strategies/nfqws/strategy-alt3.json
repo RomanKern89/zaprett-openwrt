@@ -13,5 +13,9 @@
   "source": "bundle",
   "sha256": "49ad99e7b52bdf56310fe7b1e21e38b1203f8f896a9414d48d336b2978b68e77",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt3.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt3.json",
+  "name_en": "strategy-alt3",
+  "description_en": "Strategy alt3 from the zapret for Windows repository",
+  "name_zh": "strategy-alt3",
+  "description_zh": "来自 Windows 版 zapret 仓库的 alt3 策略"
 }

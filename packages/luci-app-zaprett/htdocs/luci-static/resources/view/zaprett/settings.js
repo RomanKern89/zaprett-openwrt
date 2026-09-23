@@ -13,7 +13,30 @@
 const MARK_RE = /^(0x[0-9A-Fa-f]{1,8}|[1-9][0-9]{0,9})$/;
 const CLIENT_MARK = 0x08000000;
 const USER_RE = /^[a-z_][a-z0-9_-]{0,31}$/;
-const URL_RE = /^https?:\/\/[A-Za-z0-9.-]+(:[0-9]{1,5})?(\/[A-Za-z0-9._~%!$&'()*+,;=:@\/?#-]*)?$/;
+/* The catalog is downloaded only over https (ARCHITECTURE §14.1). */
+const URL_RE = /^https:\/\/[A-Za-z0-9.-]+(:[0-9]{1,5})?(\/[A-Za-z0-9._~%!$&'()*+,;=:@\/?#-]*)?$/;
+
+/* Check intervals of the availability monitor, minutes (§14.1). */
+const MONITOR_INTERVALS = [ 10, 15, 20, 30, 60 ];
+
+/* Ports of the game filter: "N" or "N-M", 1..65535, separated by commas
+ * without spaces (§15.2). */
+const PORT_RANGE_RE = /^([1-9][0-9]{0,4})(?:-([1-9][0-9]{0,4}))?$/;
+
+function validatePorts(section_id, value) {
+	if (value == null || value === '')
+		return true;
+
+	for (const part of String(value).split(',')) {
+		const m = part.match(PORT_RANGE_RE);
+		const from = m ? +m[1] : 0, to = (m && m[2] != null) ? +m[2] : from;
+
+		if (!m || from < 1 || to > 65535 || from > to)
+			return _('Expecting ports or ranges from 1 to 65535 separated by commas, for example 1024-65535 or 3478,50000-50100');
+	}
+
+	return true;
+}
 
 function markValue(value, fallback) {
 	const v = (value == null || value === '') ? fallback : value;
@@ -36,10 +59,11 @@ return view.extend({
 		return Promise.all([
 			uci.load('zaprett'),
 			zc.run(zc.callItems).then(res => Array.isArray(res.items) ? res.items : [], () => []),
-			L.resolveDefault(network.getHostHints(), null)
+			L.resolveDefault(network.getHostHints(), null),
+			zc.run(zc.callStatus).catch(() => null)
 		]).then(data => {
 			/* sections created by the package; recreate them if they were deleted */
-			for (const name of [ 'main', 'repo', 'test' ])
+			for (const name of [ 'main', 'repo', 'test', 'monitor' ])
 				if (!uci.get('zaprett', name))
 					uci.add('zaprett', name, name);
 
@@ -48,7 +72,12 @@ return view.extend({
 	},
 
 	render(data) {
-		const items = data[1], hosts = data[2];
+		const items = data[1], hosts = data[2], status = data[3];
+		/* Options of contract v1.4 (§15.1, §15.2) are offered when the service
+		 * reports status.flow_offload.own, or when its state is unknown; an
+		 * older service would ignore them. Values already set stay visible. */
+		const supportsV14 = !L.isObject(status?.flow_offload) || ('own' in status.flow_offload);
+		const configured = name => uci.get('zaprett', 'main', name) != null;
 		const byType = type => items.filter(it => it.type == type);
 		/* Choices from installed items plus every value already configured:
 		 * a value missing from the choices would be silently dropped on save. */
@@ -57,7 +86,9 @@ return view.extend({
 
 			for (const it of byType(type)) {
 				known[it.id] = true;
-				o.value(it.id, (it.name && it.name != it.id) ? '%s (%s)'.format(it.name, it.id) : it.id);
+				const name = zc.localized(it, 'name');
+
+				o.value(it.id, (name && name != it.id) ? '%s (%s)'.format(name, it.id) : it.id);
 			}
 
 			for (const id of L.toArray(uci.get('zaprett', 'main', o.option)))
@@ -92,7 +123,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.taboption('general', form.ListValue, 'engine', _('Engine'),
-			_('nfqws is the main engine: all repository strategies are written for it. nfqws2 is the new engine with Lua scripts; choose it only if you have strategies for it and the zaprett-nfqws2 package is installed.'));
+			_('nfqws is the main engine: all repository strategies are written for it. nfqws2 is the newer engine with Lua scripts: 14 built-in z2- strategies are made for it, one of them switches tricks by itself when a site stops opening; it needs the zaprett-nfqws2 package.'));
 		o.value('nfqws', 'nfqws');
 		o.value('nfqws2', 'nfqws2');
 		o.default = 'nfqws';
@@ -114,11 +145,30 @@ return view.extend({
 			_('Enable if your provider gives you IPv6 internet access. Otherwise leave it off.'));
 		o.default = '0';
 
+		o = s.taboption('general', form.Flag, 'watchdog', _('Engine watchdog'),
+			_('Every 5 minutes zaprett checks that the engine is running and its firewall rules are in place, and restores them if they are not (for example after the engine crashed).'));
+		o.default = '1';
+		o.rmempty = false;
+
+		const ownOffload = supportsV14 || uci.get('zaprett', 'main', 'flow_offload') == 'own';
+
 		o = s.taboption('general', form.ListValue, 'flow_offload', _('Flow offloading'),
-			_('Software and hardware flow offloading make packets bypass the firewall, and then the bypass does not work. In the automatic mode zaprett turns offloading off while it runs and restores the previous state when stopped.'));
-		o.value('auto', _('Turn off automatically while zaprett runs (recommended)'));
+			ownOffload
+				? _('Flow offloading speeds up the router, but offloaded packets bypass the firewall, and then the bypass does not work. "Own acceleration table": zaprett turns off the offloading of the firewall and accelerates connections itself, but only after the engine has seen their first packets, so both the bypass and the speed are kept. "Turn off automatically": no acceleration while zaprett runs; the previous state is restored when it stops. "Do not change": the firewall setting stays as it is, choose it only if offloading is off anyway.')
+				: _('Software and hardware flow offloading make packets bypass the firewall, and then the bypass does not work. In the automatic mode zaprett turns offloading off while it runs and restores the previous state when stopped.'));
+
+		if (ownOffload)
+			o.value('own', _('Own acceleration table (faster, recommended)'));
+
+		o.value('auto', ownOffload ? _('Turn off automatically while zaprett runs') : _('Turn off automatically while zaprett runs (recommended)'));
 		o.value('keep', _('Do not change'));
 		o.default = 'auto';
+
+		if (supportsV14 || configured('quic_block')) {
+			o = s.taboption('general', form.Flag, 'quic_block', _('Block QUIC'),
+				_('Many sites and apps (YouTube, Google services and others) load over QUIC, which runs on UDP port 443. Not every strategy can bypass the blocking of QUIC, while ordinary TCP connections are bypassed reliably. With this option the router drops UDP 443 from the local network to the internet, and browsers and apps switch to ordinary TCP connections, where the bypass works. It affects ALL sites, not only those from the lists: every site that used QUIC goes over TCP, which may be a bit slower on a good connection, and apps that work only over QUIC stop working. Traffic of the router itself is not affected; the device filter of the "LAN clients" tab applies.'));
+			o.default = '0';
+		}
 
 		/* --- clients --- */
 		o = s.taboption('clients', form.ListValue, 'clients_mode', _('Which devices get the bypass'),
@@ -178,6 +228,26 @@ return view.extend({
 		addItems(o, 'ipset_exclude');
 		o.rmempty = true;
 
+		if (supportsV14 || configured('game_filter')) {
+			o = s.taboption('lists', form.Flag, 'game_filter', _('Game filter'),
+				_('Adds a separate engine profile for online games: it processes the game ports below, but only for addresses from the enabled IP network lists, so the rest of the traffic stays untouched. It works only when an IP network list of the game is enabled above ("IP network lists"); without such a list the profile is not added and the "Overview" page shows a warning. Turn it on only if a game is blocked or slowed down.'));
+			o.default = '0';
+
+			o = s.taboption('lists', form.Value, 'game_ports_tcp', _('Game TCP ports'),
+				_('Ports or ranges separated by commas, for example 1024-65535 or 3478,50000-50100.'));
+			o.placeholder = '1024-65535';
+			o.rmempty = true;
+			o.validate = validatePorts;
+			o.depends('game_filter', '1');
+
+			o = s.taboption('lists', form.Value, 'game_ports_udp', _('Game UDP ports'),
+				_('Ports or ranges separated by commas, for example 1024-65535 or 3478,50000-50100.'));
+			o.placeholder = '1024-65535';
+			o.rmempty = true;
+			o.validate = validatePorts;
+			o.depends('game_filter', '1');
+		}
+
 		/* --- advanced --- */
 		numeric(s, 'advanced', 'qnum', _('Queue number'),
 			_('Number of the NFQUEUE queue between the firewall and the engine. Change it only if the number is already used by another program.'), 0, 65535, '200');
@@ -236,10 +306,10 @@ return view.extend({
 		s.addremove = false;
 
 		o = s.option(form.Value, 'url', _('Catalog address'),
-			_('Address of index.json of the zaprett repository. Change it only to use a mirror.'));
+			_('Address of index.json of the zaprett repository, only https://. Change it only to use a mirror.'));
 		o.placeholder = 'https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/index.json';
 		o.rmempty = true;
-		o.validate = (section_id, value) => (!value || URL_RE.test(value)) ? true : _('Expecting an http:// or https:// address');
+		o.validate = (section_id, value) => (!value || URL_RE.test(value)) ? true : _('Expecting an https:// address');
 
 		o = s.option(form.Flag, 'autoupdate', _('Update automatically'),
 			_('Once a day check the repository and update the installed strategies and lists.'));
@@ -266,6 +336,39 @@ return view.extend({
 			_('How many domains from the enabled lists are added to the check of every strategy. More sites make the check longer.'), 0, 100, '20');
 		numeric(s, null, 'settle', _('Pause after restart, s'),
 			_('Pause after the engine restart before the check starts.'), 0, 30, '2');
+
+		/* --- availability monitor --- */
+		s = m.section(form.NamedSection, 'monitor', 'monitor', _('Availability monitor'),
+			_('The monitor checks on schedule whether the sites of the enabled services open through zaprett. A check fails when less than half of the checked sites opened. The results are on the "Overview" page.'));
+		s.addremove = false;
+
+		o = s.option(form.Flag, 'enabled', _('Check the sites on schedule'),
+			_('Works only while zaprett is running.'));
+		o.default = '1';
+		o.rmempty = false;
+
+		o = s.option(form.ListValue, 'interval', _('Check every'));
+		for (const minutes of MONITOR_INTERVALS)
+			o.value(String(minutes), _('%d min').format(minutes));
+		o.default = '30';
+		o.depends('enabled', '1');
+
+		o = numeric(s, null, 'threshold', _('Failed checks before a warning'),
+			_('How many checks in a row must fail before the state becomes "sites stopped opening".'), 1, 20, '3');
+		o.depends('enabled', '1');
+
+		o = s.option(form.Flag, 'auto_repair', _('Repair automatically'),
+			_('When the sites stop opening, zaprett runs the quick strategy selection by itself and applies a strategy only if it opens more sites than the current one. Not more often than once in 6 hours; the bypass keeps working during the selection.'));
+		o.default = '0';
+		o.depends('enabled', '1');
+
+		o = numeric(s, null, 'max_targets', _('Sites per check'),
+			_('How many check addresses are opened in one check.'), 1, 20, '5');
+		o.depends('enabled', '1');
+
+		o = numeric(s, null, 'timeout', _('Wait for a site, s'),
+			_('How long to wait for one address to answer.'), 2, 30, '8');
+		o.depends('enabled', '1');
 
 		return m.render();
 	}

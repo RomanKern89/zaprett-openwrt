@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-alt",
+  "type": "nfqws2",
+  "name": "nfqws2: alt",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-alt. TLS: фейк — ClientHello www.google.com с испорченной меткой времени TCP (6 повторов), затем fakedsplit: настоящие части ClientHello перемешаны с фейковыми такого же размера. QUIC (UDP 443) — фейк QUIC Initial Google 6 раз; голос Discord (UDP 19294–19344, 50000–50100) — фейк из нулей 6 раз; HTTP — фейк с MD5 и autottl, затем разрезание запроса. Для IP-списков действует и на TLS.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-alt.txt",
+  "source": "bundle",
+  "sha256": "aa03088f4f41d9d67067cdda7e4442b5c66edefdaeb7ace18f788f7c67901942",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: alt",
+  "description_en": "Port of strategy-alt. TLS: a www.google.com ClientHello fake with a broken TCP timestamp (6 repeats), then fakedsplit mixes the real ClientHello parts with fake parts of the same size. QUIC (UDP 443) gets a Google QUIC Initial fake 6 times; Discord voice (UDP 19294–19344, 50000–50100) gets a zero-filled fake 6 times; HTTP gets an MD5 + autottl fake followed by a split request. IP lists get the TLS rule too.",
+  "name_zh": "nfqws2：alt",
+  "description_zh": "strategy-alt 的移植版。TLS：发送 TCP 时间戳被破坏的 www.google.com ClientHello 伪造包（重复 6 次），然后 fakedsplit 把真实 ClientHello 的各部分与同样大小的伪造部分混在一起。QUIC（UDP 443）发送 6 次 Google QUIC Initial 伪造包；Discord 语音（UDP 19294–19344、50000–50100）发送 6 次全零伪造包；HTTP 先发送 MD5 + autottl 伪造包，再分段发送请求。IP 列表也使用 TLS 规则。"
+}

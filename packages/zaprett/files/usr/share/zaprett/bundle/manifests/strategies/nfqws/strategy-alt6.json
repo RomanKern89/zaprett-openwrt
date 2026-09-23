@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "3b339d23643079e07e2dcd78b2c5fd7c7691d69d484f82cecc6ae71232e7d60e",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt6.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt6.json",
+  "name_en": "strategy-alt6",
+  "description_en": "Strategy alt6 from the zapret for Windows repository",
+  "name_zh": "strategy-alt6",
+  "description_zh": "来自 Windows 版 zapret 仓库的 alt6 策略"
 }

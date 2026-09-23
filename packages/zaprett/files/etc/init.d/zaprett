@@ -16,15 +16,55 @@ zaprett_enabled() {
 	[ "$enabled" = 1 ]
 }
 
+# cron lines of the watchdog and the monitor follow the service state (contract v1.3 §14.2). An automatic
+# selection stops and starts the engine many times: the schedule is left alone meanwhile.
+zaprett_cron_sync() {
+	[ -f "$ZAPRETT_RUN/test-override" ] && return 0
+	[ -f "$ZAPRETT_RUN/test-state.json" ] && return 0
+	"$ZAPRETT_CLI" cron sync --quiet >/dev/null 2>&1
+}
+
+# Automatic selection without stopping the bypass (contract v1.6 §17): the candidate runs as a second instance on
+# qnum+1 next to the main one. The tester writes its arguments and removes them afterwards; every start/reload during
+# a test declares the instance again (procd drops instances a start does not declare) and restarts only the instance
+# whose arguments changed.
+zaprett_test_instance() {
+	local engine a
+
+	[ -s "$ZAPRETT_RUN/test-args" ] && [ -s "$ZAPRETT_RUN/test-engine" ] || return 0
+	read -r engine < "$ZAPRETT_RUN/test-engine"
+	case "$engine" in
+		nfqws|nfqws2) ;;
+		*) return 0 ;;
+	esac
+	[ -x "/usr/libexec/zaprett/$engine" ] || return 0
+
+	set --
+	while IFS= read -r a; do
+		set -- "$@" "$a"
+	done < "$ZAPRETT_RUN/test-args"
+
+	procd_open_instance test
+	procd_set_param command "/usr/libexec/zaprett/$engine" "$@"
+	procd_set_param file "$ZAPRETT_RUN/test-args"
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
 start_service() {
 	local engine a test_mode=0
 
+	# `stop` marked the service as stopped by the user; any start clears the mark
+	rm -f "$ZAPRETT_RUN/stopped"
 	[ -f "$ZAPRETT_RUN/test-override" ] && test_mode=1
 	if [ "$test_mode" != 1 ] && ! zaprett_enabled; then
 		"$ZAPRETT_CLI" fw remove --quiet >/dev/null 2>&1
 		"$ZAPRETT_CLI" offload restore --quiet >/dev/null 2>&1
+		zaprett_cron_sync
 		return 0
 	fi
+	zaprett_cron_sync
 
 	if ! "$ZAPRETT_CLI" gen-args --quiet >/dev/null 2>&1; then
 		logger -t zaprett -p daemon.err "движок не запущен: ошибка в настройках или стратегии (подробности: zaprett check)"
@@ -55,6 +95,8 @@ start_service() {
 	procd_set_param stderr 1
 	procd_close_instance
 
+	zaprett_test_instance
+
 	"$ZAPRETT_CLI" fw apply --quiet >/dev/null 2>&1 || \
 		logger -t zaprett -p daemon.err "правила nftables не установлены (подробности: zaprett fw apply)"
 	[ "$test_mode" = 1 ] || "$ZAPRETT_CLI" offload apply --quiet >/dev/null 2>&1
@@ -64,12 +106,18 @@ start_service() {
 stop_service() {
 	"$ZAPRETT_CLI" fw remove --quiet >/dev/null 2>&1
 	zaprett_enabled || "$ZAPRETT_CLI" offload restore --quiet >/dev/null 2>&1
+	# a restart is stop + start of rc.common with action=restart: the service is not "stopped by the user"
+	if [ "$action" != restart ]; then
+		mkdir -p "$ZAPRETT_RUN"
+		: > "$ZAPRETT_RUN/stopped"
+		zaprett_cron_sync
+	fi
 	return 0
 }
 
 reload_service() {
 	start
-	"$ZAPRETT_CLI" cron sync --quiet >/dev/null 2>&1
+	zaprett_cron_sync
 	return 0
 }
 

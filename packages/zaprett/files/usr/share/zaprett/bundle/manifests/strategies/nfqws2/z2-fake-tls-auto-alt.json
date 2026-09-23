@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-fake-tls-auto-alt",
+  "type": "nfqws2",
+  "name": "nfqws2: fake TLS auto alt",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-fake-tls-auto-alt. TLS: фейковый ClientHello с изменёнными полями (случайные данные, копия идентификатора сессии, имя www.google.com) и сдвигом номера последовательности на 10 000 000, 8 повторов, затем fakedsplit по 1-му байту. QUIC — 11 повторов фейка. HTTP и голос Discord — как в fake TLS auto.",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-fake-tls-auto-alt.txt",
+  "source": "bundle",
+  "sha256": "84ccbfc552223652c20ff0f7c0422e79aec8078463588cdbb9d2fb98674192ba",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: fake TLS auto alt",
+  "description_en": "Port of strategy-fake-tls-auto-alt. TLS: a fake ClientHello with modified fields (random data, copied session id, www.google.com name) and the sequence number shifted by 10,000,000, 8 repeats, then fakedsplit at byte 1. QUIC gets 11 fake repeats. HTTP and Discord voice as in fake TLS auto.",
+  "name_zh": "nfqws2：自动 TLS 伪造 alt",
+  "description_zh": "strategy-fake-tls-auto-alt 的移植版。TLS：发送字段被修改的伪造 ClientHello（随机数据、复制的会话 ID、www.google.com 名称），序列号偏移 10,000,000，重复 8 次，然后在第 1 个字节处 fakedsplit。QUIC 伪造包重复 11 次。HTTP 和 Discord 语音与自动 TLS 伪造相同。"
+}

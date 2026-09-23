@@ -15,5 +15,9 @@
   "source": "bundle",
   "sha256": "d7968aabbdbcc4b8d86c3c10112ce601d411caef9a38b8c3ed9b43cda5a11fa1",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt11.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt11.json",
+  "name_en": "strategy-alt11",
+  "description_en": "Alt11 from zapret-discord-youtube",
+  "name_zh": "strategy-alt11",
+  "description_zh": "来自 zapret-discord-youtube 的 Alt11"
 }

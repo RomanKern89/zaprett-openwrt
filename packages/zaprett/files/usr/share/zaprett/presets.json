@@ -26,7 +26,29 @@
         }
       ],
       "works": "yes",
-      "note": "Замедление YouTube устроено через анализ имени сайта в зашифрованном соединении (DPI) — именно это обходит zaprett. Если видео всё равно тормозит, запустите автоподбор стратегии: у разных провайдеров срабатывают разные."
+      "note": "Замедление YouTube устроено через анализ имени сайта в зашифрованном соединении (DPI) — именно это обходит zaprett. Если видео всё равно тормозит, запустите автоподбор стратегии: у разных провайдеров срабатывают разные.",
+      "name_en": "YouTube",
+      "description_en": "YouTube website and app: pages, videos and thumbnails.",
+      "note_en": "YouTube is slowed down by analysing the site name inside the encrypted connection (DPI), and this is exactly what zaprett bypasses. If videos still stutter, run the automatic strategy selection: different providers need different strategies.",
+      "name_zh": "YouTube",
+      "description_zh": "YouTube 网站和应用：页面、视频和缩略图。",
+      "note_zh": "YouTube 的限速依靠分析加密连接中的网站名称（深度包检测（DPI）），而 zaprett 绕过的正是这一点。如果视频仍然卡顿，请运行自动选择策略：不同运营商适用的策略不同。",
+      "variants": [
+        {
+          "id": "full",
+          "name": "Расширенный",
+          "name_en": "Extended",
+          "name_zh": "扩展",
+          "description": "Больше доменов: служебные узлы API и домены приложений YouTube.",
+          "description_en": "More domains: auxiliary API hosts and YouTube app domains.",
+          "description_zh": "更多域名：辅助 API 主机和 YouTube 应用的域名。",
+          "lists": [
+            "zaprett-youtube-full"
+          ],
+          "ipsets": [],
+          "tier": "light"
+        }
+      ]
     },
     {
       "id": "discord",
@@ -49,7 +71,45 @@
         }
       ],
       "works": "yes",
-      "note": "Сайт и чаты обрабатываются по именам сайтов. Голосовые звонки идут без имени сайта, их обрабатывает отдельное правило стратегии по портам UDP 19294–19344 и 50000–50100 (значения из набора Flowseal, официального списка портов у Discord нет). Если чат работает, а голос нет, попробуйте другую стратегию через автоподбор."
+      "note": "Сайт и чаты обрабатываются по именам сайтов. Голосовые звонки идут без имени сайта, их обрабатывает отдельное правило стратегии по портам UDP 19294–19344 и 50000–50100 (значения из набора Flowseal, официального списка портов у Discord нет). Если чат работает, а голос нет, попробуйте другую стратегию через автоподбор.",
+      "name_en": "Discord",
+      "description_en": "Discord website and app: chats, images and voice calls.",
+      "note_en": "The website and chats are handled by site names. Voice calls carry no site name, so a separate rule of the strategy handles them by UDP ports 19294–19344 and 50000–50100 (values from the Flowseal set; Discord publishes no official port list). If chat works but voice does not, try another strategy with the automatic selection.",
+      "name_zh": "Discord",
+      "description_zh": "Discord 网站和应用：聊天、图片和语音通话。",
+      "note_zh": "网站和聊天按网站名称处理。语音通话不带网站名称，因此由策略中单独的规则按 UDP 端口 19294–19344 和 50000–50100 处理（端口取自 Flowseal 的策略集；Discord 没有公布官方端口列表）。如果聊天正常而语音不通，请通过自动选择策略换用其他策略。",
+      "variants": [
+        {
+          "id": "full",
+          "name": "Расширенный",
+          "name_en": "Extended",
+          "name_zh": "扩展",
+          "description": "Больше доменов: служебный домен discord.tools из кода клиента Discord.",
+          "description_en": "More domains: the auxiliary discord.tools domain from the Discord client code.",
+          "description_zh": "更多域名：Discord 客户端代码中的辅助域名 discord.tools。",
+          "lists": [
+            "zaprett-discord-full"
+          ],
+          "ipsets": [],
+          "tier": "light"
+        },
+        {
+          "id": "voice",
+          "name": "С голосовыми серверами",
+          "name_en": "With voice servers",
+          "name_zh": "含语音服务器",
+          "description": "Основные домены плюс IP-сети голосовых серверов Discord — для стратегий с правилом UDP по IP-спискам.",
+          "description_en": "The core domains plus the IP networks of the Discord voice servers, for strategies with a UDP rule by IP lists.",
+          "description_zh": "基本域名，加上 Discord 语音服务器的 IP 网段，适用于带有按 IP 列表的 UDP 规则的策略。",
+          "lists": [
+            "zaprett-discord"
+          ],
+          "ipsets": [
+            "zaprett-discord-voice"
+          ],
+          "tier": "light"
+        }
+      ]
     },
     {
       "id": "telegram",
@@ -70,7 +130,13 @@
         }
       ],
       "works": "partial",
-      "note": "Сайты Telegram обрабатываются по именам. Приложение соединяется с серверами напрямую по IP-адресам, без имени сайта, поэтому для него включается список IP-сетей Telegram. Помогает ли обход против текущего замедления медиа и звонков в Telegram — не проверено. Автоподбор проверяет только сайт telegram.org, работу самого приложения он не проверяет."
+      "note": "Сайты Telegram обрабатываются по именам. Приложение соединяется с серверами напрямую по IP-адресам, без имени сайта, поэтому для него включается список IP-сетей Telegram. По словам автора zapret (март 2026 года), замедление приложения идёт по IP-адресам, и обход DPI против него не помогает — нужен VPN или прокси. Автоподбор проверяет только сайт telegram.org, работу самого приложения он не проверяет.",
+      "name_en": "Telegram",
+      "description_en": "The telegram.org website, t.me links and the Telegram app.",
+      "note_en": "Telegram websites are handled by names. The app connects to its servers directly by IP address, without a site name, so the list of Telegram IP networks is switched on for it. According to the author of zapret (March 2026), the app is throttled by IP address and DPI bypass does not help against it: a VPN or a proxy is needed. The automatic selection checks only the telegram.org website, not the app itself.",
+      "name_zh": "Telegram",
+      "description_zh": "telegram.org 网站、t.me 链接和 Telegram 应用。",
+      "note_zh": "Telegram 网站按名称处理。应用直接按 IP 地址连接服务器，不带网站名称，因此会为它开启 Telegram IP 网段列表。据 zapret 作者所说（2026 年 3 月），应用是按 IP 地址限速的，绕过深度包检测（DPI）对此无效，需要 VPN 或代理。自动选择策略只检查 telegram.org 网站，不检查应用本身。"
     },
     {
       "id": "rutracker",
@@ -89,7 +155,30 @@
         }
       ],
       "works": "partial",
-      "note": "Помогает, если провайдер блокирует RuTracker анализом трафика. Если же он подменяет ответ DNS, одного zaprett мало: включите на роутере шифрованный DNS (например, пакет https-dns-proxy). Работает ли обход у вашего провайдера, покажет автоподбор."
+      "note": "Помогает, если провайдер блокирует RuTracker анализом трафика. Если же он подменяет ответ DNS, одного zaprett мало: включите на роутере шифрованный DNS (например, пакет https-dns-proxy). Работает ли обход у вашего провайдера, покажет автоподбор.",
+      "name_en": "RuTracker",
+      "description_en": "The RuTracker torrent tracker.",
+      "note_en": "Helps if your provider blocks RuTracker by analysing traffic. If the provider forges DNS answers instead, zaprett alone is not enough: enable encrypted DNS on the router (for example, the https-dns-proxy package). The automatic selection shows whether the bypass works with your provider.",
+      "name_zh": "RuTracker",
+      "description_zh": "RuTracker 种子站。",
+      "note_zh": "如果运营商通过分析流量封锁 RuTracker，这会有帮助。如果运营商伪造 DNS 应答（DNS 劫持），仅靠 zaprett 不够：请在路由器上启用加密 DNS（例如 https-dns-proxy 软件包）。绕过在您的运营商处是否有效，自动选择策略会给出结果。",
+      "needs_dns": true,
+      "variants": [
+        {
+          "id": "full",
+          "name": "Расширенный",
+          "name_en": "Extended",
+          "name_zh": "扩展",
+          "description": "Больше доменов: служебный домен RuTracker rutrk.org.",
+          "description_en": "More domains: the auxiliary RuTracker domain rutrk.org.",
+          "description_zh": "更多域名：RuTracker 的辅助域名 rutrk.org。",
+          "lists": [
+            "zaprett-rutracker-full"
+          ],
+          "ipsets": [],
+          "tier": "light"
+        }
+      ]
     },
     {
       "id": "cloudflare",
@@ -109,7 +198,116 @@
         }
       ],
       "works": "partial",
-      "note": "С июня 2025 года у сайтов за Cloudflare в России загружаются только первые 16 КБ данных, после чего соединение замирает. Мастер подключит официальные диапазоны IP-адресов Cloudflare: 22 сети, памяти почти не занимают. Насколько обход помогает против этого ограничения — не проверено. Правило действует на все сайты за Cloudflare, в том числе российские: если какой-то сайт перестал открываться, выключите этот пункт. Сайты на Hetzner, DigitalOcean и OVH ограничены так же, но этим пунктом не покрываются."
+      "note": "С июня 2025 года у сайтов за Cloudflare в России загружаются только первые 16 КБ данных, после чего соединение замирает. Мастер подключит официальные диапазоны IP-адресов Cloudflare: 22 сети, памяти почти не занимают. Насколько обход помогает против этого ограничения — не проверено. Правило действует на все сайты за Cloudflare, в том числе российские: если какой-то сайт перестал открываться, выключите этот пункт. Сайты на Hetzner, DigitalOcean и OVH ограничены так же, но этим пунктом не покрываются.",
+      "name_en": "Sites behind Cloudflare",
+      "description_en": "Foreign websites that load only the beginning of a page and then hang.",
+      "note_en": "Since June 2025, sites behind Cloudflare in Russia load only the first 16 KB of data, after which the connection stalls. The wizard adds the official Cloudflare IP ranges: 22 networks that take almost no memory. How much the bypass helps against this restriction has not been verified. The rule applies to every site behind Cloudflare, Russian ones included: if some site stops opening, switch this item off. Sites on Hetzner, DigitalOcean and OVH are restricted the same way but are not covered by this item.",
+      "name_zh": "Cloudflare 后的网站",
+      "description_zh": "只加载页面开头、随后卡住不动的境外网站。",
+      "note_zh": "自 2025 年 6 月起，在俄罗斯访问 Cloudflare 后的网站时只能加载前 16 KB 数据，随后连接停滞。设置向导会添加 Cloudflare 官方 IP 网段：共 22 个网段，几乎不占内存。绕过对这一限制的效果尚未验证。该规则作用于所有 Cloudflare 后的网站，包括俄罗斯网站：如果某个网站打不开了，请关闭此项。Hetzner、DigitalOcean 和 OVH 上的网站受到同样的限制，但此项不覆盖它们。",
+      "variants": [
+        {
+          "id": "bundled",
+          "name": "Снимок в пакете",
+          "name_en": "Built-in snapshot",
+          "name_zh": "软件包内快照",
+          "description": "Те же официальные диапазоны Cloudflare из снимка в пакете: работает без загрузки из интернета, но не обновляется сам.",
+          "description_en": "The same official Cloudflare ranges from the snapshot inside the package: works without downloading, but is not updated automatically.",
+          "description_zh": "同样的 Cloudflare 官方网段，来自软件包内的快照：无需下载即可使用，但不会自动更新。",
+          "lists": [],
+          "ipsets": [
+            "zaprett-cloudflare-ipset",
+            "zaprett-cloudflare-ipset6"
+          ],
+          "tier": "light"
+        }
+      ]
+    },
+    {
+      "id": "roblox",
+      "name": "Roblox",
+      "description": "Игровая платформа Roblox: сайт, приложение и игры.",
+      "lists": [
+        "zaprett-roblox"
+      ],
+      "ipsets": [
+        "zaprett-roblox-ipset"
+      ],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://www.roblox.com/",
+          "min_bytes": 32768
+        }
+      ],
+      "works": "partial",
+      "note": "Roblox заблокирован в России 3 декабря 2025 года. Сайт и вход обрабатываются по именам сайтов, а сами игры идут по UDP на серверы Roblox: для них включается список IP-сетей Roblox, и нужна стратегия с правилом для UDP (strategy-alt2-roblox или strategy-fake-tls-auto-alt3-roblox). Помогает ли обход у вашего провайдера — не проверено; автоподбор проверяет только сайт.",
+      "name_en": "Roblox",
+      "description_en": "The Roblox gaming platform: website, app and games.",
+      "note_en": "Roblox has been blocked in Russia since 3 December 2025. The website and login are handled by site names, while the games themselves use UDP to Roblox servers: the list of Roblox IP networks is switched on for them, and a strategy with a UDP rule is needed (strategy-alt2-roblox or strategy-fake-tls-auto-alt3-roblox). Whether the bypass works with your provider has not been verified; the automatic selection checks only the website.",
+      "name_zh": "Roblox",
+      "description_zh": "Roblox 游戏平台：网站、应用和游戏。",
+      "note_zh": "自 2025 年 12 月 3 日起 Roblox 在俄罗斯被封锁。网站和登录按网站名称处理，而游戏本身通过 UDP 连接 Roblox 服务器：为此会开启 Roblox IP 网段列表，并需要带有 UDP 规则的策略（strategy-alt2-roblox 或 strategy-fake-tls-auto-alt3-roblox）。绕过在您的运营商处是否有效尚未验证；自动选择策略只检查网站。",
+      "variants": [
+        {
+          "id": "full",
+          "name": "Расширенный",
+          "name_en": "Extended",
+          "name_zh": "扩展",
+          "description": "Больше доменов: CDN, сайты для разработчиков и прочие домены Roblox, плюс IP-сети.",
+          "description_en": "More domains: CDN, developer sites and other Roblox domains, plus the IP networks.",
+          "description_zh": "更多域名：CDN、开发者网站和其他 Roblox 域名，另加 IP 网段。",
+          "lists": [
+            "zaprett-roblox-full"
+          ],
+          "ipsets": [
+            "zaprett-roblox-ipset"
+          ],
+          "tier": "light"
+        }
+      ]
+    },
+    {
+      "id": "signal",
+      "name": "Signal",
+      "description": "Мессенджер Signal: сообщения и звонки.",
+      "lists": [
+        "zaprett-signal"
+      ],
+      "ipsets": [],
+      "sources": [],
+      "tier": "light",
+      "test_targets": [
+        {
+          "url": "https://signal.org/",
+          "min_bytes": 17000
+        }
+      ],
+      "works": "partial",
+      "note": "Signal заблокирован в России 9 августа 2024 года. Как устроено ограничение, в открытых источниках не описано, поэтому помогает ли обход — не проверено. Звонкам нужны UDP-порты 3478 и 10000, которые стратегии по умолчанию не обрабатывают. В самом приложении Signal есть поддержка прокси.",
+      "name_en": "Signal",
+      "description_en": "The Signal messenger: messages and calls.",
+      "note_en": "Signal has been blocked in Russia since 9 August 2024. How the restriction works is not described in public sources, so whether the bypass helps has not been verified. Calls need UDP ports 3478 and 10000, which the default strategies do not handle. The Signal app itself supports proxies.",
+      "name_zh": "Signal",
+      "description_zh": "Signal 通讯应用：消息和通话。",
+      "note_zh": "自 2024 年 8 月 9 日起 Signal 在俄罗斯被封锁。公开资料没有说明限制的方式，因此绕过是否有效尚未验证。通话需要 UDP 端口 3478 和 10000，默认策略不处理这些端口。Signal 应用本身支持代理。",
+      "variants": [
+        {
+          "id": "full",
+          "name": "Расширенный",
+          "name_en": "Extended",
+          "name_zh": "扩展",
+          "description": "Больше доменов: стикеры, видео и форум Signal.",
+          "description_en": "More domains: stickers, video and the Signal forum.",
+          "description_zh": "更多域名：Signal 的贴纸、视频和论坛。",
+          "lists": [
+            "zaprett-signal-full"
+          ],
+          "ipsets": [],
+          "tier": "light"
+        }
+      ]
     },
     {
       "id": "rkn_full",
@@ -124,7 +322,14 @@
       "tier": "full",
       "test_targets": [],
       "works": "partial",
-      "note": "Списки загружаются из интернета (Re:filter и antifilter.download) и обновляются раз в несколько дней. Для работы nfqws им нужно около 10 МиБ оперативной памяти (замер на 64-битной системе; на 32-битных роутерах ожидается меньше, но это не проверено) и около 1,6 МБ свободного места во флеш-памяти. Не включайте на роутерах, где меньше 200 МБ оперативной памяти. Многие сайты из этих списков заблокированы по IP-адресу или через DNS — против таких блокировок zaprett не поможет. При автоподборе проверяются несколько доменов из самого списка."
+      "note": "Списки загружаются из интернета (Re:filter и antifilter.download) и обновляются раз в несколько дней. Для работы nfqws им нужно около 10 МиБ оперативной памяти (замер на 64-битной системе; на 32-битных роутерах ожидается меньше, но это не проверено) и около 1,6 МБ свободного места во флеш-памяти. Не включайте на роутерах, где меньше 200 МБ оперативной памяти. Многие сайты из этих списков заблокированы по IP-адресу или через DNS — против таких блокировок zaprett не поможет. При автоподборе проверяются несколько доменов из самого списка.",
+      "name_en": "Other blocked websites",
+      "description_en": "A large list of websites blocked in Russia (about 81 thousand domains and 17 thousand IP networks) with automatic updates.",
+      "note_en": "The lists are downloaded from the internet (Re:filter and antifilter.download) and updated every few days. nfqws needs about 10 MiB of RAM for them (measured on a 64-bit system; less is expected on 32-bit routers, but this has not been verified) and about 1.6 MB of free flash space. Do not enable this on routers with less than 200 MB of RAM. Many sites in these lists are blocked by IP address or through DNS, and zaprett cannot help against such blocking. The automatic selection checks a few domains from the list itself.",
+      "name_zh": "其他被封锁的网站",
+      "description_zh": "在俄罗斯被封锁的网站大列表（约 8.1 万个域名和 1.7 万个 IP 网段），自动更新。",
+      "note_zh": "这些列表从互联网下载（Re:filter 和 antifilter.download），每隔几天更新一次。nfqws 需要约 10 MiB 内存来加载它们（在 64 位系统上测得；32 位路由器上预计更少，但尚未验证），并需要约 1.6 MB 可用闪存空间。内存小于 200 MB 的路由器请勿开启。这些列表中的许多网站是按 IP 地址或通过 DNS 封锁的，zaprett 对这类封锁无能为力。自动选择策略会检查列表本身中的几个域名。",
+      "needs_dns": true
     },
     {
       "id": "whatsapp",
@@ -136,7 +341,14 @@
       "tier": "light",
       "test_targets": [],
       "works": "no",
-      "note": "zaprett здесь не поможет. В феврале 2026 года домены WhatsApp исключили из национальной системы доменных имён (НСДИ) — это блокировка на уровне DNS, а не анализа трафика. Нужен шифрованный DNS на роутере или VPN. Помогает ли обход против ограничения звонков — не проверено."
+      "note": "zaprett здесь не поможет. В феврале 2026 года домены WhatsApp исключили из национальной системы доменных имён (НСДИ) — это блокировка на уровне DNS, а не анализа трафика. Нужен шифрованный DNS на роутере или VPN. Помогает ли обход против ограничения звонков — не проверено.",
+      "name_en": "WhatsApp",
+      "description_en": "The WhatsApp messenger: messages and calls.",
+      "note_en": "zaprett will not help here. In February 2026 the WhatsApp domains were removed from the national domain name system (NSDI): this is blocking at the DNS level, not traffic analysis. You need encrypted DNS on the router or a VPN. Whether the bypass helps against the throttling of calls has not been verified.",
+      "name_zh": "WhatsApp",
+      "description_zh": "WhatsApp 通讯应用：消息和通话。",
+      "note_zh": "zaprett 在这里无能为力。2026 年 2 月，WhatsApp 的域名被从国家域名系统（NSDI）中删除：这是 DNS 层面的封锁，而不是流量分析。需要在路由器上使用加密 DNS 或 VPN。绕过对通话限速是否有效尚未验证。",
+      "needs_dns": true
     },
     {
       "id": "instagram_facebook",
@@ -148,7 +360,13 @@
       "tier": "light",
       "test_targets": [],
       "works": "no",
-      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси."
+      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси.",
+      "name_en": "Instagram and Facebook",
+      "description_en": "The Instagram and Facebook social networks.",
+      "note_en": "zaprett will not help here: the service is blocked by server IP addresses, while zaprett only bypasses traffic content analysis (DPI). You need a VPN or a proxy.",
+      "name_zh": "Instagram 和 Facebook",
+      "description_zh": "Instagram 和 Facebook 社交网络。",
+      "note_zh": "zaprett 在这里无能为力：该服务是按服务器 IP 地址封锁的，而 zaprett 只绕过流量内容分析（深度包检测（DPI））。需要 VPN 或代理。"
     },
     {
       "id": "twitter",
@@ -160,7 +378,13 @@
       "tier": "light",
       "test_targets": [],
       "works": "no",
-      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси."
+      "note": "zaprett здесь не поможет: сервис заблокирован по IP-адресам серверов, а zaprett обходит только анализ содержимого трафика (DPI). Нужен VPN или прокси.",
+      "name_en": "X (Twitter)",
+      "description_en": "The X social network, formerly Twitter.",
+      "note_en": "zaprett will not help here: the service is blocked by server IP addresses, while zaprett only bypasses traffic content analysis (DPI). You need a VPN or a proxy.",
+      "name_zh": "X（Twitter）",
+      "description_zh": "X 社交网络，原名 Twitter。",
+      "note_zh": "zaprett 在这里无能为力：该服务是按服务器 IP 地址封锁的，而 zaprett 只绕过流量内容分析（深度包检测（DPI））。需要 VPN 或代理。"
     },
     {
       "id": "chatgpt_claude",
@@ -172,7 +396,13 @@
       "tier": "light",
       "test_targets": [],
       "works": "no",
-      "note": "zaprett здесь не поможет: доступ из России закрывают сами сервисы — России нет в списке поддерживаемых стран OpenAI и Anthropic. Нужен VPN."
+      "note": "zaprett здесь не поможет: доступ из России закрывают сами сервисы — России нет в списке поддерживаемых стран OpenAI и Anthropic. Нужен VPN.",
+      "name_en": "ChatGPT and Claude",
+      "description_en": "The ChatGPT (OpenAI) and Claude (Anthropic) AI assistants.",
+      "note_en": "zaprett will not help here: access from Russia is closed by the services themselves, since Russia is not among the countries supported by OpenAI and Anthropic. You need a VPN.",
+      "name_zh": "ChatGPT 和 Claude",
+      "description_zh": "ChatGPT（OpenAI）和 Claude（Anthropic）人工智能助手。",
+      "note_zh": "zaprett 在这里无能为力：来自俄罗斯的访问是由服务本身关闭的，俄罗斯不在 OpenAI 和 Anthropic 支持的国家之列。需要 VPN。"
     },
     {
       "id": "spotify",
@@ -184,7 +414,13 @@
       "tier": "light",
       "test_targets": [],
       "works": "no",
-      "note": "zaprett здесь не поможет: Spotify сам прекратил работу в России в апреле 2022 года. Нужен VPN."
+      "note": "zaprett здесь не поможет: Spotify сам прекратил работу в России в апреле 2022 года. Нужен VPN.",
+      "name_en": "Spotify",
+      "description_en": "The Spotify music service.",
+      "note_en": "zaprett will not help here: Spotify itself stopped operating in Russia in April 2022. You need a VPN.",
+      "name_zh": "Spotify",
+      "description_zh": "Spotify 音乐服务。",
+      "note_zh": "zaprett 在这里无能为力：Spotify 已于 2022 年 4 月自行停止在俄罗斯运营。需要 VPN。"
     }
   ],
   "always": {
@@ -222,6 +458,17 @@
       "strategy-simple-fake",
       "strategy-discord-fix",
       "strategy-youtubefix-alt"
+    ],
+    "strategy_nfqws2": "z2-general",
+    "quick_test_strategies_nfqws2": [
+      "z2-general",
+      "z2-alt",
+      "z2-alt2",
+      "z2-alt3",
+      "z2-simple-fake",
+      "z2-fake-tls-auto-alt",
+      "z2-hostfakesplit",
+      "z2-disorder-seqovl"
     ]
   }
 }

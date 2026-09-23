@@ -1,0 +1,185 @@
+<Page
+    x:Class="Zaprett.Ui.Views.ListsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels"
+    Background="Transparent">
+
+    <Page.Resources>
+        <DataTemplate x:Key="ListRow" x:DataType="vm:ListItem">
+            <Grid Padding="18,12" ColumnSpacing="16" CornerRadius="8" BorderThickness="1"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{x:Bind Details}" Style="{StaticResource Secondary}" FontSize="12" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsOn="{x:Bind IsActive, Mode=TwoWay}" IsEnabled="{x:Bind CanToggle}" OnContent="" OffContent=""
+                              MinWidth="0" AutomationProperties.Name="{x:Bind Name}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="16">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Lists.Title')}" AutomationProperties.HeadingLevel="Level1" />
+            <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind loc:L.T('Lists.Lead')}" />
+            <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                     Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" />
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="8">
+                    <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Lists.Mode')}" />
+                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Whitelist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.WhitelistText')}" GroupName="mode" IsChecked="{x:Bind ui:Conv.Not(Vm.IsBlacklist), Mode=OneWay}" Checked="OnWhitelist">
+                        <StackPanel>
+                            <TextBlock Text="{x:Bind loc:L.T('Lists.Mode.Whitelist')}" />
+                            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Lists.Mode.WhitelistText')}" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Blacklist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.BlacklistText')}" GroupName="mode" IsChecked="{x:Bind Vm.IsBlacklist, Mode=OneWay}" Checked="OnBlacklist">
+                        <StackPanel>
+                            <TextBlock Text="{x:Bind loc:L.T('Lists.Mode.Blacklist')}" />
+                            <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Lists.Mode.BlacklistText')}" />
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </Border>
+
+            <SelectorBar x:Name="Tabs" SelectionChanged="OnTabChanged">
+                <SelectorBarItem Tag="domains" Text="{x:Bind loc:L.T('Lists.Tab.Domains')}" IsSelected="True" />
+                <SelectorBarItem Tag="networks" Text="{x:Bind loc:L.T('Lists.Tab.Networks')}" />
+                <SelectorBarItem Tag="exclusions" Text="{x:Bind loc:L.T('Lists.Tab.Exclusions')}" />
+                <SelectorBarItem Tag="own" Text="{x:Bind loc:L.T('Lists.Tab.Own')}" />
+                <SelectorBarItem Tag="sources" Text="{x:Bind loc:L.T('Lists.Tab.Sources')}" />
+            </SelectorBar>
+
+            <StackPanel x:Name="DomainsPanel" Spacing="8">
+                <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Lists.Domains.Text')}" />
+                <ItemsRepeater ItemsSource="{x:Bind Vm.Domains}" ItemTemplate="{StaticResource ListRow}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <StackPanel x:Name="NetworksPanel" Spacing="8" Visibility="Collapsed">
+                <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Lists.Networks.Text')}" />
+                <ItemsRepeater ItemsSource="{x:Bind Vm.Networks}" ItemTemplate="{StaticResource ListRow}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <StackPanel x:Name="ExclusionsPanel" Spacing="8" Visibility="Collapsed">
+                <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Lists.Exclusions.Text')}" />
+                <ItemsRepeater ItemsSource="{x:Bind Vm.Exclusions}" ItemTemplate="{StaticResource ListRow}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="6" /></ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+
+            <Border x:Name="OwnPanel" Style="{StaticResource Card}" Visibility="Collapsed">
+                <StackPanel Spacing="12">
+                    <ComboBox Header="{x:Bind loc:L.T('Lists.User.Which')}" ItemsSource="{x:Bind Vm.UserListChoices}" SelectedValuePath="Value"
+                              SelectedValue="{x:Bind Vm.UserListId, Mode=TwoWay}" MinWidth="320" />
+                    <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind Vm.UserHint, Mode=OneWay}" />
+                    <TextBox Text="{x:Bind Vm.UserText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="NoWrap"
+                             FontFamily="{StaticResource MonoFont}" FontSize="13" MinHeight="220" MaxHeight="420" IsSpellCheckEnabled="False"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" AutomationProperties.Name="{x:Bind loc:L.T('Lists.User.Which')}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Common.Save')}" Command="{x:Bind Vm.SaveUserCommand}"
+                                IsEnabled="{x:Bind Vm.UserDirty, Mode=OneWay}" />
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.User.Import')}" Command="{x:Bind Vm.ImportCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8B5;" FontSize="14" />
+                                <TextBlock Text="{x:Bind loc:L.T('Lists.User.Import')}" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.User.Export')}" Command="{x:Bind Vm.ExportCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xEDE1;" FontSize="14" />
+                                <TextBlock Text="{x:Bind loc:L.T('Lists.User.Export')}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <StackPanel x:Name="SourcesPanel" Spacing="12" Visibility="Collapsed">
+                <Grid>
+                    <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Lists.Sources.Text')}" Margin="0,0,200,0" VerticalAlignment="Center" />
+                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.Sources.Update')}" HorizontalAlignment="Right" Command="{x:Bind Vm.UpdateSourcesCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                            <TextBlock Text="{x:Bind loc:L.T('Lists.Sources.Update')}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <Border Style="{StaticResource SubtleCard}" Visibility="{x:Bind Vm.Job.IsVisible, Mode=OneWay}">
+                    <StackPanel Spacing="6">
+                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind Vm.Job.Title, Mode=OneWay}" />
+                        <ProgressBar Value="{x:Bind Vm.Job.Percent, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+                <ItemsRepeater ItemsSource="{x:Bind Vm.Sources}">
+                    <ItemsRepeater.Layout><StackLayout Spacing="8" /></ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SourceItem">
+                            <Grid Padding="18,14" ColumnSpacing="16" CornerRadius="8" BorderThickness="1"
+                                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{x:Bind TypeLabel}" Style="{StaticResource Secondary}" FontSize="12" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Text="{x:Bind Url}" Style="{StaticResource Mono}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="14">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" ui:StateColor.Fill="{x:Bind Kind}" />
+                                            <TextBlock Text="{x:Bind StatusLabel}" FontSize="12" ui:StateColor.Foreground="{x:Bind Kind}" />
+                                        </StackPanel>
+                                        <TextBlock Style="{StaticResource Secondary}" FontSize="12">
+                                            <Run Text="{x:Bind UpdatedText}" />
+                                        </TextBlock>
+                                        <TextBlock Style="{StaticResource Secondary}" FontSize="12">
+                                            <Run Text="{x:Bind EntriesText}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <ToggleSwitch IsOn="{x:Bind IsEnabled, Mode=TwoWay}" OnContent="" OffContent="" MinWidth="0"
+                                              AutomationProperties.Name="{x:Bind Title}" />
+                                <Button VerticalAlignment="Center" Click="OnDeleteSource" Tag="{x:Bind}"
+                                        AutomationProperties.Name="{x:Bind loc:L.T('Common.Delete')}" ToolTipService.ToolTip="{x:Bind loc:L.T('Common.Delete')}">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                </Button>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Lists.Source.Add')}" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Header="{x:Bind loc:L.T('Lists.Source.TitleField')}" Text="{x:Bind Vm.NewSourceTitle, Mode=TwoWay}" />
+                            <TextBox Grid.Column="1" Header="{x:Bind loc:L.T('Lists.Source.Url')}" Text="{x:Bind Vm.NewSourceUrl, Mode=TwoWay}"
+                                     PlaceholderText="https://" FontFamily="{StaticResource MonoFont}" />
+                        </Grid>
+                        <CheckBox Content="{x:Bind loc:L.T('Lists.Source.IsIpset')}" IsChecked="{x:Bind Vm.NewSourceIsIpset, Mode=TwoWay}" />
+                        <Button Content="{x:Bind loc:L.T('Lists.Source.AddButton')}" Command="{x:Bind Vm.AddSourceCommand}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

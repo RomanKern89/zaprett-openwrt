@@ -3,8 +3,8 @@
 'use strict';
 
 import * as fs from 'fs';
-import { P, VERSION, run, read_json, write_json, mkdir_p, atomic_write, is_file, is_id, try_lock, wait_lock, unlock,
-	log, ok, fail, tail_lines } from 'zaprett.util';
+import { P, VERSION, run, read_json, mkdir_p, atomic_write, is_file, is_id, try_lock, wait_lock, unlock,
+	log, ok, fail, tail_lines, meminfo_mib } from 'zaprett.util';
 import * as V from 'zaprett.validate';
 import * as C from 'zaprett.config';
 import * as S from 'zaprett.store';
@@ -15,9 +15,97 @@ import * as SV from 'zaprett.service';
 import * as J from 'zaprett.job';
 import * as R from 'zaprett.repo';
 import * as T from 'zaprett.tester';
+import * as ISO from 'zaprett.isolate';
 import * as SRC from 'zaprett.sources';
+import * as CR from 'zaprett.cron';
+import * as H from 'zaprett.health';
+import * as DNS from 'zaprett.dns';
+import * as DG from 'zaprett.diagnose';
 
 export const MAX_STDIN = 1048576;
+
+// Item types whose files the engine reads only at start: replacing them needs a restart.
+const RELOAD_TYPES = [ 'nfqws', 'nfqws2', 'bin', 'lua_lib' ];
+
+function needs_reload(types) {
+	for (let t in (types ?? []))
+		if (index(RELOAD_TYPES, t) >= 0)
+			return true;
+	return false;
+}
+
+// UCI option holding active items of a list type (lists, exclude_lists, ipsets, exclude_ipsets).
+function list_option(itype) {
+	return S.TYPES[itype]?.uci;
+}
+
+export const TIER_FULL_MIN_RAM_MIB = 200;
+
+function load_presets() {
+	let p = read_json(P.presets, 1048576);
+	return (type(p) == 'object' && type(p.services) == 'array') ? p : null;
+}
+
+function str_list(v) {
+	return filter((type(v) == 'array') ? v : [], (x) => type(x) == 'string');
+}
+
+// Pure: a wizard argument "<service>" or "<service>:<variant>" -> { id, variant } (variant null: the core set of the
+// service), or null when a part is not an id (contract v1.7 §16.4).
+export function parse_service_ref(ref) {
+	if (type(ref) != 'string')
+		return null;
+	let parts = split(ref, ':');
+	if (length(parts) == 1 && is_id(parts[0]))
+		return { id: parts[0], variant: null };
+	if (length(parts) == 2 && is_id(parts[0]) && is_id(parts[1]))
+		return { id: parts[0], variant: parts[1] };
+	return null;
+};
+
+// Pure: item sets of a preset service — the core one (id null: lists/ipsets/sources of the service itself) first,
+// then its variants (contract v1.5 §16.3). A variant without its own tier has the tier of the service; a variant
+// with a bad or repeated id is ignored.
+export function service_sets(s) {
+	let out = [ { id: null, lists: str_list(s?.lists), ipsets: str_list(s?.ipsets), sources: str_list(s?.sources), tier: s?.tier } ];
+	for (let v in ((type(s?.variants) == 'array') ? s.variants : [])) {
+		if (type(v) != 'object' || !is_id(v.id) || length(filter(out, (x) => x.id == v.id)))
+			continue;
+		push(out, { id: v.id, lists: str_list(v.lists), ipsets: str_list(v.ipsets), sources: str_list(v.sources), tier: v.tier ?? s.tier,
+			name: v.name, name_en: v.name_en, description: v.description, description_en: v.description_en });
+	}
+	return out;
+};
+
+function set_size(set) {
+	return length(set.lists) + length(set.ipsets) + length(set.sources);
+}
+
+// Pure: how many items of an item set are switched on in cfg (a subscription counts when it is enabled and its
+// src-<name> item is active). srcs: { name: source } from C.load_sources().
+export function set_active(set, cfg, srcs) {
+	let n = length(filter(set.lists, (x) => index(cfg.lists ?? [], x) >= 0)) + length(filter(set.ipsets, (x) => index(cfg.ipsets ?? [], x) >= 0));
+	for (let name in set.sources) {
+		let src = srcs?.[name];
+		if (src && src.enabled && index(cfg[list_option(src.type)] ?? [], SRC.item_id(name)) >= 0)
+			n++;
+	}
+	return n;
+};
+
+// Pure: id of the variant of a service whose items are all switched on (contract v1.7 §16.4: `enabled_variant`);
+// of several such variants the largest wins, the first one on a tie; null when there is none.
+export function enabled_variant(s, cfg, srcs) {
+	let best = null, best_size = 0;
+	for (let set in slice(service_sets(s), 1)) {
+		let size = set_size(set);
+		if (size > 0 && set_active(set, cfg, srcs) == size && size > best_size) {
+			best = set.id;
+			best_size = size;
+		}
+	}
+	return best;
+};
 
 function copy_cfg(cfg) {
 	return json(sprintf('%J', cfg));
@@ -112,19 +200,25 @@ export function read_stdin(limit) {
 
 // A test override left behind by a test job that died (OOM, kill -9) keeps the engine on a candidate
 // strategy; it is rolled back as soon as someone looks at the state.
+// An isolated test (contract v1.6 §17) that died leaves its test chains, instance `test` and state instead; they are
+// removed with `zaprett fw apply` in its own process (fw_apply of this module is declared further down).
+function test_restore() {
+	return T.restore(null, null);
+}
+
 function recover_dead_test() {
-	if (!test_active())
+	if (!test_active() && !T.leftover())
 		return false;
 	let j = J.read();
 	if (j && j.name == 'test' && j.state == 'running')
 		return false;
-	T.restore(null);
-	log('warning', 'автоподбор прервался аварийно: исходная стратегия возвращена');
+	test_restore();
+	log('warning', 'автоподбор прервался аварийно: исходная стратегия возвращена, проверочные правила сняты');
 	return true;
 }
 
 function cleanup_job(job) {
-	return (job?.name == 'test') ? T.restore(null) : null;
+	return (job?.name == 'test') ? test_restore() : null;
 }
 
 // Status polls finish overdue cancellations and roll back tests that died.
@@ -135,11 +229,62 @@ function settle_jobs() {
 
 /* ---------- service ---------- */
 
+// Pure: are the active services/subscriptions too heavy for this router (contract v1.3 §14.4)? A switched-on
+// service of tier "full" with less RAM than tiers.full.min_ram_mib, or enabled subscriptions that need more than
+// half of MemAvailable. A variant of tier "full" counts when all its items are switched on (contract v1.7 §16.4).
+export function memory_heavy(cfg, presets, sources, ram_total, mem_available) {
+	let min_full = presets?.tiers?.full?.min_ram_mib ?? TIER_FULL_MIN_RAM_MIB;
+	let srcs = {};
+	for (let s in sources)
+		srcs[s.name] = s;
+	if (ram_total != null && ram_total < min_full)
+		for (let s in ((type(presets?.services) == 'array') ? presets.services : [])) {
+			if (type(s) != 'object')
+				continue;
+			if (s.tier == 'full' && T.service_active({ lists: s.lists, ipsets: s.ipsets, sources: s.sources }, cfg))
+				return true;
+			for (let set in slice(service_sets(s), 1))
+				if (set.tier == 'full' && set_size(set) > 0 && set_active(set, cfg, srcs) == set_size(set))
+					return true;
+		}
+	let need = 0;
+	for (let s in sources)
+		if (s.enabled && s.valid)
+			need += s.ram_mib ?? 0;
+	return mem_available != null && need * 2 > mem_available;
+};
+
+// Pure: is a switched-on preset service waiting for encrypted DNS (contract v1.4 §15.3: `dns_plain`)?
+export function dns_plain(cfg, presets, dns) {
+	if (dns?.encrypted)
+		return false;
+	for (let s in ((type(presets?.services) == 'array') ? presets.services : []))
+		if (type(s) == 'object' && s.needs_dns == true && T.service_active(s, cfg))
+			return true;
+	return false;
+};
+
+function job_brief(j) {
+	return j ? { id: j.id, name: j.name, state: j.state, progress: j.progress } : null;
+}
+
 export function status() {
 	let recovered = settle_jobs();
-	let st = SV.status(C.load());
+	let cfg = C.load();
+	let st = SV.status(cfg);
 	if (recovered)
 		st.details.recovered_test = true;
+	st.job = job_brief(J.read());
+	st.monitor = H.monitor_brief(cfg);
+	let add = (w) => { if (index(st.warnings, w) < 0) push(st.warnings, w); };
+	if (st.monitor && (st.monitor.state == 'degraded' || st.monitor.state == 'repairing'))
+		add('monitor_degraded');
+	let presets = load_presets();
+	if (memory_heavy(cfg, presets, C.load_sources(), meminfo_mib('MemTotal'), meminfo_mib('MemAvailable')))
+		add('low_memory');
+	st.dns = DNS.status();
+	if (dns_plain(cfg, presets, st.dns))
+		add('dns_plain');
 	return st;
 };
 
@@ -204,6 +349,7 @@ export function enable() {
 	if (!C.set({ enabled: '1' }))
 		return fail('uci_failed', 'Не удалось сохранить настройку enabled');
 	let a = SV.init_action('enable');
+	CR.sync();
 	return ok({ enabled: true, autostart: a.rc == 0 });
 };
 
@@ -215,6 +361,7 @@ export function disable() {
 		if (!test_active())
 			SV.init_action('stop');
 		O.restore();
+		CR.sync();
 		return ok({ enabled: false, autostart: false });
 	});
 };
@@ -223,7 +370,7 @@ export function disable() {
 
 export function check() {
 	let cfg = C.load();
-	let g = G.generate(cfg, { ignore_override: true });
+	let g = G.generate(cfg, { ignore_override: true, force_dry_run: true });
 	if (!g.ok)
 		return g;
 	return ok({
@@ -243,35 +390,83 @@ export function gen_args() {
 	return ok({ path: P.run + '/args', engine: g.engine, strategy: g.strategy, warnings: g.warnings, test_mode: g.test_mode });
 };
 
+// Pure: rulesets `fw apply` tries in turn (contract v1.4 §15.1): with the own flowtable — hardware offloading first
+// when it was on, then software — and without it. plan: result of O.flowtable_plan() (null = no flowtable wanted).
+// isolation: test chains of an isolated automatic selection (contract v1.6 §17) or null.
+export function fw_candidates(cfg, ports, wan, test_mode, plan, isolation) {
+	let out = [];
+	let add = (ft, kind) => push(out, { text: N.render(cfg, ports, wan, { test_mode: test_mode, flowtable: ft, isolation: isolation }),
+		flowtable: kind });
+	if (plan && length(plan.devices)) {
+		if (length(plan.hw_devices ?? []))
+			add({ devices: plan.hw_devices, hw: true }, 'hw');
+		add({ devices: plan.devices, hw: false }, 'sw');
+	}
+	add(null, null);
+	return out;
+};
+
 function render_current(cfg) {
 	let g = G.generate(cfg, { skip_dry_run: true, no_ensure: true });
 	if (!g.ok)
 		return g;
 	let wan = N.query_wan(cfg);
-	return ok({ text: N.render(cfg, g.ports, wan, { test_mode: g.test_mode }), wan: wan, ports: g.ports, test_mode: g.test_mode });
+	let plan = O.flowtable_plan(cfg);
+	let cands = fw_candidates(cfg, g.ports, wan, g.test_mode, plan, ISO.read_state());
+	return ok({ text: cands[0].text, candidates: cands, flowtable_wanted: plan != null, wan: wan, ports: g.ports,
+		test_mode: g.test_mode });
 }
+
+// Applies the first candidate the kernel accepts. A ruleset already in the kernel is not applied again
+// (changed: false). hooks (unit tests): applied_text, is_applied, apply_text.
+export function apply_candidates(cands, hooks) {
+	hooks = hooks ?? {};
+	let applied_text = hooks.applied_text ?? N.applied_text;
+	let is_applied = hooks.is_applied ?? N.is_applied;
+	let apply_text = hooks.apply_text ?? N.apply_text;
+	let cur = applied_text(), present = null, last = null;
+	for (let c in cands) {
+		if (cur == c.text) {
+			present = present ?? is_applied();
+			if (present)
+				return ok({ changed: false, flowtable: c.flowtable });
+		}
+		let a = apply_text(c.text);
+		if (a.ok)
+			return ok({ changed: true, flowtable: c.flowtable });
+		last = a;
+		if (c.flowtable != null)
+			log('warning', sprintf('правила с собственной flowtable (%s) не приняты ядром: %s', c.flowtable, a.message));
+	}
+	return last;
+};
 
 export function fw_apply(flags) {
 	return with_fw_lock(() => {
 		let cfg = C.load();
 		if (flags.if_running && !SV.instance_state().running)
-			return ok({ skipped: true });
+			return ok({ skipped: true, changed: false });
 		if (flags.if_applied && !is_file(N.nft_path()))
-			return ok({ skipped: true });
+			return ok({ skipped: true, changed: false });
 		let r = render_current(cfg);
 		if (!r.ok) {
 			log('err', 'правила nftables не применены: ' + r.message);
 			return r;
 		}
-		let a = N.apply_text(r.text);
+		let warnings = [];
+		if (!length(r.wan.v4) && !(cfg.ipv6 && length(r.wan.v6)))
+			push(warnings, 'no_wan');
+		let wan = { v4: r.wan.v4, v6: r.wan.v6 };
+		// hotplug and init call this on every interface event: the same ruleset over a present table is not
+		// applied again (contract v1.3 §14.3)
+		let a = apply_candidates(r.candidates, null);
 		if (!a.ok) {
 			log('err', a.message);
 			return a;
 		}
-		let warnings = [];
-		if (!length(r.wan.v4) && !(cfg.ipv6 && length(r.wan.v6)))
-			push(warnings, 'no_wan');
-		return ok({ applied: true, wan: r.wan, ports: r.ports, warnings: warnings });
+		if (r.flowtable_wanted && a.flowtable == null)
+			push(warnings, 'flowtable_failed');
+		return ok({ applied: true, changed: a.changed, flowtable: a.flowtable, wan: wan, ports: r.ports, warnings: warnings });
 	});
 };
 
@@ -460,6 +655,12 @@ export function set_mode(mode) {
 	return ok({ list_mode: mode, reloaded: reload_if_needed(ncfg).reloaded, warnings: v.warnings });
 };
 
+// Pure: the default strategy of the presets for an engine (defaults.strategy / defaults.strategy_nfqws2), or null.
+export function default_strategy(presets, engine) {
+	let d = presets?.defaults?.[(engine == 'nfqws2') ? 'strategy_nfqws2' : 'strategy'];
+	return is_id(d) ? d : null;
+};
+
 export function set_engine(engine) {
 	if (engine != 'nfqws' && engine != 'nfqws2')
 		return fail('bad_value', 'Движок должен быть nfqws или nfqws2');
@@ -467,68 +668,44 @@ export function set_engine(engine) {
 		return fail('engine_missing', sprintf('Движок %s не установлен (пакет zaprett-%s)', engine, engine));
 	let cfg = C.load(), ncfg = copy_cfg(cfg);
 	ncfg.engine = engine;
+	let changes = { engine: engine };
+	// no strategy chosen for this engine yet: the default of the presets, when it is installed
+	let sopt = C.strategy_option(engine);
+	let dstrat = default_strategy(load_presets(), engine);
+	if (!C.current_strategy_id(cfg, engine) && dstrat && S.scan().items[engine]?.[dstrat]) {
+		ncfg[sopt] = dstrat;
+		changes[sopt] = dstrat;
+	}
 	let v = validate_change(cfg, ncfg);
 	if (!v.ok)
 		return v;
-	if (!C.set({ engine: engine }))
+	if (!C.set(changes))
 		return fail('uci_failed', 'Не удалось сохранить настройки');
-	return ok({ engine: engine, reloaded: reload_if_needed(ncfg).reloaded, warnings: v.warnings });
+	return ok({ engine: engine, strategy: ncfg[sopt] || null, reloaded: reload_if_needed(ncfg).reloaded, warnings: v.warnings });
 };
 
 /* ---------- cron (autoupdate of repository items and subscriptions) ---------- */
 
-export const CRON_MARK = '# zaprett-autoupdate';
+// The schedule itself lives in zaprett.cron (autoupdate, watchdog, monitor lines, contract v1.3 §14.2).
+export const CRON_MARK = CR.MARK_AUTOUPDATE;
 
-// Pure: new crontab text with exactly one (or no) zaprett line.
+// Pure: crontab text with exactly one (or no) autoupdate line; other lines, including the watchdog and monitor
+// ones, are kept.
 export function cron_render(text, enabled, hour, random_minute) {
-	let other = [], minute = null;
-	for (let l in split(text ?? '', '\n')) {
-		if (index(l, CRON_MARK) >= 0) {
-			let m = match(l, /^([0-9]{1,2}) /);
-			if (m && int(m[1]) < 60)
-				minute = int(m[1]);
-			continue;
-		}
-		push(other, l);
-	}
-	while (length(other) && other[length(other) - 1] == '')
-		pop(other);
-	if (enabled)
-		push(other, sprintf('%d %d * * * /usr/bin/zaprett repo upgrade --all --foreground --quiet %s',
-			minute ?? random_minute, hour, CRON_MARK));
-	return length(other) ? (join('\n', other) + '\n') : '';
+	let want = {};
+	want[CR.MARK_AUTOUPDATE] = enabled ? CR.autoupdate_line(hour) : null;
+	return CR.render(text, want, random_minute);
 };
 
-// The daily run is needed for repository autoupdate and for every enabled subscription; subscriptions
-// are updated by their own intervals even when repo.autoupdate is off.
 export function cron_needed(cfg, sources) {
-	if (cfg.repo.autoupdate)
-		return true;
-	for (let s in sources)
-		if (s.enabled && s.valid)
-			return true;
-	return false;
+	return CR.autoupdate_needed(cfg, sources);
 };
 
 export function cron_sync() {
-	let cfg = C.load();
-	let cur = fs.readfile(P.crontab, 1048576);
-	let uuid = fs.readfile('/proc/sys/kernel/random/uuid', 64) ?? '00';
-	let rnd = hex(substr(replace(uuid, '-', ''), 0, 4)) % 60;
-	let next = cron_render(cur ?? '', cron_needed(cfg, C.load_sources()), cfg.repo.autoupdate_hour, rnd);
-	if ((cur ?? '') == next)
-		return ok({ changed: false });
-	mkdir_p(fs.dirname(P.crontab));
-	if (!atomic_write(P.crontab, next, 384))
-		return fail('write_failed', 'Не удалось обновить ' + P.crontab);
-	if (is_file(P.cron_init))
-		run([ P.cron_init, 'restart' ], { timeout: 30000 });
-	return ok({ changed: true });
+	return CR.sync();
 };
 
 /* ---------- subscriptions (contract v1.1) ---------- */
-
-const SOURCE_UCI = { list: 'lists', list_exclude: 'exclude_lists', ipset: 'ipsets', ipset_exclude: 'exclude_ipsets' };
 
 function is_default_source(name) {
 	return length(filter(C.DEFAULT_SOURCES, (d) => d.name == name)) > 0;
@@ -593,9 +770,9 @@ export function sources_save(name, text) {
 		let type_changed = cur != null && cur.type != values.type;
 		let url_changed = cur != null && cur.url != values.url;
 		// a changed type moves the id to the option of the new type: the subscription stays switched on
-		let old_opt = type_changed ? SOURCE_UCI[cur.type] : null;
+		let old_opt = type_changed ? list_option(cur.type) : null;
 		if (old_opt && index(cfg[old_opt], iid) >= 0) {
-			let new_opt = SOURCE_UCI[values.type];
+			let new_opt = list_option(values.type);
 			changes[old_opt] = filter(cfg[old_opt], (x) => x != iid);
 			if (index(cfg[new_opt], iid) < 0) {
 				changes[new_opt] = slice(cfg[new_opt]);
@@ -632,9 +809,11 @@ export function sources_delete(name) {
 			return fail('not_found', sprintf('Подписка «%s» не найдена', name));
 		let cfg = C.load(), iid = SRC.item_id(name);
 		let changes = {};
-		for (let t, opt in SOURCE_UCI)
+		for (let t in S.LIST_TYPES) {
+			let opt = list_option(t);
 			if (index(cfg[opt], iid) >= 0)
 				changes[opt] = filter(cfg[opt], (x) => x != iid);
+		}
 		// uci-defaults must not bring a deleted default subscription back after an upgrade
 		if (is_default_source(name) && index(cfg.deleted_sources, name) < 0) {
 			changes.deleted_sources = slice(cfg.deleted_sources);
@@ -672,20 +851,14 @@ export function sources_defaults() {
 
 /* ---------- presets / wizard ---------- */
 
-export const TIER_FULL_MIN_RAM_MIB = 200;
-
-function load_presets() {
-	let p = read_json(P.presets, 1048576);
-	return (type(p) == 'object' && type(p.services) == 'array') ? p : null;
-}
 
 function ram_total_mib() {
-	let m = match(fs.readfile('/proc/meminfo', 4096) ?? '', /MemTotal:[ \t]+([0-9]+) kB/);
-	return m ? int(int(m[1]) / 1024) : null;
+	return meminfo_mib('MemTotal');
 }
 
-function str_list(v) {
-	return filter((type(v) == 'array') ? v : [], (x) => type(x) == 'string');
+function set_available(set, idx, srcs) {
+	return length(filter(set.lists, (x) => idx.items.list[x] != null)) + length(filter(set.ipsets, (x) => idx.items.ipset[x] != null)) +
+		length(filter(set.sources, (n) => srcs[n]?.valid));
 }
 
 export function presets() {
@@ -700,23 +873,27 @@ export function presets() {
 	for (let s in p.services) {
 		if (type(s) != 'object' || !is_id(s.id))
 			continue;
-		let lists = str_list(s.lists), ipsets = str_list(s.ipsets), sources = str_list(s.sources);
-		let all = length(lists) + length(ipsets) + length(sources);
-		let active = length(filter(lists, (x) => index(cfg.lists, x) >= 0)) + length(filter(ipsets, (x) => index(cfg.ipsets, x) >= 0));
-		let available = length(filter(lists, (x) => idx.items.list[x] != null)) + length(filter(ipsets, (x) => idx.items.ipset[x] != null));
-		for (let n in sources) {
-			let src = srcs[n];
-			if (src?.valid)
-				available++;
-			if (src && src.enabled && index(cfg[SOURCE_UCI[src.type]] ?? [], SRC.item_id(n)) >= 0)
-				active++;
+		let sets = service_sets(s), core = sets[0];
+		let all = set_size(core), active = set_active(core, cfg, srcs), available = set_available(core, idx, srcs);
+		let variants = [];
+		for (let v in slice(sets, 1)) {
+			let size = set_size(v);
+			push(variants, {
+				id: v.id, name: v.name, name_en: v.name_en, description: v.description, description_en: v.description_en,
+				lists: v.lists, ipsets: v.ipsets, sources: v.sources, tier: v.tier,
+				enabled: size > 0 && set_active(v, cfg, srcs) == size,
+				available: size > 0 && set_available(v, idx, srcs) == size && s.works != 'no'
+			});
 		}
 		push(services, {
 			id: s.id, name: s.name, description: s.description, note: s.note, tier: s.tier, works: s.works,
-			lists: lists, ipsets: ipsets, sources: sources, test_targets: s.test_targets ?? [],
+			name_en: s.name_en, description_en: s.description_en, note_en: s.note_en,
+			lists: core.lists, ipsets: core.ipsets, sources: core.sources, test_targets: s.test_targets ?? [],
 			enabled: all > 0 && active == all,
 			partially_enabled: active > 0 && active < all,
-			available: all > 0 && available == all && s.works != 'no'
+			available: all > 0 && available == all && s.works != 'no',
+			variants: variants,
+			enabled_variant: enabled_variant(s, cfg, srcs)
 		});
 	}
 	let ram = ram_total_mib();
@@ -724,29 +901,47 @@ export function presets() {
 		ram_total_mib: ram, recommended_tier: (ram != null && ram < TIER_FULL_MIN_RAM_MIB) ? 'light' : 'full' });
 };
 
-export function wizard_apply(ids) {
+// The wizard owns the lists of the preset services: it never switches off a user list, even if a preset names one.
+function is_user_item(x) {
+	return substr(x, 0, 5) == 'user-';
+}
+
+// refs: "<service>" or "<service>:<variant>" (contract v1.7 §16.4). The chosen item set of every selected service is
+// switched on; all other sets of all preset services (other variants of a selected service, every set of a service
+// that is not selected) are switched off, except items that a chosen set uses too.
+export function wizard_apply(refs) {
 	let p = load_presets();
 	if (!p)
 		return fail('presets_missing', 'Файл пресетов не найден или повреждён');
-	if (!length(ids))
+	if (!length(refs))
 		return fail('bad_args', 'Укажите хотя бы один сервис');
 	let by_id = {};
 	for (let s in p.services)
 		if (type(s) == 'object' && is_id(s.id))
 			by_id[s.id] = s;
-	let selected = [], skipped = [];
-	for (let id in ids) {
-		let s = by_id[id];
+	let selected = [], chosen = {}, skipped = [];
+	for (let ref in refs) {
+		let r = parse_service_ref(ref);
+		if (!r)
+			return fail('bad_args', sprintf('Неверный сервис «%s»: ожидается <сервис> или <сервис>:<вариант>', ref));
+		let s = by_id[r.id];
 		if (!s)
-			return fail('unknown_service', sprintf('Сервис «%s» не найден в пресетах', id));
+			return fail('unknown_service', sprintf('Сервис «%s» не найден в пресетах', r.id));
+		let set = filter(service_sets(s), (x) => x.id == r.variant)[0];
+		if (!set)
+			return fail('unknown_variant', sprintf('У сервиса «%s» нет варианта «%s»', r.id, r.variant));
+		if (chosen[r.id] && chosen[r.id].id != set.id)
+			return fail('bad_args', sprintf('Сервис «%s» указан с разными вариантами', r.id));
 		if (s.works == 'no') {
-			push(skipped, { id: id, reason: 'works_no' });
+			push(skipped, { id: r.id, reason: 'works_no' });
 			continue;
 		}
-		if (!length(str_list(s.lists)) && !length(str_list(s.ipsets)) && !length(str_list(s.sources)))
-			return fail('preset_unavailable', sprintf('Для сервиса «%s» нет ни списков, ни подписок', id));
-		if (index(selected, id) < 0)
-			push(selected, id);
+		if (!set_size(set))
+			return fail('preset_unavailable', sprintf('Для сервиса «%s» нет ни списков, ни подписок', ref));
+		if (!chosen[r.id]) {
+			chosen[r.id] = set;
+			push(selected, r.id);
+		}
 	}
 	if (!length(selected))
 		return fail('preset_unavailable', 'Выбранные сервисы нельзя включить: обход для них не работает', { skipped: skipped });
@@ -756,51 +951,53 @@ export function wizard_apply(ids) {
 	for (let s in C.load_sources())
 		srcs[s.name] = s;
 	let opts = { lists: slice(cfg.lists), ipsets: slice(cfg.ipsets), exclude_lists: slice(cfg.exclude_lists), exclude_ipsets: slice(cfg.exclude_ipsets) };
-	// lists and subscriptions of preset services that are not selected are switched off; a subscription
-	// stops updating (enabled=0) unless another selected service uses it
+	// items of the sets that are not chosen are switched off; a subscription stops updating (enabled=0) unless
+	// a chosen set uses it
 	let add = (opt, x) => { if (index(opts[opt], x) < 0) push(opts[opt], x); };
-	let drop = (opt, x) => { opts[opt] = filter(opts[opt], (y) => y != x); };
+	let drop = (opt, x) => { if (!is_user_item(x)) opts[opt] = filter(opts[opt], (y) => y != x); };
 	let used_sources = {}, disable_sources = [];
 	for (let id in selected)
-		for (let n in str_list(by_id[id].sources))
+		for (let n in chosen[id].sources)
 			used_sources[n] = true;
 	for (let id, s in by_id) {
-		if (index(selected, id) >= 0)
-			continue;
-		for (let l in str_list(s.lists))
-			drop('lists', l);
-		for (let l in str_list(s.ipsets))
-			drop('ipsets', l);
-		for (let n in str_list(s.sources)) {
-			if (!srcs[n])
+		for (let set in service_sets(s)) {
+			if (chosen[id] != null && chosen[id].id == set.id)
 				continue;
-			drop(SOURCE_UCI[srcs[n].type] ?? 'lists', SRC.item_id(n));
-			if (!used_sources[n] && srcs[n].enabled && index(disable_sources, n) < 0)
-				push(disable_sources, n);
+			for (let l in set.lists)
+				drop('lists', l);
+			for (let l in set.ipsets)
+				drop('ipsets', l);
+			for (let n in set.sources) {
+				if (!srcs[n])
+					continue;
+				drop(list_option(srcs[n].type) ?? 'lists', SRC.item_id(n));
+				if (!used_sources[n] && srcs[n].enabled && index(disable_sources, n) < 0)
+					push(disable_sources, n);
+			}
 		}
 	}
 	let missing = [], enable_sources = [];
 	for (let id in selected) {
-		let s = by_id[id];
-		for (let l in str_list(s.lists)) {
+		let set = chosen[id];
+		for (let l in set.lists) {
 			if (!idx.items.list[l])
 				push(missing, l);
 			else
 				add('lists', l);
 		}
-		for (let l in str_list(s.ipsets)) {
+		for (let l in set.ipsets) {
 			if (!idx.items.ipset[l])
 				push(missing, l);
 			else
 				add('ipsets', l);
 		}
-		for (let n in str_list(s.sources)) {
+		for (let n in set.sources) {
 			let src = srcs[n];
 			if (!src?.valid) {
 				push(missing, 'source:' + n);
 				continue;
 			}
-			add(SOURCE_UCI[src.type], SRC.item_id(n));
+			add(list_option(src.type), SRC.item_id(n));
 			if (index(enable_sources, n) < 0)
 				push(enable_sources, n);
 		}
@@ -845,9 +1042,17 @@ export function wizard_apply(ids) {
 			C.set_source(n, { enabled: '1' });
 	for (let n in disable_sources)
 		C.set_source(n, { enabled: '0' });
-	let res = ok({ services: selected, skipped: skipped, lists: opts.lists, ipsets: opts.ipsets, exclude_lists: opts.exclude_lists,
-		exclude_ipsets: opts.exclude_ipsets, list_mode: 'whitelist', strategy: ncfg[sopt], sources: enable_sources,
-		sources_disabled: disable_sources, reloaded: reload_if_needed(ncfg).reloaded, warnings: v.warnings ?? [] });
+	let variants = {};
+	for (let id in selected)
+		variants[id] = chosen[id].id;
+	let res = ok({ services: selected, variants: variants, skipped: skipped, lists: opts.lists, ipsets: opts.ipsets,
+		exclude_lists: opts.exclude_lists, exclude_ipsets: opts.exclude_ipsets, list_mode: 'whitelist', strategy: ncfg[sopt],
+		sources: enable_sources, sources_disabled: disable_sources, reloaded: reload_if_needed(ncfg).reloaded, warnings: v.warnings ?? [] });
+	// a chosen set of tier "full" on a small router is applied, but with a warning (contract v1.3 §14.3, v1.7 §16.4)
+	let ram = ram_total_mib(), min_full = p.tiers?.full?.min_ram_mib ?? TIER_FULL_MIN_RAM_MIB;
+	if (ram != null && ram < min_full && length(filter(selected, (id) => chosen[id].tier == 'full')) &&
+	    index(res.warnings, 'low_memory') < 0)
+		push(res.warnings, 'low_memory');
 	cron_sync();
 	// an error of the side job is not a configuration warning (contract v1.2 §6.2)
 	if (length(enable_sources)) {
@@ -871,12 +1076,7 @@ export function repo_list(opts) {
 function reload_after_install(res) {
 	if (!res.ok)
 		return res;
-	let types = res.types ?? [];
-	let force = false;
-	for (let t in [ 'nfqws', 'nfqws2', 'bin', 'lua_lib' ])
-		if (index(types, t) >= 0)
-			force = true;
-	res.reloaded = reload_if_changed(force).reloaded;
+	res.reloaded = reload_if_changed(needs_reload(res.types)).reloaded;
 	return res;
 }
 
@@ -892,11 +1092,7 @@ export const JOB_HANDLERS = {
 		let s = SRC.update(null, ctx, { due_only: true });
 		let r = cfg.repo.autoupdate ? R.upgrade(cfg, null, ctx, {}) :
 			ok({ skipped: true, message: 'Автообновление элементов репозитория выключено' });
-		let force = false;
-		for (let t in (r.types ?? []))
-			if (index([ 'nfqws', 'nfqws2', 'bin', 'lua_lib' ], t) >= 0)
-				force = true;
-		let reloaded = reload_if_changed(force).reloaded;
+		let reloaded = reload_if_changed(needs_reload(r.types)).reloaded;
 		if (!r.ok || !s.ok)
 			return fail(r.ok ? s.error : r.error, join('; ', filter([ r.ok ? null : r.message, s.ok ? null : s.message ], (x) => x != null)),
 				{ repo: r, sources: s, reloaded: reloaded });
@@ -907,13 +1103,11 @@ export const JOB_HANDLERS = {
 		r.reloaded = reload_if_changed(false).reloaded;
 		return r;
 	},
-	'test': (ctx, args, flags) => T.run(C.load(), { quick: flags.quick, strategies: flags.strategies }, ctx)
-};
-
-export function job_cleanup(job) {
-	if (job?.name == 'test')
-		return T.restore(null);
-	return null;
+	'test': (ctx, args, flags) => T.run(C.load(), { quick: flags.quick, strategies: flags.strategies,
+		apply_if_better: flags.apply_if_better, exclusive: flags.exclusive, hooks: { fw_apply: () => fw_apply({}) } }, ctx),
+	'probe': (ctx, args, flags) => H.probe_run(C.load(), flags.services, ctx, null),
+	'dns-setup': (ctx, args, flags) => DNS.setup(ctx, null),
+	'diagnose': (ctx, args, flags) => DG.run_diagnose(C.load(), flags.services, ctx, null)
 };
 
 // Starts a job in background, or runs it in place with --foreground.
@@ -930,6 +1124,12 @@ export function run_job(name, args, flags) {
 		push(jargs, '--quick');
 	if (flags.strategies)
 		push(jargs, '--strategies', join(',', flags.strategies));
+	if (flags.apply_if_better)
+		push(jargs, '--apply-if-better');
+	if (flags.exclusive)
+		push(jargs, '--exclusive');
+	if (flags.services)
+		push(jargs, '--services', join(',', flags.services));
 	return J.start(name, jargs);
 };
 
@@ -964,21 +1164,37 @@ export function trim_test_results(res) {
 	return res;
 };
 
-export function test_status() {
+// Pure: results without per-target details (`test status --brief`, contract v1.3 §14.3).
+export function brief_test_results(res) {
+	if (type(res) != 'object')
+		return res;
+	if (type(res.results) == 'array')
+		for (let r in res.results)
+			if (type(r) == 'object')
+				delete r.targets;
+	if (type(res.baseline) == 'object')
+		delete res.baseline.targets;
+	return res;
+};
+
+export function test_status(flags) {
 	settle_jobs();
 	let j = J.read();
+	let res = read_json(T.results_path(), 4194304);
 	return ok({
 		job: (j && j.name == 'test') ? j : null,
 		running: !!(j && j.name == 'test' && j.state == 'running'),
-		results: trim_test_results(read_json(T.results_path(), 4194304))
+		mode: res?.mode ?? null,
+		mode_reason: res?.mode_reason ?? null,
+		results: flags?.brief ? brief_test_results(res) : trim_test_results(res)
 	});
 };
 
 export function test_stop() {
 	let j = J.read();
 	if (!j || j.name != 'test' || j.state != 'running') {
-		if (test_active()) {
-			let rr = T.restore(null);
+		if (test_active() || T.leftover()) {
+			let rr = test_restore();
 			return ok({ state: 'restored', reloaded: rr?.rc == 0 });
 		}
 		return fail('no_job', 'Автоподбор не выполняется');
@@ -1075,4 +1291,103 @@ export function diag(flags) {
 	else
 		out += section('Журнал', sprintf('(пропущено в быстром отчёте) %s\nили: logread -e zaprett', DIAG_FULL_HINT));
 	return ok({ text: out, full: full });
+};
+
+/* ---------- watchdog, probe, monitor, log, page (contract v1.3 §14) ---------- */
+
+export function ensure() {
+	// a test killed with its job must not keep the watchdog away for good (health.test_busy)
+	settle_jobs();
+	return with_main_lock(() => H.ensure(C.load(), { fw_apply: () => fw_apply({}) }));
+};
+
+export function probe_status() {
+	return H.probe_status();
+};
+
+export function monitor_run() {
+	settle_jobs();
+	return H.monitor_run(C.load(), null);
+};
+
+export function monitor_status() {
+	return H.monitor_status(C.load());
+};
+
+/* ---------- encrypted DNS and blocking diagnosis (contract v1.4 §15.3–§15.4) ---------- */
+
+export function dns_status() {
+	return ok({ dns: DNS.status() });
+};
+
+// `dns setup`: a working provider needs no job — {ok, changed:false} at once; otherwise job `dns-setup`.
+export function dns_setup(flags) {
+	let st = DNS.status();
+	if (st.encrypted)
+		return ok({ changed: false, dns: st });
+	return run_job('dns-setup', [], flags);
+};
+
+export function diagnose_status() {
+	return DG.status();
+};
+
+export const LOG_TAIL_DEFAULT = 200;
+export const LOG_TAIL_MAX = 1000;
+
+// Pure: the last n syslog lines of zaprett or the engine.
+export function log_filter(text, n) {
+	let lines = filter(split(text ?? '', '\n'), (l) => index(l, 'zaprett') >= 0 || index(l, 'nfqws') >= 0);
+	return (length(lines) > n) ? slice(lines, length(lines) - n) : lines;
+};
+
+export function log_lines(opts) {
+	let n = (opts?.tail == null) ? LOG_TAIL_DEFAULT : V.parse_uint(opts.tail, 1, 1000000000);
+	if (n == null)
+		return fail('bad_value', '--tail: целое число от 1');
+	if (n > LOG_TAIL_MAX)
+		n = LOG_TAIL_MAX;
+	let r = run([ P.logread ], { timeout: 15000, limit: 4194304 });
+	if (r.rc != 0)
+		return fail('logread_failed', 'Не удалось прочитать системный журнал: ' + trim(r.stderr));
+	return ok({ lines: log_filter(r.stdout, n) });
+};
+
+export const PAGES = {
+	overview: [ 'status', 'job', 'presets', 'monitor', 'probe', 'dns' ],
+	lists: [ 'status', 'job', 'items', 'sources', 'presets' ],
+	strategies: [ 'status', 'job', 'items', 'test' ],
+	diagnostics: [ 'status', 'job', 'monitor', 'dns', 'diagnose' ]
+};
+
+const PAGE_PARTS = {
+	status: () => status(),
+	job: () => job_status(),
+	presets: () => presets(),
+	monitor: () => monitor_status(),
+	probe: () => probe_status(),
+	items: () => items({}),
+	sources: () => sources_list(),
+	test: () => test_status({ brief: true }),
+	dns: () => dns_status(),
+	diagnose: () => diagnose_status()
+};
+
+// One process instead of several for a page of the web interface: every field is the whole answer of its
+// command, with its own `ok` (contract v1.3 §14.3).
+export function page(name) {
+	let parts = PAGES[name];
+	if (!parts)
+		return fail('bad_value', 'Страница: overview, lists, strategies или diagnostics');
+	let res = ok({ page: name });
+	for (let k in parts) {
+		let fn = PAGE_PARTS[k];
+		try {
+			res[k] = fn();
+		}
+		catch (e) {
+			res[k] = fail('internal_error', 'Внутренняя ошибка: ' + e.message);
+		}
+	}
+	return res;
 };

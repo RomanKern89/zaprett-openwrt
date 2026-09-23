@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "d1d041f3f65121ad9b3c84f5c1eb9f2c628936828fc9389df950a6688d17357f",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-russiafix.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-russiafix.json",
+  "name_en": "strategy-russiafix",
+  "description_en": "Port of a strategy from the Snowy-Fluffy repository (ported by HelloGames)",
+  "name_zh": "strategy-russiafix",
+  "description_zh": "移植自 Snowy-Fluffy 仓库的策略（由 HelloGames 移植）"
 }

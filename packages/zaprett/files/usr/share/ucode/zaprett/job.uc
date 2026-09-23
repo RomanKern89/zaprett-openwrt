@@ -7,7 +7,8 @@ import { P, read_json, write_json, mkdir_p, try_lock, wait_lock, unlock, self_pi
 	run, ok, fail } from 'zaprett.util';
 
 export const LOG_LIMIT = 262144;
-export const NAMES = [ 'repo-fetch', 'repo-install', 'repo-remove', 'repo-upgrade', 'sources-update', 'test', 'autoupdate' ];
+export const NAMES = [ 'repo-fetch', 'repo-install', 'repo-remove', 'repo-upgrade', 'sources-update', 'test', 'autoupdate', 'probe',
+	'dns-setup', 'diagnose' ];
 
 export function job_path() {
 	return P.run + '/job.json';

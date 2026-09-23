@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "92b9a59f8709cb66c59b0ce3ebf5a79dae061d724eb92017aadeb05370987d58",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-simple-fake-alt.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-simple-fake-alt.json",
+  "name_en": "strategy-simple-fake-alt",
+  "description_en": "Strategy simple-fake-alt from the zapret for Windows repository",
+  "name_zh": "strategy-simple-fake-alt",
+  "description_zh": "来自 Windows 版 zapret 仓库的 simple-fake-alt 策略"
 }

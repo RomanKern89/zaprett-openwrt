@@ -11,5 +11,9 @@
   "source": "bundle",
   "sha256": "6bb040ee55b4dd8131c2e0d23b6d48d3558a7dce53621f3219e3c90969eab4fe",
   "installed_at": 1789603200,
-  "manifest_url": null
+  "manifest_url": null,
+  "name_en": "Exclusions: websites",
+  "description_en": "Websites the bypass leaves alone (379 domains): Gosuslugi and government sites, banks, Yandex, VK, marketplaces, gaming and software services. A merge of the Flowseal list-exclude, CherretGit/zaprett-repo list-exclude-general (plus gosuslugi.ru and x5.ru) and remittor zapret-hosts-user-exclude lists; domains missing from DNS were removed.",
+  "name_zh": "排除项：网站",
+  "description_zh": "绕过不处理的网站（379 个域名）：政务服务（Gosuslugi）和政府网站、银行、Yandex、VK、电商平台、游戏和软件服务。合并了 Flowseal list-exclude、CherretGit/zaprett-repo list-exclude-general（另加 gosuslugi.ru 和 x5.ru）以及 remittor zapret-hosts-user-exclude；已删除 DNS 中不存在的域名。"
 }

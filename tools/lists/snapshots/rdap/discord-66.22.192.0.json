@@ -1,0 +1,15 @@
+{
+ "end": "66.22.255.255",
+ "entities": [
+  "abuse: Abuse contact role object",
+  "administrative,technical: Engineering",
+  "registrant: Discord Inc.",
+  "registrant: RIPE-NCC-HM-MNT",
+  "registrant: lir-us-discord1-1-MNT"
+ ],
+ "fetched": "2026-09-22",
+ "handle": "66.22.192.0 - 66.22.255.255",
+ "name": "US-DISCORD1-20000919",
+ "start": "66.22.192.0",
+ "url": "https://rdap.db.ripe.net/ip/66.22.192.0/18"
+}

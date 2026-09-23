@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "name": "base/nfqws/strategy-discordfix-mgts",
+  "engine": "nfqws",
+  "main": {
+    "list_mode": "whitelist",
+    "lists": [
+      "zaprett-youtube",
+      "zaprett-discord",
+      "user-hosts"
+    ],
+    "exclude_lists": [
+      "zaprett-exclude",
+      "user-hosts-exclude"
+    ],
+    "ipsets": [],
+    "exclude_ipsets": [
+      "zaprett-exclude-ipset",
+      "user-ipset-exclude"
+    ],
+    "ipv6": "0",
+    "debug": "0",
+    "game_filter": "0",
+    "game_ports_tcp": "1024-65535",
+    "game_ports_udp": "1024-65535"
+  },
+  "strategy": "strategy-discordfix-mgts",
+  "text": null,
+  "item_id": null,
+  "user_files": {},
+  "config_bad_options": [],
+  "generated_by": {
+    "openwrt": "OpenWrt 25.12.5 r33051-f5dae5ece4",
+    "zaprett": "1.1.0",
+    "generator": "repository strategy.uc 0e18745fdfde7834",
+    "path_rewrite": {
+      "/tmp/zaprett-conf/sbx/etc": "/etc/zaprett",
+      "/tmp/zaprett-conf/sbx/run": "/var/run/zaprett"
+    },
+    "at": "2026-09-23T07:53:59Z"
+  },
+  "expected": {
+    "ok": true,
+    "args": [
+      "--qnum=200",
+      "--user=daemon",
+      "--dpi-desync-fwmark=0x40000000",
+      "--filter-udp=443",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+      "--hostlist=/etc/zaprett/user/hosts-include.txt",
+      "--hostlist=/usr/share/zaprett/guard/hostlist-guard.txt",
+      "--hostlist-exclude=/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+      "--hostlist-exclude=/etc/zaprett/user/hosts-exclude.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--dpi-desync=fake",
+      "--dpi-desync-repeats=6",
+      "--dpi-desync-fake-quic=/usr/share/zaprett/bundle/files/bin/quic_initial_www_google_com.bin",
+      "--new",
+      "--filter-udp=50000-65535",
+      "--ipset=/usr/share/zaprett/guard/ipset-guard.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--dpi-desync=fake,tamper",
+      "--dpi-desync-any-protocol",
+      "--dpi-desync-cutoff=d3",
+      "--dpi-desync-repeats=6",
+      "--dpi-desync-fake-quic=/usr/share/zaprett/bundle/files/bin/quic_initial_www_google_com.bin",
+      "--new",
+      "--filter-tcp=443",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-youtube.txt",
+      "--hostlist=/usr/share/zaprett/bundle/files/lists/include/zaprett-discord.txt",
+      "--hostlist=/etc/zaprett/user/hosts-include.txt",
+      "--hostlist=/usr/share/zaprett/guard/hostlist-guard.txt",
+      "--hostlist-exclude=/usr/share/zaprett/bundle/files/lists/exclude/zaprett-exclude.txt",
+      "--hostlist-exclude=/etc/zaprett/user/hosts-exclude.txt",
+      "--ipset-exclude=/usr/share/zaprett/bundle/files/ipset/exclude/zaprett-exclude-ipset.txt",
+      "--ipset-exclude=/etc/zaprett/user/ipset-exclude.txt",
+      "--dpi-desync=fake",
+      "--dpi-desync-autottl=2",
+      "--dpi-desync-repeats=6",
+      "--dpi-desync-fooling=md5sig",
+      "--dpi-desync-fake-tls=/usr/share/zaprett/bundle/files/bin/tls_clienthello_www_google_com.bin"
+    ],
+    "ports": {
+      "tcp": [
+        "443"
+      ],
+      "udp": [
+        "443",
+        "50000-65535"
+      ]
+    },
+    "warnings": [
+      "empty_profile_removed",
+      "wide_port_range"
+    ],
+    "details": {
+      "empty_profiles": 1
+    }
+  }
+}

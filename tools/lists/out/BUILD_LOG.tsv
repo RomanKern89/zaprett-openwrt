@@ -1,0 +1,937 @@
+service	entry	verdict	reason	source
+cloudflare	103.21.244.0/22	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	103.22.200.0/22	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	103.31.4.0/22	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	104.16.0.0/13	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	104.24.0.0/14	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	108.162.192.0/18	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	131.0.72.0/22	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	141.101.64.0/18	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	162.158.0.0/15	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	172.64.0.0/13	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	173.245.48.0/20	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	188.114.96.0/20	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	190.93.240.0/20	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	197.234.240.0/22	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	198.41.128.0/17	included	zaprett-cloudflare-ipset: в списке	official:https://www.cloudflare.com/ips-v4
+cloudflare	2400:cb00::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2405:8100::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2405:b500::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2606:4700::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2803:f800::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2a06:98c0::/29	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+cloudflare	2c0f:f248::/32	included	zaprett-cloudflare-ipset6: в списке	official:https://www.cloudflare.com/ips-v6
+discord	*.discord.co	covered	поддоменов из CT, страниц и сессий: 1, покрыты discord.co	ct/page/session
+discord	*.discord.com	covered	поддоменов из CT, страниц и сессий: 66, покрыты discord.com	ct/page/session
+discord	*.discord.gg	covered	поддоменов из CT, страниц и сессий: 5, покрыты discord.gg	ct/page/session
+discord	*.discord.media	covered	поддоменов из CT, страниц и сессий: 1, покрыты discord.media	ct/page/session
+discord	*.discord.tools	covered	поддоменов из CT, страниц и сессий: 2, покрыты discord.tools	ct/page/session
+discord	*.discordapp.com	covered	поддоменов из CT, страниц и сессий: 10, покрыты discordapp.com	ct/page/session
+discord	*.discordapp.net	covered	поддоменов из CT, страниц и сессий: 6, покрыты discordapp.net	ct/page/session
+discord	66.22.192.0/18	owner	RDAP: registrant: Discord Inc.	rdap:https://rdap.db.ripe.net/ip/66.22.192.0/18
+discord	66.22.196.0/22	included	zaprett-discord-voice: в списке	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.200.0/22	included	zaprett-discord-voice: агрегирована в 66.22.200.0/21	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.204.0/22	included	zaprett-discord-voice: агрегирована в 66.22.200.0/21	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.208.0/22	included	zaprett-discord-voice: агрегирована в 66.22.208.0/21	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.212.0/22	included	zaprett-discord-voice: агрегирована в 66.22.208.0/21	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.218.0/23	included	zaprett-discord-voice: в списке	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.220.0/23	included	zaprett-discord-voice: агрегирована в 66.22.220.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.222.0/23	included	zaprett-discord-voice: агрегирована в 66.22.220.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.224.0/23	included	zaprett-discord-voice: агрегирована в 66.22.224.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.226.0/23	included	zaprett-discord-voice: агрегирована в 66.22.224.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.230.0/24	included	zaprett-discord-voice: агрегирована в 66.22.230.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.231.0/24	included	zaprett-discord-voice: агрегирована в 66.22.230.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.232.0/24	included	zaprett-discord-voice: агрегирована в 66.22.232.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.233.0/24	included	zaprett-discord-voice: агрегирована в 66.22.232.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.234.0/24	included	zaprett-discord-voice: агрегирована в 66.22.232.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.235.0/24	included	zaprett-discord-voice: агрегирована в 66.22.232.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.236.0/24	included	zaprett-discord-voice: агрегирована в 66.22.236.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.237.0/24	included	zaprett-discord-voice: агрегирована в 66.22.236.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.238.0/24	included	zaprett-discord-voice: в списке	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.240.0/24	included	zaprett-discord-voice: агрегирована в 66.22.240.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.241.0/24	included	zaprett-discord-voice: агрегирована в 66.22.240.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.242.0/24	included	zaprett-discord-voice: агрегирована в 66.22.240.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.243.0/24	included	zaprett-discord-voice: агрегирована в 66.22.240.0/22	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.244.0/24	included	zaprett-discord-voice: агрегирована в 66.22.244.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.245.0/24	included	zaprett-discord-voice: агрегирована в 66.22.244.0/23	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.246.0/24	included	zaprett-discord-voice: в списке	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	66.22.248.0/24	included	zaprett-discord-voice: в списке	ripestat:AS49544 (i3Dnet i3D.net B.V, 2026-09-08..2026-09-22)
+discord	dis.gd	core+full	DNS: NOERROR в обоих DoH	code:discord/home
+discord	discord-activities.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discord-attachments-uploads-prd.storage.googleapis.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP; в коде discord.com/app и /login (677 скриптов) имени нет; загрузка вложений видна только после входа, сессии с учётной записью нет	seed
+discord	discord.co	core+full	DNS: NOERROR в обоих DoH	code:discord/home
+discord	discord.com	core+full	DNS: NOERROR в обоих DoH	doc:https://support.discord.com/hc/en-us/articles/360042987951
+discord	discord.design	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discord.dev	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discord.gg	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discord.gift	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discord.gifts	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discord.media	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discord.new	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discord.store	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discord.tools	full	DNS: NOERROR в обоих DoH	code:discord/login
+discord	discordactivities.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discordapp.com	core+full	DNS: NOERROR в обоих DoH	doc:https://support.discord.com/hc/en-us/articles/360042987951
+discord	discordapp.net	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discordcdn.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+discord	discordmerch.com	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/
+discord	discordsays.com	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/app
+discord	discordstatus.com	core+full	DNS: NOERROR в обоих DoH	page:https://discord.com/
+roblox	*.rblx.org	covered	поддоменов из CT, страниц и сессий: 1, покрыты rblx.org	ct/page/session
+roblox	*.rbx.com	covered	поддоменов из CT, страниц и сессий: 6, покрыты rbx.com	ct/page/session
+roblox	*.rbxcdn.com	covered	поддоменов из CT, страниц и сессий: 40, покрыты rbxcdn.com	ct/page/session
+roblox	*.roblox.com	covered	поддоменов из CT, страниц и сессий: 226, покрыты roblox.com	ct/page/session
+roblox	*.robloxlabs.com	covered	поддоменов из CT, страниц и сессий: 9, покрыты robloxlabs.com	ct/page/session
+roblox	103.140.28.0/23	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	10xgenomics.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	128.116.0.0/17	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.0.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.1.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.102.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.105.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.11.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.115.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.116.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.117.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.120.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.127.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.13.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.14.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.2.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.21.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.30.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.31.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.32.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.44.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.45.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.46.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.47.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.48.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.5.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.50.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.51.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.53.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.54.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.55.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.56.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.57.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.63.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.64.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.67.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.74.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.80.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.81.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.84.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.86.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.87.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.88.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.92.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.93.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.94.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.95.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	128.116.97.0/24	included	zaprett-roblox-ipset: агрегирована в 128.116.0.0/17	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	141.193.3.0/24	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	205.201.62.0/24	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6000::/40	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6004::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6007::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6008::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6009::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:600a::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:600b::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:600c::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:600d::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:600e::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6041::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:606e::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:606f::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:135:6070::/48	included	zaprett-roblox-ipset: агрегирована в 2620:135:6000::/40	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	2620:2b:e000::/48	included	zaprett-roblox-ipset: в списке	ripestat:AS22697 (ROBLOX-PRODUCTION - Roblox, 2026-09-08..2026-09-22)
+roblox	athenascope.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	bash.video	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	blox.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	bloxyawards.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	buildroblox.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	byfron.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	cdn.arkoselabs.com	full	DNS: NOERROR в обоих DoH	doc:https://en.help.roblox.com/hc/en-us/articles/115005744663
+roblox	cerner.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	costargroup.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	dcsg.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	deere.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	dexcom.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	dolby.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	eightfold.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	eightfolddemo.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	getsway.app	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	go-block.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	go-blocks.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	go-blox.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	goblocks.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	goblox.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	gooblox.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	goroblox.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	hamul.gg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	headshotz.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	houstonisd.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	insight.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	jidomaps.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	kemper.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	loom.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	luau-lang.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	magnitglobal.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	matchgroupcareers.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	micron.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	mskcc.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	nakama.us	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	nakamalabs.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	prounlimited.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	ptc.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	rblx.org	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	rbx.com	full	DNS: NOERROR в обоих DoH	code:roblox/home
+roblox	rbxcdn-cn.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	rbxcdn.com	core+full	DNS: NOERROR в обоих DoH	doc:https://en.help.roblox.com/hc/en-us/articles/115005744663
+roblox	rbxcdn.net	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	rbxlabs.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	road-blocks.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	roblox-api.arkoselabs.com	core+full	DNS: NOERROR в обоих DoH	doc:https://en.help.roblox.com/hc/en-us/articles/115005744663
+roblox	roblox.com	core+full	DNS: NOERROR в обоих DoH	doc:https://en.help.roblox.com/hc/en-us/articles/115005744663
+roblox	robloxdev.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	robloxlabs.com	full	DNS: NOERROR в обоих DoH	code:roblox/home
+roblox	simulping.com	full	DNS: NOERROR в обоих DoH	ct:roblox.com
+roblox	teladochealth.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	trimble.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	trinet.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	tripleplay.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	tym.so	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	whirlpool.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+roblox	zebra.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:roblox.com
+rutracker	*.rutracker.cc	covered	поддоменов из CT, страниц и сессий: 6, покрыты rutracker.cc	ct/page/session
+rutracker	rutracker.cc	core+full	DNS: NOERROR в обоих DoH	ct:rutracker.org
+rutracker	rutracker.net	core+full	DNS: NOERROR в обоих DoH	ct:rutracker.org
+rutracker	rutracker.org	core+full	DNS: NOERROR в обоих DoH	doc:https://rutracker.org/forum/index.php
+rutracker	rutracker.ru	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+rutracker	rutracker.wiki	core+full	DNS: NOERROR в обоих DoH	page:https://rutracker.org/forum/index.php
+rutracker	rutrk.org	full	DNS: NOERROR в обоих DoH	ct:rutracker.org
+rutracker	t-ru.org	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+signal	*.signal.org	covered	поддоменов из CT, страниц и сессий: 35, покрыты signal.org	ct/page/session
+signal	*.signalusers.org	covered	поддоменов из CT, страниц и сессий: 1, покрыты signalusers.org	ct/page/session
+signal	signal.art	full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signal.group	core+full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signal.link	core+full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signal.me	core+full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signal.org	core+full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signal.tube	full	DNS: NOERROR в обоих DoH	doc:https://support.signal.org/hc/en-us/articles/360007320291
+signal	signalusers.org	full	DNS: NOERROR в обоих DoH	page:https://signal.org/
+telegram	*.telegram.org	covered	поддоменов из CT, страниц и сессий: 55, покрыты telegram.org	ct/page/session
+telegram	149.154.160.0/20	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	149.154.160.0/22	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.160.0/23	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.160.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.161.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.162.0/23	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.162.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.163.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.164.0/22	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.164.0/23	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.164.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.165.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.166.0/23	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.166.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.167.0/24	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.168.0/22	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	149.154.172.0/22	included	zaprett-telegram-ipset: агрегирована в 149.154.160.0/20	ripestat:AS59930 (Telegram_Messenger Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	185.76.151.0/24	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	185.76.151.0/24	included	zaprett-telegram-ipset: в списке	ripestat:AS211157 (Telegram-AS Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2001:67c:4e8::/48	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	2001:67c:4e8::/48	included	zaprett-telegram-ipset: в списке	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2001:b28:f23c::/48	included	zaprett-telegram-ipset: агрегирована в 2001:b28:f23c::/47	official:https://core.telegram.org/resources/cidr.txt
+telegram	2001:b28:f23c::/48	included	zaprett-telegram-ipset: агрегирована в 2001:b28:f23c::/47	ripestat:AS44907 (Telegram_Messenger_CDN Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2001:b28:f23d::/48	included	zaprett-telegram-ipset: агрегирована в 2001:b28:f23c::/47	official:https://core.telegram.org/resources/cidr.txt
+telegram	2001:b28:f23d::/48	included	zaprett-telegram-ipset: агрегирована в 2001:b28:f23c::/47	ripestat:AS59930 (Telegram_Messenger Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2001:b28:f23f::/48	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	2001:b28:f23f::/48	included	zaprett-telegram-ipset: в списке	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2a0a:f280:203::/48	included	zaprett-telegram-ipset: агрегирована в 2a0a:f280::/32	ripestat:AS211157 (Telegram-AS Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	2a0a:f280::/32	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.105.192.0/23	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.105.192.0/23	included	zaprett-telegram-ipset: в списке	ripestat:AS211157 (Telegram-AS Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.10.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.12.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.12.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	ripestat:AS59930 (Telegram_Messenger Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.16.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.16.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.16.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.18.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.20.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.20.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	ripestat:AS44907 (Telegram_Messenger_CDN Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.20.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.16.0/21	ripestat:AS44907 (Telegram_Messenger_CDN Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.4.0/22	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.4.0/22	included	zaprett-telegram-ipset: в списке	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.4.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.4.0/22	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.56.0/22	included	zaprett-telegram-ipset: в списке	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.56.0/22	included	zaprett-telegram-ipset: в списке	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.56.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.56.0/22	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.56.0/24	included	zaprett-telegram-ipset: агрегирована в 91.108.56.0/22	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.57.0/24	included	zaprett-telegram-ipset: агрегирована в 91.108.56.0/22	ripestat:AS62014 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.6.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.4.0/22	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.8.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	official:https://core.telegram.org/resources/cidr.txt
+telegram	91.108.8.0/22	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	91.108.8.0/23	included	zaprett-telegram-ipset: агрегирована в 91.108.8.0/21	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	95.161.64.0/20	included	zaprett-telegram-ipset: в списке	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	95.161.64.0/21	included	zaprett-telegram-ipset: агрегирована в 95.161.64.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	95.161.72.0/21	included	zaprett-telegram-ipset: агрегирована в 95.161.64.0/20	ripestat:AS62041 (Telegram Telegram Messenger Inc, 2026-09-08..2026-09-22)
+telegram	cdn-telegram.org	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+telegram	comments.app	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	contest.com	core	DNS: NOERROR в обоих DoH	code:telegram/web_a
+telegram	fragment.com	core	DNS: NOERROR в обоих DoH	page:https://core.telegram.org/
+telegram	graph.org	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	quiz.directory	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	t.me	core	DNS: NOERROR в обоих DoH	code:telegram/web_a
+telegram	tdesktop.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+telegram	telegra.ph	core	DNS: NOERROR в обоих DoH	code:telegram/web_a
+telegram	telegram.dog	core	DNS: NOERROR в обоих DoH	session:telegram/web_a
+telegram	telegram.me	core	DNS: NOERROR в обоих DoH	session:telegram/web_k
+telegram	telegram.org	core	DNS: NOERROR в обоих DoH	doc:https://telegram.org/
+telegram	telegram.space	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	telesco.pe	core	DNS: NOERROR в обоих DoH	code:telegram/web_k
+telegram	tg.dev	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	tx.me	core	DNS: NOERROR в обоих DoH	ip:zaprett-telegram-ipset
+telegram	usercontent.dev	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+youtube	*.android.youtube	covered	поддоменов из CT, страниц и сессий: 3, покрыты android.youtube	ct/page/session
+youtube	*.ggpht.com	covered	поддоменов из CT, страниц и сессий: 5, покрыты ggpht.com	ct/page/session
+youtube	*.googlevideo.com	covered	поддоменов из CT, страниц и сессий: 53, покрыты googlevideo.com	ct/page/session
+youtube	*.javascript.youtube	covered	поддоменов из CT, страниц и сессий: 2, покрыты javascript.youtube	ct/page/session
+youtube	*.youtube-nocookie.com	covered	поддоменов из CT, страниц и сессий: 3, покрыты youtube-nocookie.com	ct/page/session
+youtube	*.youtube.com	covered	поддоменов из CT, страниц и сессий: 151, покрыты youtube.com	ct/page/session
+youtube	*.youtubeedu.com	covered	поддоменов из CT, страниц и сессий: 2, покрыты youtubeedu.com	ct/page/session
+youtube	*.youtubeeducation.com	covered	поддоменов из CT, страниц и сессий: 3, покрыты youtubeeducation.com	ct/page/session
+youtube	*.ytimg.com	covered	поддоменов из CT, страниц и сессий: 12, покрыты ytimg.com	ct/page/session
+youtube	2mdn.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	accessibility.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	adgoogle.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	admeld.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	advertisercommunity.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	advertiserscommunity.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	adwords-community.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	adwordsexpress.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	ai.android	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	aiapp.cloud.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	aiinfra.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	aistudio.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	alphagenomecommunity.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	alphagenomedocs.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	android.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	android.youtube	excluded	DNS: NXDOMAIN в обоих DoH	page:https://www.youtube.com/
+youtube	angulardart.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	appbridge.ca	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	appbridge.io	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	appbridge.it	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	apture.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	asp-cc.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	atv-b2b-mgmt.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	autodatatoolkit.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bandpage.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bdn.dev	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	beatthatquote.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bg-call-donation-alpha.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bg-call-donation-canary.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bg-call-donation-dev.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bg-call-donation.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	blink.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	blog.youtube	full	DNS: NOERROR в обоих DoH	page:https://www.youtube.com/@YouTube
+youtube	blogger.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	brotli.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumpshare.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumptop.ca	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumptop.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumptop.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumptop.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	bumptunes.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	campuslondon.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cc-dt.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	certificate-transparency.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	chrome.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	chromecast.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	chromium.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	chronicle.security	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cloud-staging.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cloud-test.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cloudburstresearch.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cloudrobotics.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	conscrypt.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	conscrypt.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	contactcenter.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	contentofferpilot.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	contentpilot.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cookiechoices.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	coova.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	coova.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	coova.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	crr.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	cs4hs.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	dartsearch.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	debug.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	debugproject.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	design.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	devicecenter.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	doodles.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	doubleclick.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	doubleclick.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	environment.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	episodic.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	famebit.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	fbit.co	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	feedburner.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	fflick.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	financeleadsonline.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	g-tun.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	g.co	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gerritcodereview.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	getbumptop.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	ggpht.com	core+full	DNS: NOERROR в обоих DoH	page:https://www.youtube.com/@YouTube
+youtube	gipscorp.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	globaledu.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gmeet.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gngjd.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gonglchuangl.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	goo.gl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google-analytics.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ac	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ad	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ae	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.af	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ag	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.al	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.am	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.as	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.at	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.az	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ba	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.be	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.berlin	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bf	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bi	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bj	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bs	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.by	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.bzh	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ca	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cat	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cc	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cd	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cf	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ch	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ci	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ao	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.bw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ck	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.cr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.hu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.id	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.il	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.im	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.in	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.je	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.jp	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ke	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.kr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ls	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ma	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.mz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.nz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.th	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.tz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ug	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.uk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.uz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.ve	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.vi	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.zm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.co.zw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.af	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ag	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ar	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.au	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.bd	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.bh	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.bn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.bo	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.br	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.by	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.bz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.co	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.cu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.cy	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.do	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ec	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.eg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.et	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.fj	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ge	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.gh	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.gi	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.gr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.gt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.hk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.iq	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.jm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.jo	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.kh	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.kw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.lb	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ly	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.mm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.mt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.mx	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.my	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.na	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.nf	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ng	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ni	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.np	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.nr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.om	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pa	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pe	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ph	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.pr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.py	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.qa	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ru	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.sa	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.sb	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.sg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.sl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.sv	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.tj	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.tn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.tr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.tw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ua	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.uy	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.vc	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.ve	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.com.vn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cv	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.cz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.de	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.dj	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.dk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.dm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.dz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ee	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.es	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.eus	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.fi	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.fm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.fr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.frl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ga	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gal	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ge	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gp	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.gy	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.hk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.hn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.hr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ht	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.hu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ie	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.im	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.in	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.info	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.iq	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ir	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.is	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.it	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.it.ao	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.je	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.jo	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.jobs	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.jp	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.kg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ki	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.kz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.la	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.li	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.lk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.lt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.lu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.lv	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.md	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.me	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ml	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ms	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mv	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.mw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ne	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ne.jp	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ng	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.nl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.no	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.nr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.nu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.off.ai	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.pk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.pl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.pn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ps	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.pt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ro	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.rs	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ru	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.rw	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sc	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.se	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sh	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.si	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.so	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.sr	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.st	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.td	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tel	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tl	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tm	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.to	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.tt	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ua	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.us	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.uz	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ventures	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.vg	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.vu	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	google.ws	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleads.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleadsserving.cn	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleapis.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleapps.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlecommerce.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlecompare.co.uk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googledanmark.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlefinland.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlemaps.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlenestcommunity.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlephotos.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleplay.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleplus.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlesverige.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlesyndication.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googletraveladservices.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googleusercontent.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	googlevideo.com	core+full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	googlezip.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gridaware.app	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gsrc.io	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gstatic.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gsuite.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gtv-m10n.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gvt1.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gvt2.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	gws.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	hdrplusdata.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	hindiweb.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	home-mqtt.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	howtogetmo.co.uk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	html5rocks.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	hwgo.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	im.youtube	excluded	DNS: NXDOMAIN в обоих DoH	code:youtube/home
+youtube	impermium.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	j2objc.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	javascript.youtube	excluded	DNS: NXDOMAIN в обоих DoH	code:youtube/home
+youtube	jnn-pa.googleapis.com	core+full	DNS: NOERROR в обоих DoH	code:youtube/home
+youtube	keytransparency.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	keytransparency.foo	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	keytransparency.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	latentlogic.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	link.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	mandiant.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	mdialog.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	memegen.new	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	mfg-inspector.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	mmmdata.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	mobileview.page	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	moodstocks.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	near.by	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	notebook.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	oauthz.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	on.here	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	on2.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	oneworldmanystories.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	opal.goog	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	pageview.mobi	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	partylikeits1986.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	paxlicense.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	pittpatt.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	pj.youtube	excluded	DNS: NXDOMAIN в обоих DoH	code:youtube/home
+youtube	polymerproject.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	populous.studio	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	postini.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	questvisual.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	quickoffice.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	quickshare.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	quiksee.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	raxium.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	recaptcha.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	revolv.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	ridepenguin.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	sagetv.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	sandbox.blogspot.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	saynow.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	sbx-internal.dev	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	schemer.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	screenwisetrends.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	screenwisetrendspanel.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	searchplayground.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	snapseed.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	solveforx.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	sparkify.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stcroixmosquito.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stcroixmosquitoproject.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stratozone.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stxmosquito.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stxmosquitoproject.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stxmosquitoproject.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	stxmosquitoproject.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	suppliers.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	synergyse.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	thecleversense.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	thinkquarterly.co.uk	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	thinkquarterly.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	txcloud.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	txvia.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	urchin.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	useplannr.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	usvimosquito.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	usvimosquitoproject.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	v8project.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	velostrata.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	videoreviewconsole.google	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtual-app.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtualappdelivery.co	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtualappdelivery.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtualappdelivery.io	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtualappdelivery.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	virtualappdelivery.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	vnd.youtube	excluded	DNS: NXDOMAIN в обоих DoH	page:https://www.youtube.com/
+youtube	wallet.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	waze.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	webappfieldguide.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	webgpu.dev	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	webgpu.io	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	weltweitwachsen.de	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	whatbrowser.org	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	widevine.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	womenwill.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	womenwill.com.br	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	womenwill.id	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	womenwill.in	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	womenwill.mx	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	word-lens.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	wordlens.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	wordlens.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	workbencheducation.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	workbencheducation.net	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	workbenchplatform.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	wrkbnch.io	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	x.company	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	x.team	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	xn--ngstr-lra8j.com	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	xviaduct.app	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com
+youtube	youtu.be	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtube-3rd-party.com	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtube-nocookie.com	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtube.ae	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.al	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.am	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.at	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.az	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ba	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.be	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.bg	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.bh	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.bo	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.by	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ca	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.cat	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ch	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.cl	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.ae	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.at	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.cr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.hu	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.id	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.il	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.in	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.jp	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.ke	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.kr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.ma	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.nz	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.th	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.tz	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.ug	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.uk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.ve	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.co.zw	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtube.com.ar	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.au	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.az	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.bd	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.bh	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.bo	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.br	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.by	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.co	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.cy	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.do	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ec	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ee	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.eg	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.es	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.gh	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.gr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.gt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.hk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.hn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.hr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.jm	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.jo	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.kh	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.kw	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.lb	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.lv	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ly	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.mk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.mt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.mx	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.my	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ng	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ni	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.om	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.pa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.pe	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ph	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.pk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.pt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.py	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.qa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ro	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.sa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.sg	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.sv	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.tn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.tr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.tw	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ua	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.uy	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.com.ve	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.cr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.cz	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.de	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.dk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ee	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.es	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.fi	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.fr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ge	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.googleapis.com	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtube.gr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.gt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.hk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.hr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.hu	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ie	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.in	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.iq	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.is	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.it	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.jo	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.jp	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.kr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.kz	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.la	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.lk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.lt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.lu	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.lv	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ly	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ma	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.md	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.me	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.mk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.mn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.mx	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.my	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ng	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ni	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.nl	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.no	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pe	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ph	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pl	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pr	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.pt	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.qa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ro	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.rs	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ru	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.sa	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.se	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.sg	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.si	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.sk	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.sn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.soy	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.sv	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.tn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.tv	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ua	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.ug	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.uy	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtube.vn	excluded	региональная копия основного домена (перенаправляет на него)	ct:youtube.com
+youtube	youtubeedu.com	full	DNS: NOERROR в обоих DoH	code:youtube/home
+youtube	youtubeeducation.com	full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtubeembeddedplayer.googleapis.com	excluded	семя не подтверждено ни документом, ни CT, ни страницей, ни сессией браузера, ни кодом клиента, ни IP	seed
+youtube	youtubego.co.id	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubego.co.in	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubego.com	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubego.id	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubego.in	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubei-att.googleapis.com	full	DNS: NOERROR в обоих DoH	page:https://www.youtube.com/
+youtube	youtubei.googleapis.com	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	youtubekids.com	core+full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	youtubemobilesupport.com	full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	yt.be	core+full	DNS: NOERROR в обоих DoH	ct:youtube.com
+youtube	yt3.googleusercontent.com	core+full	DNS: NOERROR в обоих DoH	page:https://www.youtube.com/@YouTube
+youtube	ytimg.com	core+full	DNS: NOERROR в обоих DoH	doc:https://knowledge.workspace.google.com/admin/youtube/control-youtube-content-available-to-users
+youtube	zukunftswerkstatt.de	excluded	чужой домен (нет признаков принадлежности сервису)	ct:youtube.com

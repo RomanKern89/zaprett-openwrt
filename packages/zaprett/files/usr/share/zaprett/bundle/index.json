@@ -4,9 +4,14 @@
   "zaprett_repo_commit": "09b30f0ee80731807eec59d2a5b796681739e654",
   "items": [
     {
-      "id": "zaprett-youtube",
-      "type": "list",
-      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-youtube.json"
+      "id": "zaprett-cloudflare-ipset",
+      "type": "ipset",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-cloudflare-ipset.json"
+    },
+    {
+      "id": "zaprett-cloudflare-ipset6",
+      "type": "ipset",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-cloudflare-ipset6.json"
     },
     {
       "id": "zaprett-discord",
@@ -14,9 +19,29 @@
       "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-discord.json"
     },
     {
-      "id": "zaprett-telegram",
+      "id": "zaprett-discord-full",
       "type": "list",
-      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-telegram.json"
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-discord-full.json"
+    },
+    {
+      "id": "zaprett-discord-voice",
+      "type": "ipset",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-discord-voice.json"
+    },
+    {
+      "id": "zaprett-roblox",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-roblox.json"
+    },
+    {
+      "id": "zaprett-roblox-full",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-roblox-full.json"
+    },
+    {
+      "id": "zaprett-roblox-ipset",
+      "type": "ipset",
+      "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-roblox-ipset.json"
     },
     {
       "id": "zaprett-rutracker",
@@ -24,9 +49,39 @@
       "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-rutracker.json"
     },
     {
+      "id": "zaprett-rutracker-full",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-rutracker-full.json"
+    },
+    {
+      "id": "zaprett-signal",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-signal.json"
+    },
+    {
+      "id": "zaprett-signal-full",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-signal-full.json"
+    },
+    {
+      "id": "zaprett-telegram",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-telegram.json"
+    },
+    {
       "id": "zaprett-telegram-ipset",
       "type": "ipset",
       "manifest": "/usr/share/zaprett/bundle/manifests/ipset/include/zaprett-telegram-ipset.json"
+    },
+    {
+      "id": "zaprett-youtube",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-youtube.json"
+    },
+    {
+      "id": "zaprett-youtube-full",
+      "type": "list",
+      "manifest": "/usr/share/zaprett/bundle/manifests/lists/include/zaprett-youtube-full.json"
     },
     {
       "id": "zaprett-exclude",
@@ -387,6 +442,76 @@
       "id": "tls_clienthello_sberbank_ru",
       "type": "bin",
       "manifest": "/usr/share/zaprett/bundle/manifests/bin/tls_clienthello_sberbank_ru.json"
+    },
+    {
+      "id": "z2-general",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-general.json"
+    },
+    {
+      "id": "z2-alt",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-alt.json"
+    },
+    {
+      "id": "z2-alt2",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-alt2.json"
+    },
+    {
+      "id": "z2-alt3",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-alt3.json"
+    },
+    {
+      "id": "z2-simple-fake",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-simple-fake.json"
+    },
+    {
+      "id": "z2-fake-tls-auto",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-fake-tls-auto.json"
+    },
+    {
+      "id": "z2-fake-tls-auto-alt",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-fake-tls-auto-alt.json"
+    },
+    {
+      "id": "z2-discord",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-discord.json"
+    },
+    {
+      "id": "z2-ultimatefix",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-ultimatefix.json"
+    },
+    {
+      "id": "z2-ultimatefix-universal",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-ultimatefix-universal.json"
+    },
+    {
+      "id": "z2-hostfakesplit",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-hostfakesplit.json"
+    },
+    {
+      "id": "z2-disorder-seqovl",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-disorder-seqovl.json"
+    },
+    {
+      "id": "z2-circular",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-circular.json"
+    },
+    {
+      "id": "z2-circular-nofake",
+      "type": "nfqws2",
+      "manifest": "/usr/share/zaprett/bundle/manifests/strategies/nfqws2/z2-circular-nofake.json"
     }
   ]
 }

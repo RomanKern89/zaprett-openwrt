@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-circular-nofake",
+  "type": "nfqws2",
+  "name": "nfqws2: auto-switch without fakes",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Оркестратор circular с приёмами без фейков с фулингом (для провайдеров, где фейки ломают соединения): 1 — seqovl 652 байта (как alt2), 2 — multidisorder посередине домена с перекрытием, 3 — разрезание на 3 части. Переключение сайта после 3 неудач за минуту. Действует на TLS и HTTP по спискам сайтов и IP-спискам; QUIC — фейк 6 раз. Голос Discord не обрабатывает.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-circular-nofake.txt",
+  "source": "bundle",
+  "sha256": "4fb778ecd17c2713eab3636e32abbf7373843b3cf33399e9196ae4198f80d2d2",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: auto-switch without fakes",
+  "description_en": "The circular orchestrator with techniques that use no fooled fakes (for providers where fakes break connections): 1 seqovl of 652 bytes (like alt2), 2 multidisorder in the middle of the domain with an overlap, 3 a split into 3 parts. A site is switched after 3 failures within a minute. Applies to TLS and HTTP for site and IP lists; QUIC gets a fake 6 times. Discord voice is not handled.",
+  "name_zh": "nfqws2：无伪造包的自动切换",
+  "description_zh": "使用不带被干扰伪造包手法的 circular 调度器（适用于伪造包会破坏连接的运营商）：1 为 652 字节的 seqovl（类似 alt2），2 为在域名中间切开并带重叠的 multidisorder，3 为切成 3 段。一分钟内失败 3 次后切换网站。作用于网站列表和 IP 列表的 TLS 和 HTTP；QUIC 发送 6 次伪造包。不处理 Discord 语音。"
+}

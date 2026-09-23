@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="zh-CN" Codepage="936" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ProductLanguage" Value="2052" />
+  <String Id="DefaultUiLanguage" Value="zh-CN" />
+  <String Id="LicenseFile" Value="License.zh-CN.rtf" />
+  <String Id="ProductDescription" Value="zaprett：使用 zapret 引擎为本机绕过 DPI" />
+  <String Id="DowngradeError" Value="已安装更新版本的 zaprett。安装程序将退出。" />
+  <String Id="RequiresX64" Value="zaprett 仅支持 64 位 Windows (x64)。" />
+  <String Id="RequiresWin10" Value="zaprett 需要 Windows 10 2004 版（内部版本 19041）或更高版本。" />
+  <String Id="ServiceDisplayName" Value="zaprett" />
+  <String Id="ServiceDescription" Value="zaprett 服务：运行 DPI 绕过引擎 (winws) 并保存设置。" />
+  <String Id="ShortcutDescription" Value="管理 zaprett DPI 绕过" />
+  <String Id="FeatureCoreTitle" Value="zaprett" />
+  <String Id="FeatureCoreDescription" Value="服务、用户界面、命令行、winws 引擎、策略和列表。" />
+  <String Id="FeatureEngine2Title" Value="zapret2 引擎 (winws2)" />
+  <String Id="FeatureEngine2Description" Value="使用 Lua 策略的第二个引擎。" />
+  <String Id="FeatureDohTitle" Value="本地 DoH 代理" />
+  <String Id="FeatureDohDescription" Value="适用于 Windows 10 的加密 DNS（开发中）。" />
+  <String Id="ZaprettWarningDlg_Title" Value="zaprett 安装程序" />
+  <String Id="ZaprettWarningDlgTitle" Value="{\WixUI_Font_Title}安装前须知" />
+  <String Id="ZaprettWarningDlgDescription" Value="zaprett 的工作原理，以及杀毒软件可能提示的内容" />
+  <String Id="ZaprettWarningDlgText" Value="zaprett 使用 WinDivert 驱动程序（来自 zapret 项目）拦截网络数据包并加以修改，使运营商的 DPI 无法识别被封锁的网站。不会向第三方服务器发送任何数据，也没有遥测。&#xD;&#xA;&#xD;&#xA;由于该驱动程序能够拦截流量，部分杀毒软件会将 WinDivert 和 winws.exe 标记为“黑客工具”或“潜在有害应用”。引擎文件取自 zapret 官方发行版，未经修改，其校验和已在构建时验证。如果杀毒软件删除了这些文件，请将 zaprett 的安装文件夹（默认为 C:\Program Files\zaprett）添加到排除项。&#xD;&#xA;&#xD;&#xA;请勿与 GoodbyeDPI、另一份 zapret 或其他使用 WinDivert 的程序同时运行 zaprett。" />
+  <String Id="ZaprettWarningDlgTray" Value="登录时在通知区域显示 zaprett 图标" />
+</WixLocalization>

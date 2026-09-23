@@ -64,6 +64,8 @@ dist/
 | `build/test-install-rootfs.sh` | VM (хост) | прогон `install.sh` из x86_64-бандлов в контейнерах `openwrt/rootfs` (раздел 6.1) |
 | `build/install.sh` | роутер | установщик из бандла (кладётся в каждый бандл) |
 | `build/arches.txt` | — | матрица архитектур |
+| `tools/ci/*.sh`, `tools/ci/*.py` | GitHub Actions / сборочная машина | CI-проверки, qemu-smoke, ключи, релиз (раздел 10) |
+| `.github/workflows/*.yml` | GitHub Actions | CI, сборка, релиз по тегу, слежение за движком (раздел 10) |
 | `build/keys/zaprett-apk.pub`, `build/keys/zaprett-usign.pub` | — | открытые ключи (в git) |
 | `packages/zaprett-nfqws*/Makefile`, `elf-check.sh` | SDK | арх-пакеты nfqws/nfqws2 |
 
@@ -114,6 +116,8 @@ python build/remote.py build --extra-feed build/work/stub   # отладка к�
 
 Опции `build.sh`: `--out DIR` и `--dist DIR` — отдельные каталоги результатов (нужны для сборки «второй версии»
 при проверке обновления, раздел 6.1). По умолчанию `~/zaprett-build/out` и `~/zaprett-build/dist`.
+`--no-copy` — собирать в `/builder` образа без постоянной копии SDK (CI, раздел 10.3). Рабочий каталог задаёт
+`ZAPRETT_WORK` (по умолчанию `~/zaprett-build`).
 
 ## 5. Матрица архитектур
 
@@ -206,6 +210,8 @@ bash $W/src/build/test-install-rootfs.sh $W $W/upgrade/dist/releases
 
 ## 7. Выпуск новой версии zaprett
 
+Основной путь — тег `v<версия>-r<релиз>` и `release.yml` (раздел 10.5). Ручной путь (сборочная машина):
+
 1. Поднять `PKG_VERSION`/`PKG_RELEASE` в `packages/zaprett/Makefile` и `packages/luci-app-zaprett/Makefile`
    (формат apk: `<цифры>(.<цифры>)*-r<N>`).
 2. `python build/remote.py build` — дождаться `rc=0`, прочитать `dist/verify-*.txt` (0 FAIL).
@@ -215,7 +221,9 @@ bash $W/src/build/test-install-rootfs.sh $W $W/upgrade/dist/releases
 
 ## 8. Обновление nfqws / nfqws2
 
-1. Найти новый тег: `https://api.github.com/repos/bol-van/zapret/releases/latest` (и `zapret2`).
+1. Найти новый тег: `https://api.github.com/repos/bol-van/zapret/releases/latest` (и `zapret2`). Это делает
+   `engine-watch.yml` ежедневно: issue «Engine update: …» уже содержит sha256 (скачанный и из API) и таблицу
+   `binaries/linux-*` → архитектуры; проверка ниже всё равно обязательна.
 2. Скачать `…-openwrt-embedded.tar.gz` и посчитать sha256 **двумя способами**: поле `digest` ассета в GitHub API
    и локальный `sha256sum`/`hashlib` — должны совпасть.
 3. В `packages/zaprett-nfqws/Makefile`: `PKG_VERSION`, `PKG_HASH`, `PKG_RELEASE:=1`. Имя архива и префикс
@@ -238,3 +246,124 @@ bash $W/src/build/test-install-rootfs.sh $W $W/upgrade/dist/releases
 - Освободить место: `rm -rf ~/zaprett-build/sdk ~/zaprett-build/out ~/zaprett-build/dist` (пересоздадутся),
   образы SDK — `docker rmi openwrt/sdk:x86_64-v25.12.5 openwrt/sdk:x86_64-v24.10.8`. Приватные ключи в
   `~/zaprett-build/keys` не удалять, не имея их копии вне сборочной машины.
+
+## 10. CI (GitHub Actions) и выпуск тегом
+
+Все проверки и сборка вынесены в скрипты `tools/ci/`, workflow только вызывают их. Те же скрипты запускаются
+на сборочной машине (Linux + Docker, bash, curl, git, python3, node) — результат должен совпадать.
+
+### 10.1. Workflow
+
+| Файл | Когда | Что делает |
+|---|---|---|
+| `.github/workflows/ci.yml` | push в `main`, pull request, вручную | `static-checks.sh`; `ucode-tests.sh` для 25.12 и 24.10 (матрица) |
+| `.github/workflows/build.yml` | push в `main`, pull request, вручную | для каждой серии: одноразовые ключи (`gen-keys.sh`), `build.sh --no-copy` (все arch, внутри `verify.py`), `qemu-smoke.sh`; затем `test-install-rootfs.sh` на бандлах обеих серий. Артефакты `dist-<серия>`, `logs-<серия>`, `rootfs-test` (7 дней) |
+| `.github/workflows/release.yml` | тег `v*` | тег = версия пакетов (`check-release-tag.sh`); сборка обеих серий с ключами из секретов (`release-keys.sh`); `qemu-smoke.sh`; `test-install-rootfs.sh`; `merge-dist.sh`; GitHub Release (бандлы, `zaprett.pem`, `zaprett-usign.pub`, `SHA256SUMS`); фиды `<серия>/<arch>/` на GitHub Pages |
+| `.github/workflows/engine-watch.yml` | ежедневно 06:17 UTC, вручную | `engine_watch.py`: новый релиз bol-van/zapret или zapret2 → issue (не PR) с sha256 и архитектурами |
+
+Права минимальные: по умолчанию `contents: read`; `contents: write` — только у задания публикации релиза,
+`pages: write` + `id-token: write` — только у выкладки Pages, `issues: write` — только у engine-watch.
+Используются только официальные actions с закреплённой мажорной версией (`actions/checkout@v7`,
+`setup-python@v7`, `setup-node@v7`, `upload-artifact@v7`, `download-artifact@v8`, `upload-pages-artifact@v5`,
+`deploy-pages@v5`); релиз создаётся штатным `gh` раннера.
+
+### 10.2. Скрипты `tools/ci/`
+
+| Скрипт | Что проверяет / делает |
+|---|---|
+| `static-checks.sh [root]` | CR в текстовых файлах (`check_cr.py`, байтово; `*.bin`, `*.gz` и другие двоичные исключены); `check_static.py` и `negative_controls.py` пакета LuCI (нужен python-модуль `babel`); `check_names.js` (acorn 8.15.0 ставится `npm` в кэш или берётся из `$ACORN`); `node --check` всех `*.js` (представления LuCI — обёрнутыми в функцию, как это делает LuCI); `tools/data/test_build_bundle.py` — **только при наличии `upstream/`** (исходники zapret и очищенные листы не хранятся в git, в CI шаг честно помечается `SKIP`); `sh -n` скриптов пакетов, `bash -n` скриптов `build/`, `tools/ci/`; `py_compile` всех `*.py` |
+| `ucode-tests.sh <25.12\|24.10> [--ref REF\|--tree DIR]` | тесты бэкенда (`packages/zaprett/tests/run.sh`) и rpcd-плагина (`run-plugin-tests.sh`) в контейнере `openwrt/rootfs:x86_64-v25.12.4` / `-v24.10.8`. Берётся **закоммиченное** дерево (`git archive HEAD`), незакоммиченные правки не влияют. nfqws — статический `linux-x86_64` из архива, закреплённого `PKG_HASH` в Makefile (sha256 сверяется). Внутри контейнера — как на роутере: `/usr/libexec/zaprett/nfqws`, `ubusd`, `uhttpd` на 127.0.0.1:80 (для проверки лимита загрузки), `--cap-add NET_ADMIN` (без него `nft -c` и `nfqws --dry-run` падают `Operation not permitted`) |
+| `qemu-smoke.sh [--dist DIR]` | `nfqws --version` / `nfqws2 --version` каждой «y»-ячейки `build/arches.txt` под qemu-user с ближайшей моделью CPU (24Kc, 74Kf, 4KEc, arm1176, cortex-a7…a76, Octeon68XX, mpc8548, 440epx, pentium…); с `--dist` — ещё и бинарники из собранных `.ipk` 24.10. Отрицательные контроли: `linux-arm` на ARMv5 (`-cpu arm926`) обязан упасть (SIGILL — подтверждает исключение `arm_arm926ej-s`), MIPS-бинарник под `qemu-arm` не загружается. Без qemu в PATH запускает себя в `ubuntu:24.04` с `qemu-user-static` |
+| `gen-keys.sh <dir> [sdk-образ]` | одноразовые ключи apk/usign (как `remote.py keys-init`, контейнер без сети) |
+| `release-keys.sh <dir> [sdk-образ]` | ключи из переменных окружения (секреты); отказ, если открытые ключи не совпадают с `build/keys/*.pub`, если приватный apk-ключ не порождает этот открытый (`openssl`) или usign-ключ не подписывает проверочное сообщение (контроль: изменённое сообщение не проходит) |
+| `check-release-tag.sh <тег>` | тег обязан быть `v<PKG_VERSION>-r<PKG_RELEASE>` пакета `zaprett`; у `luci-app-zaprett` те же версия и релиз |
+| `merge-dist.sh <out> <версия> <dist>...` | объединяет `dist/` серий: сверка `SHA256SUMS` каждой, одинаковые ключи, нет `FAIL` в `verify-*.txt`, все бандлы нужной версии; готовит `assets/` (релиз), `site/` (Pages), `notes.md` |
+| `engine_watch.py [--dry-run] [--pinned pkg=ver]` | сравнивает `PKG_VERSION` с `releases/latest`; для нового релиза скачивает архив, сверяет sha256 с полем `digest` API, перечисляет `binaries/linux-*` и сопоставляет с `build/arches.txt`; одна issue на релиз (повторно не создаётся) |
+| `free-disk.sh` | только на раннере GitHub (иначе отказ): удаляет неиспользуемые тулчейны (.NET, Android, GHC, CodeQL) |
+
+Запуск на сборочной машине (из клона репозитория):
+
+```sh
+export ZAPRETT_CI_CACHE=~/zaprett-ci/cache ZAPRETT_CI_OUT=~/zaprett-ci/out
+bash tools/ci/static-checks.sh
+bash tools/ci/ucode-tests.sh 25.12 && bash tools/ci/ucode-tests.sh 24.10
+bash tools/ci/gen-keys.sh ~/zaprett-ci/work/keys
+ZAPRETT_WORK=~/zaprett-ci/work bash build/build.sh --series 25.12 --arch x86_64 --no-copy
+bash tools/ci/qemu-smoke.sh --dist ~/zaprett-ci/work/dist
+```
+
+Результаты прогона 2026-09-22 на сборочной машине (коммит `3f2967f`): `ucode-tests` — 990 PASS / 0 FAIL бэкенда и
+145 / 0 плагина на обеих сериях (как на роутерах стенда); `static-checks` — 7 PASS, `bundle` SKIP (нет `upstream/`
+в клоне); `qemu-smoke` — 58 бинарников релизов + 6 из `.ipk` + 2 отрицательных контроля, 0 FAIL; сборка
+`--no-copy` 25.12 x86_64 — `verify` 44 проверки, 0 FAIL (и так же под uid 1001, как на раннере GitHub);
+`test-install-rootfs.sh` с обновлением r1→r2 — 22 OK, 0 FAIL.
+
+**Число проверок бэкенда зависит от ядра хоста:** `test_nft.uc` при незагруженном модуле `nft_queue`
+(`/sys/module/nft_queue`) выполняет ветку «только парсер» — на одну проверку больше (991). Роутер и
+сборочная машина после первого прогона — 990. В `ci.yml` модуль загружается `sudo modprobe nft_queue`.
+
+### 10.3. Особенности сборки на раннере
+
+- `build.sh --no-copy` собирает прямо в `/builder` образа SDK, без копии в `WORK/sdk/<серия>` (экономит
+  ~1,4 ГБ и ~40 с; фиды base/luci загружаются заново при каждом запуске). Без `--no-copy` поведение прежнее.
+- Контейнеры SDK работают от `buildbot` (uid 1000). На раннере GitHub пользователь — uid 1001, и без
+  выравнивания `cp`/запись в смонтированные каталоги падают `Permission denied` (проверено: исходный `build.sh`
+  под uid 1001 — rc=1). Поэтому `build.sh` при несовпадении uid передаёт `out/<серия>`, `dl`, `keys` (и копию SDK)
+  uid-у SDK через одноразовый контейнер от root и возвращает владельца после сборки — без `sudo` на хосте.
+  На сборочной машине (uid 1000 = SDK) ничего не меняется.
+- Диск: образ SDK ~3,2 ГБ + сборка всех arch одной серии; серии собираются на разных раннерах (матрица),
+  перед сборкой `free-disk.sh`.
+- Бандлы подписаны одноразовыми ключами только в `build.yml`: они для проверок, не для роутеров.
+
+### 10.4. Настройки репозитория (делает владелец один раз)
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. **Settings → Environments → `github-pages` → Deployment branches and tags:** добавить правило для тегов `v*`
+   (по умолчанию окружение принимает только ветку по умолчанию, и выкладка с тега будет отклонена).
+3. **Settings → Environments → New environment `release`:** Deployment branches and tags → только теги `v*`;
+   рекомендуется Required reviewers (релиз ждёт подтверждения). Секреты окружения:
+
+   | Секрет | Содержимое |
+   |---|---|
+   | `ZAPRETT_APK_PRIVATE_KEY` | файл `$ZAPRETT_SECRETS/zaprett-apk-private.pem` целиком (PEM-файл с приватным EC-ключом, от первой до последней строки) |
+   | `ZAPRETT_APK_PUBLIC_KEY` | `zaprett-apk-public.pem` (= `build/keys/zaprett-apk.pub`) |
+   | `ZAPRETT_USIGN_SECRET` | `zaprett-usign.key` (две строки: строка-комментарий usign и строка ключа) |
+   | `ZAPRETT_USIGN_PUBLIC` | `zaprett-usign.pub` (= `build/keys/zaprett-usign.pub`) |
+
+   Задать из командной строки (значение читается из файла, в историю оболочки не попадает):
+   `gh secret set ZAPRETT_APK_PRIVATE_KEY --env release < "$ZAPRETT_SECRETS/zaprett-apk-private.pem"` и так же остальные.
+4. **Settings → Actions → General → Workflow permissions:** достаточно «Read repository contents»; нужные
+   workflow сами повышают права через `permissions:`.
+
+### 10.5. Выпуск релиза тегом
+
+1. Поднять `PKG_VERSION`/`PKG_RELEASE` в `packages/zaprett/Makefile` и `packages/luci-app-zaprett/Makefile`
+   (одинаково), закоммитить, дождаться зелёных `CI` и `Build` на `main`.
+2. `git tag v<PKG_VERSION>-r<PKG_RELEASE> && git push origin v<PKG_VERSION>-r<PKG_RELEASE>`.
+3. `release.yml`: тег не совпал с версией → стоп до сборки; секреты не те → стоп на `release-keys.sh`; любой
+   `FAIL` в `verify.py`, qemu-smoke или установочных тестах → релиз не создаётся.
+4. После публикации проверить: страница релиза (бандлы, `SHA256SUMS`, sha256 ключей в описании совпадают с
+   `build/keys`), `https://romankern89.github.io/zaprett-openwrt/25.12/x86_64/packages.adb` отдаётся, на тестовом
+   роутере `sh install.sh --feed` → `apk update` / `opkg update` без ошибок подписи.
+
+### 10.6. Смена ключей подписи
+
+Смена ключа ломает обновления у всех: `install.sh` откажется ставить бандл с другим ключом без `--force`, а
+подключённый онлайн-фид станет «UNTRUSTED» (25.12) / не пройдёт проверку подписи (24.10). Менять только при
+компрометации.
+
+1. Новые ключи: `python build/remote.py keys-init` в **новый** каталог `ZAPRETT_SECRETS` (старый не перезаписывать).
+2. Открытые части → `build/keys/zaprett-apk.pub`, `build/keys/zaprett-usign.pub` (коммит); секреты окружения
+   `release` — заменить все четыре. `release-keys.sh` не даст собрать релиз, если хоть один секрет не от пары
+   из `build/keys`.
+3. Выпустить релиз (новая версия), в описании — предупреждение: переустановить бандлом с `--force`
+   (`sh install.sh --force --feed`), старый ключ `/etc/apk/keys/zaprett.pem` / `/etc/opkg/keys/<отпечаток>`
+   установщик заменит.
+4. При компрометации: удалить старые секреты, отозвать доступ к окружению `release`, сообщить в релизе
+   отпечатки старого и нового ключей.
+
+**Офлайн-копии.** Приватные ключи существуют в трёх местах: каталог `ZAPRETT_SECRETS` управляющей машины,
+`~/zaprett-build/keys` сборочной машины и секреты окружения `release` (GitHub не отдаёт их обратно — это не
+резервная копия). Держать ещё одну копию вне сети: зашифрованный архив (`gpg -c` или `7z -p`) с четырьмя
+файлами на двух носителях, пароль — отдельно. Проверка копии раз в полгода: распаковать во временный каталог и
+прогнать `release-keys.sh` (он сравнит пару с `build/keys`).

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "z2-simple-fake",
+  "type": "nfqws2",
+  "name": "nfqws2: simple fake",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-simple-fake. TLS: только фейковый ClientHello www.google.com с испорченной меткой времени TCP, 6 повторов; настоящий ClientHello уходит целиком. QUIC (UDP 443) — фейк QUIC Initial Google 6 раз; голос Discord (UDP 19294–19344, 50000–50100) — фейк из нулей 6 раз; HTTP — фейк с MD5 и autottl, затем разрезание запроса. Самая лёгкая для процессора роутера.",
+  "dependencies": [
+    "quic_initial_www_google_com",
+    "tls_clienthello_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-simple-fake.txt",
+  "source": "bundle",
+  "sha256": "d7ea2cec844274119f64fa311c3b9be78319eb840036d26408b7bd3810fc5096",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: simple fake",
+  "description_en": "Port of strategy-simple-fake. TLS: only a www.google.com ClientHello fake with a broken TCP timestamp, 6 repeats; the real ClientHello is sent whole. QUIC (UDP 443) gets a Google QUIC Initial fake 6 times; Discord voice (UDP 19294–19344, 50000–50100) gets a zero-filled fake 6 times; HTTP gets an MD5 + autottl fake followed by a split request. The lightest one for the router CPU.",
+  "name_zh": "nfqws2：简单伪造",
+  "description_zh": "strategy-simple-fake 的移植版。TLS：只发送 TCP 时间戳被破坏的 www.google.com ClientHello 伪造包，重复 6 次；真实 ClientHello 整体发送。QUIC（UDP 443）发送 6 次 Google QUIC Initial 伪造包；Discord 语音（UDP 19294–19344、50000–50100）发送 6 次全零伪造包；HTTP 先发送 MD5 + autottl 伪造包，再分段发送请求。对路由器 CPU 负担最轻。"
+}

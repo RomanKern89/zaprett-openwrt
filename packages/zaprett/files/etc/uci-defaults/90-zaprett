@@ -15,6 +15,16 @@ fi
 uci -q get zaprett.main >/dev/null || { uci set zaprett.main=main; uci set zaprett.main.enabled='0'; }
 uci -q get zaprett.repo >/dev/null || uci set zaprett.repo=repo
 uci -q get zaprett.test >/dev/null || uci set zaprett.test=test
+# availability monitor (contract v1.3): added on upgrade too, an existing section is left as the user set it
+if ! uci -q get zaprett.monitor >/dev/null; then
+	uci set zaprett.monitor=monitor
+	uci set zaprett.monitor.enabled='1'
+	uci set zaprett.monitor.interval='30'
+	uci set zaprett.monitor.threshold='3'
+	uci set zaprett.monitor.auto_repair='0'
+	uci set zaprett.monitor.max_targets='5'
+	uci set zaprett.monitor.timeout='8'
+fi
 uci commit zaprett
 
 # user lists (conffiles) and runtime directories
@@ -23,11 +33,23 @@ for f in hosts-include.txt hosts-exclude.txt ipset-include.txt ipset-exclude.txt
 	[ -f "/etc/zaprett/user/$f" ] || : > "/etc/zaprett/user/$f"
 done
 
+# system user of the checks of an automatic selection without stopping the bypass (contract v1.6 §17): its traffic is
+# told apart by `meta skuid`. Fixed uid/gid 29411; a system where that id is taken gets no user, and the automatic
+# selection falls back to stopping the engine (mode_reason no_test_user)
+zt_id=29411
+if ! grep -q '^zaprett-test:' /etc/passwd && ! cut -d: -f3 /etc/passwd | grep -qx "$zt_id"; then
+	. /lib/functions.sh
+	grep -q '^zaprett-test:' /etc/group || cut -d: -f3 /etc/group | grep -qx "$zt_id" || \
+		group_add zaprett-test "$zt_id"
+	[ "$(sed -n 's/^zaprett-test:[^:]*:\([0-9]*\):.*/\1/p' /etc/group)" = "$zt_id" ] && \
+		user_add zaprett-test "$zt_id" "$zt_id" zaprett-test /var /bin/false
+fi
+
 # default subscriptions added by newer versions (the kept /etc/config/zaprett lacks them after an upgrade);
 # those deleted by the user are listed in zaprett.main.deleted_sources and are not restored
 /usr/bin/zaprett sources defaults --quiet >/dev/null 2>&1
 
-# daily autoupdate line in /etc/crontabs/root (random minute, hour from UCI)
+# lines in /etc/crontabs/root: daily autoupdate (random minute, hour from UCI), watchdog and monitor
 /usr/bin/zaprett cron sync --quiet >/dev/null 2>&1
 
 exit 0

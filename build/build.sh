@@ -2,11 +2,15 @@
 # zaprett package build on the Docker VM (host side). Started by build/remote.py or by hand:
 #
 #   bash build.sh [--series "25.12 24.10"] [--arch all|"x86_64 mipsel_24kc"] [--extra-feed DIR]
-#                 [--no-fetch] [--rc-file FILE] [--out DIR] [--dist DIR]
+#                 [--no-fetch] [--rc-file FILE] [--out DIR] [--dist DIR] [--no-copy]
+#
+#   --no-copy  build in the SDK image's own /builder instead of a persistent copy in WORK/sdk/<series>
+#              (CI runners: saves ~1.4 GB of disk and the copy; feeds are fetched again on every run)
 #
 # Layout (WORK = $ZAPRETT_WORK or ~/zaprett-build):
 #   WORK/keys/            signing keys (private-key.pem, public-key.pem, key-build, key-build.pub), never in git
-#   WORK/sdk/<series>/    persistent SDK tree copied from the image (feeds, host tools, compiled dependencies)
+#   WORK/sdk/<series>/    persistent SDK tree copied from the image (feeds, host tools, compiled dependencies);
+#                         not used with --no-copy
 #   WORK/dl/              download cache shared by both SDKs
 #   WORK/out/<series>/    raw results of the last run; WORK/out/dist.tar - everything for download
 #   WORK/dist/            final tree: <series>/<arch>/ feeds, releases/*.tar.gz bundles, keys/, SHA256SUMS
@@ -21,6 +25,7 @@ ARCH_ARG="all"
 EXTRA_FEED=""
 FETCH=1
 RC_FILE=""
+COPY_SDK=1
 OUT="$WORK/out"
 DIST="$WORK/dist"
 while [ $# -gt 0 ]; do
@@ -31,6 +36,7 @@ while [ $# -gt 0 ]; do
 		--arch) ARCH_ARG="$2"; shift 2 ;;
 		--extra-feed) EXTRA_FEED="$2"; shift 2 ;;
 		--no-fetch) FETCH=0; shift ;;
+		--no-copy) COPY_SDK=0; shift ;;
 		--rc-file) RC_FILE="$2"; shift 2 ;;
 		*) echo "build.sh: unknown argument $1" >&2; exit 2 ;;
 	esac
@@ -38,6 +44,7 @@ done
 
 finish() {
 	local rc=$?
+	if declare -F restore_owner > /dev/null; then restore_owner; fi
 	[ -n "$RC_FILE" ] && echo "$rc" > "$RC_FILE"
 	log "exit code $rc"
 }
@@ -116,10 +123,40 @@ arches_for() { # series
 }
 
 # ------------------------------------------------------------------ SDK trees
+# The SDK containers run as the image user (buildbot, uid 1000). When the host user has another uid (GitHub
+# runners: 1001), the mounted directories are handed over to the SDK uid and back after the build, as root in a
+# throw-away container: no sudo on the host, keys never become world-readable.
+HOST_IDS="$(id -u):$(id -g)"
+SDK_IDS=""
+OWNED=()
+own() { # image owner dir...
+	local image="$1" owner="$2"
+	shift 2
+	local d args=()
+	for d in "$@"; do args+=(-v "$d:/own$(printf '%s' "$d" | tr -c 'A-Za-z0-9\n' _)"); done
+	docker run --rm --user root --network none "${args[@]}" "$image" sh -c "chown -R $owner /own*"
+}
+align_owner() { # image dir...
+	local image="$1"
+	shift
+	[ -n "$SDK_IDS" ] || SDK_IDS=$(docker run --rm "$image" sh -c 'echo "$(id -u):$(id -g)"')
+	[ "$SDK_IDS" != "$HOST_IDS" ] || return 0
+	log "host uid:gid $HOST_IDS, SDK $SDK_IDS: handing over $*"
+	own "$image" "$SDK_IDS" "$@"
+	OWNED+=("$@")
+	OWNER_IMAGE="$image"
+}
+restore_owner() {
+	[ "${#OWNED[@]}" -gt 0 ] || return 0
+	own "$OWNER_IMAGE" "$HOST_IDS" "${OWNED[@]}" || log "could not give ${OWNED[*]} back to $HOST_IDS"
+	OWNED=()
+}
+
 prepare_sdk() { # series
 	local s="$1" image id dir
 	image=$(image_of "$s")
 	docker image inspect "$image" > /dev/null 2>&1 || docker pull "$image"
+	[ "$COPY_SDK" = 1 ] || return 0
 	id=$(docker image inspect --format '{{.Id}}' "$image")
 	dir="$WORK/sdk/$s"
 	if [ -f "$dir/.zaprett-image" ] && [ "$(cat "$dir/.zaprett-image")" = "$id" ]; then
@@ -128,7 +165,9 @@ prepare_sdk() { # series
 	log "copying SDK $image into $dir"
 	rm -rf "$dir"
 	mkdir -p "$dir"
+	align_owner "$image" "$dir"
 	docker run --rm -v "$dir:/out" "$image" bash -c 'cp -a /builder/. /out/'
+	restore_owner
 	echo "$id" > "$dir/.zaprett-image"
 }
 
@@ -136,14 +175,13 @@ run_series() { # series arches
 	local s="$1" arches="$2" image out args=()
 	image=$(image_of "$s")
 	out="$OUT/$s"
-	rm -rf "$out"
-	mkdir -p "$out"
 	args=(--series "$s" --arches "$arches")
 	[ -n "$NOARCH" ] && args+=(--noarch "$NOARCH")
 	[ "$EXTRA" = 1 ] && args+=(--extra)
 	[ "$LUCI" = 1 ] && args+=(--luci)
 	[ "$FETCH" = 1 ] && args+=(--fetch)
-	local mounts=(-v "$WORK/sdk/$s:/builder" -v "$WORK/dl:/builder/dl" -v "$SRC:/src:ro" -v "$WORK/keys:/keys:ro" -v "$out:/out")
+	local mounts=(-v "$WORK/dl:/builder/dl" -v "$SRC:/src:ro" -v "$WORK/keys:/keys:ro" -v "$out:/out")
+	[ "$COPY_SDK" = 1 ] && mounts=(-v "$WORK/sdk/$s:/builder" "${mounts[@]}")
 	[ "$EXTRA" = 1 ] && mounts+=(-v "$EXTRA_FEED:/extra:ro")
 	docker run --rm --name "zaprett-sdk-${s/./}-$$" "${mounts[@]}" "$image" bash /src/build/sdk-build.sh "${args[@]}" \
 		&& docker run --rm --name "zaprett-verify-${s/./}-$$" "${mounts[@]}" "$image" \
@@ -156,7 +194,15 @@ for s in $SERIES_LIST; do
 	prepare_sdk "$s"
 	ARCHES[$s]=$(arches_for "$s")
 	[ -n "${ARCHES[$s]// /}" ] || fail "no architectures selected for $s"
+	rm -rf "${OUT:?}/$s"
+	mkdir -p "$OUT/$s"
 done
+for s in $SERIES_LIST; do
+	dirs=("$OUT/$s")
+	[ "$COPY_SDK" = 1 ] && dirs+=("$WORK/sdk/$s")
+	align_owner "$(image_of "$s")" "${dirs[@]}"
+done
+align_owner "$(image_of "${SERIES_LIST%% *}")" "$WORK/dl" "$WORK/keys"
 for s in $SERIES_LIST; do
 	log "start $s: $(echo ${ARCHES[$s]} | wc -w) architectures, log $WORK/logs/sdk-$s.log"
 	run_series "$s" "${ARCHES[$s]}" > "$WORK/logs/sdk-$s.log" 2>&1 &
@@ -173,6 +219,7 @@ for s in $SERIES_LIST; do
 	fi
 	grep -E '^\[|^verify|^FAIL' "$WORK/logs/sdk-$s.log" | tail -n 25 || true
 done
+restore_owner
 [ -z "$FAILED" ] || fail "series failed:$FAILED"
 
 # ------------------------------------------------------------------ dist

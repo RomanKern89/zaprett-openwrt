@@ -1,0 +1,18 @@
+--blob=quic_google:@${bin:quic_initial_www_google_com}
+--blob=tls_google:@${bin:tls_clienthello_www_google_com}
+--blob=z64:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+--filter-udp=443 --filter-l7=quic ${hostlists} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --payload=discord_ip_discovery,stun --lua-desync=fake:blob=z64:repeats=6 --new
+--filter-tcp=80 ${hostlists} --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit --new
+--filter-tcp=443 ${hostlists}
+ --in-range=-s34228 --lua-desync=circular:fails=3:retrans=2:maxseq=16384
+ --in-range=x --payload=tls_client_hello
+ --lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000:tcp_ack=-66000:repeats=8:strategy=1
+ --lua-desync=multidisorder:pos=midsld:strategy=1
+ --lua-desync=multisplit:pos=2:seqovl=652:seqovl_pattern=tls_google:strategy=2
+ --lua-desync=fake:blob=tls_google:tcp_ts=-600000:repeats=6:strategy=3
+ --lua-desync=fakedsplit:pattern=0x00:tcp_ts=-600000:strategy=3
+ --lua-desync=hostfakesplit:midhost=midsld:tcp_md5:tcp_seq=-10000:tcp_ack=-66000:repeats=2:strategy=4 --new
+--filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000:tcp_ack=-66000:repeats=8 --lua-desync=multidisorder:pos=midsld --new
+--filter-udp=443 --filter-l7=quic ${ipsets} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-tcp=80 ${ipsets} --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit

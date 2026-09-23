@@ -1,0 +1,54 @@
+<Page
+    x:Class="Zaprett.Ui.Views.ServicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="using:Zaprett.Ui.Controls"
+    xmlns:loc="using:Zaprett.Ui.Core.Loc"
+    xmlns:vm="using:Zaprett.Ui.Core.ViewModels"
+    Background="Transparent">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- header with the apply bar stays in place while the list scrolls -->
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="40,28,40,12" Spacing="10" HorizontalAlignment="Stretch">
+            <TextBlock Style="{StaticResource PageTitle}" Text="{x:Bind loc:L.T('Services.Title')}" AutomationProperties.HeadingLevel="Level1" />
+            <TextBlock Style="{StaticResource PageLead}" Text="{x:Bind loc:L.T('Services.Lead')}" />
+            <InfoBar IsOpen="{x:Bind Vm.HasMessage, Mode=TwoWay}" Severity="{x:Bind ui:Conv.Severity(Vm.MessageKindValue), Mode=OneWay}"
+                     Title="{x:Bind Vm.MessageTitle, Mode=OneWay}" Message="{x:Bind Vm.MessageText, Mode=OneWay}" />
+            <Grid ColumnSpacing="10" Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource Secondary}" VerticalAlignment="Center" Text="{x:Bind Vm.Summary, Mode=OneWay}" />
+                <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Reset')}" Command="{x:Bind Vm.ResetCommand}"
+                        IsEnabled="{x:Bind Vm.IsDirty, Mode=OneWay}" />
+                <Button AutomationProperties.Name="{x:Bind loc:L.T('Services.Apply')}" Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.ApplyCommand}"
+                        IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}" Width="16" Height="16" />
+                        <TextBlock Text="{x:Bind loc:L.T('Services.Apply')}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater ItemsSource="{x:Bind Vm.Services}" MaxWidth="{StaticResource PageMaxWidth}" Margin="40,4,40,40">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="12" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ServiceChoice">
+                        <ui:ServiceCard Choice="{x:Bind}" />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </Grid>
+</Page>

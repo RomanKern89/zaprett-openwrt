@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "z2-fake-tls-auto",
+  "type": "nfqws2",
+  "name": "nfqws2: fake TLS auto",
+  "version": "2026.09.22",
+  "author": "zaprett для OpenWrt",
+  "description": "Перенос strategy-general-fake-tls-auto. TLS и HTTP: фейк с MD5 и TTL по расстоянию до сервера (autottl), затем fakedsplit с тем же фулингом. QUIC для IP-списков — 11 повторов фейка. Голос Discord — как в general. Если TTL до сервера определить не удалось, фейки доходят до сервера и соединение может сломаться (так же ведёт себя исходная стратегия nfqws).",
+  "dependencies": [
+    "quic_initial_www_google_com"
+  ],
+  "file": "/usr/share/zaprett/bundle/files/strategies/nfqws2/z2-fake-tls-auto.txt",
+  "source": "bundle",
+  "sha256": "187c10a1c2b00b686c74db9a24a9af00bf0e359cb8ad6c857bc5ac845da1f888",
+  "installed_at": 1789603200,
+  "manifest_url": null,
+  "name_en": "nfqws2: fake TLS auto",
+  "description_en": "Port of strategy-general-fake-tls-auto. TLS and HTTP: a fake with MD5 and a TTL guessed from the distance to the server (autottl), then fakedsplit with the same fooling. QUIC for IP lists gets 11 fake repeats. Discord voice as in general. If the TTL to the server cannot be found, the fakes reach the server and may break the connection (the original nfqws strategy behaves the same way).",
+  "name_zh": "nfqws2：自动 TLS 伪造",
+  "description_zh": "strategy-general-fake-tls-auto 的移植版。TLS 和 HTTP：发送带 MD5、TTL 按到服务器的距离推算（autottl）的伪造包，然后以同样的干扰方式 fakedsplit。IP 列表的 QUIC 伪造包重复 11 次。Discord 语音与 general 相同。如果无法得出到服务器的 TTL，伪造包会到达服务器并可能破坏连接（原 nfqws 策略的行为相同）。"
+}

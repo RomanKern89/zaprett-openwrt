@@ -8,9 +8,27 @@ import * as C from 'zaprett.config';
 import * as S from 'zaprett.store';
 import * as N from 'zaprett.nft';
 import * as O from 'zaprett.offload';
+import * as ISO from 'zaprett.isolate';
 
 export function engine_path(engine) {
 	return P.libexec + '/' + engine;
+};
+
+// Written by `stop` of the init script, removed by `start`: the user stopped the service on purpose, so the
+// watchdog must not start it again and the watchdog/monitor cron lines are removed (contract v1.3 §14.2).
+export function stopped_path() {
+	return P.run + '/stopped';
+};
+
+// Pure: cumulative packet counter of NFQUEUE <qnum> from /proc/net/netfilter/nfnetlink_queue (8th column,
+// id_sequence; the 3rd one is the momentary queue length), or null when the queue is not bound.
+export function queue_packets(text, qnum) {
+	for (let l in split(text ?? '', '\n')) {
+		let f = filter(split(trim(l), ' '), (x) => x != '');
+		if (length(f) >= 8 && f[0] == '' + qnum && match(f[7], /^[0-9]+$/))
+			return int(f[7]);
+	}
+	return null;
 };
 
 // Engine version from `<engine> --version`, cached by binary size+mtime.
@@ -112,7 +130,9 @@ export function status(cfg) {
 			if (substr(id, 0, 4) != 'src-' && !idx.items[t]?.[id])
 				add('list_missing');
 
-	let applied = N.is_applied();
+	let table = N.list_table();
+	let applied = (table != null);
+	let own = N.has_flowtable(table);
 	let wan = N.query_wan(cfg);
 	if (cfg.enabled && !inst.running)
 		add('not_running');
@@ -120,11 +140,19 @@ export function status(cfg) {
 		add('nft_not_applied');
 	if (!length(wan.v4) && !(cfg.ipv6 && length(wan.v6)))
 		add('no_wan');
-	if (override)
+	// isolated automatic selection (contract v1.6 §17): the engine works as usual, the test runs next to it
+	if (override || is_file(ISO.state_path()))
 		add('test_running');
 	let off = O.state(cfg);
 	if (off.fw4.flow_offloading && (cfg.enabled || inst.running))
 		add('flow_offload_enabled');
+	// mode own: the table is in the kernel, but without the flowtable it should have (contract v1.4 §15.1)
+	if (applied && !own && O.flowtable_plan(cfg, { state: off }) != null)
+		add('flowtable_failed');
+	// IPv6 connections pass without the bypass: the table has no ip6 rules when ipv6=0
+	if (wan.ipv6_default && !cfg.ipv6 && (cfg.enabled || inst.running))
+		add('ipv6_wan_unhandled');
+	let qp = queue_packets(fs.readfile(P.nfqueue, 65536), cfg.qnum);
 
 	let wans = [];
 	for (let d in wan.v4)
@@ -149,9 +177,11 @@ export function status(cfg) {
 		exclude_ipsets: cfg.exclude_ipsets,
 		nft_applied: applied,
 		wan: wans,
-		flow_offload: { fw4: off.fw4.flow_offloading, fw4_hw: off.fw4.flow_offloading_hw, mode: cfg.flow_offload },
+		flow_offload: { fw4: off.fw4.flow_offloading, fw4_hw: off.fw4.flow_offloading_hw, mode: cfg.flow_offload, own: own },
 		clients_mode: cfg.clients_mode,
 		test_mode: !!override,
+		queue: (qp == null) ? null : { packets: qp },
+		ipv6_wan: !!wan.ipv6_default,
 		warnings: warnings,
 		details: { generate: gen, bad_options: cfg.bad_options },
 		version: VERSION

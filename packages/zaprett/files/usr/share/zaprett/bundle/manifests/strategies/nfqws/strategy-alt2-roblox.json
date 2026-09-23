@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "aa6fa6a7f75a4ad91e2a0cfc78ceefaa5eb23241c33abb6f7497433f3cdb406f",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt2-roblox.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt2-roblox.json",
+  "name_en": "strategy-alt2-roblox",
+  "description_en": "ALT 2 with a bypass for Roblox",
+  "name_zh": "strategy-alt2-roblox",
+  "description_zh": "带 Roblox 绕过的 ALT 2"
 }

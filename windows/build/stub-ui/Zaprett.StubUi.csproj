@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Placeholder zaprett-ui.exe for test MSIs built before the real UI exists (build.ps1 -StubUi). Never released. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>zaprett-ui</AssemblyName>
+    <RootNamespace>Zaprett.StubUi</RootNamespace>
+  </PropertyGroup>
+
+</Project>

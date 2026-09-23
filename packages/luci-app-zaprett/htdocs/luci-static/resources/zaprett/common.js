@@ -22,13 +22,19 @@ const MAX_STRATEGY_BYTES = 64 * 1024;
 
 const ID_RE = /^[A-Za-z0-9._-]{1,96}$/;
 
-function decl(method, params) {
+/* Warning codes that only inform: nothing is broken (ARCHITECTURE §14.4, §15.5). */
+const INFO_WARNINGS = [ 'empty_profile_removed', 'strategy_option_ignored', 'test_running', 'dns_plain' ];
+
+/* nobatch: a slow method (diag, page) is sent in its own HTTP request, so it
+ * does not delay the answers of quick methods batched together with it. */
+function decl(method, params, nobatch) {
 	return rpc.declare({
 		object: 'luci.zaprett',
 		method: method,
 		params: params ?? [],
 		expect: { '': {} },
-		reject: true
+		reject: true,
+		nobatch: nobatch === true
 	});
 }
 
@@ -120,14 +126,23 @@ return baseclass.extend({
 	callSourcesUpdate: decl('sources_update', [ 'names' ]),
 	callSourceSave: decl('source_save', [ 'name', 'title', 'type', 'url', 'interval_hours', 'min_entries', 'enabled' ]),
 	callSourceDelete: decl('source_delete', [ 'name' ]),
-	callTestStart: decl('test_start', [ 'strategies', 'quick' ]),
-	callTestStatus: decl('test_status'),
+	callTestStart: decl('test_start', [ 'strategies', 'quick', 'apply_if_better' ]),
+	callTestStatus: decl('test_status', [ 'brief' ]),
 	callTestStop: decl('test_stop'),
 	callTestApply: decl('test_apply', [ 'id' ]),
 	callJobStatus: decl('job_status'),
 	callJobLog: decl('job_log', [ 'tail' ]),
 	callJobCancel: decl('job_cancel'),
-	callDiag: decl('diag'),
+	callDiag: decl('diag', [], true),
+	callProbeStart: decl('probe_start', [ 'services' ]),
+	callProbeStatus: decl('probe_status'),
+	callMonitorStatus: decl('monitor_status'),
+	callLog: decl('log', [ 'tail' ]),
+	callPage: decl('page', [ 'name' ], true),
+	callDnsStatus: decl('dns_status'),
+	callDnsSetup: decl('dns_setup'),
+	callDiagnoseStart: decl('diagnose_start', [ 'services' ]),
+	callDiagnoseStatus: decl('diagnose_status'),
 
 	txt: txt,
 
@@ -143,6 +158,145 @@ return baseclass.extend({
 
 			return res;
 		});
+	},
+
+	/* An older zaprett service answers "usage" to a command or flag it does
+	 * not know yet (page, probe, monitor, log, --brief, --apply-if-better). */
+	isUsageError(err) {
+		return err?.zaprett === true && err.code == 'usage';
+	},
+
+	/* Loads a page with one "page <name>" call (ARCHITECTURE §14.3): every
+	 * field of the answer is the whole answer of one command. A field that
+	 * is missing, or the whole call failing (older service), falls back to
+	 * the separate call from fallbacks[key]. Resolves to { key: reply or
+	 * Error } for every key of fallbacks, never rejects. */
+	loadPage(name, fallbacks) {
+		const keys = Object.keys(fallbacks);
+		const single = key => Promise.resolve().then(() => fallbacks[key]()).catch(err => err);
+
+		return this.run(this.callPage, name).catch(() => null).then(res => Promise.all(keys.map(key => {
+			const part = res ? res[key] : null;
+
+			if (!L.isObject(part))
+				return single(key);
+
+			return (part.ok === true) ? part : zaprettError(part.error || 'backend_error', part.message, part);
+		}))).then(values => {
+			const data = {};
+
+			keys.forEach((key, i) => { data[key] = values[i]; });
+
+			return data;
+		});
+	},
+
+	/* Like poll.add(), but skips the ticks while the browser tab is hidden
+	 * and refreshes at once when it becomes visible again. Returns a
+	 * function that stops polling. */
+	pollVisible(fn, interval) {
+		let stopped = false, busy = false;
+
+		const tick = () => {
+			if (stopped || busy || document.hidden)
+				return Promise.resolve();
+
+			busy = true;
+
+			return Promise.resolve().then(fn).catch(() => null).then(() => { busy = false; });
+		};
+
+		const onVisibility = () => {
+			if (!document.hidden)
+				tick();
+		};
+
+		const stop = () => {
+			if (stopped)
+				return;
+
+			stopped = true;
+			poll.remove(tick);
+			document.removeEventListener('visibilitychange', onVisibility);
+			window.removeEventListener('pagehide', stop);
+		};
+
+		poll.add(tick, interval);
+		document.addEventListener('visibilitychange', onVisibility);
+		window.addEventListener('pagehide', stop);
+
+		return stop;
+	},
+
+	/* Language of the interface: <html lang> or the "lang_xx" class of <body>
+	 * set by the theme; without them, whether our Russian catalog is active. */
+	isRussianUI() {
+		if (this.russianUI == null) {
+			const html = String(document.documentElement.getAttribute('lang') ?? '');
+			const body = String(document.body?.className ?? '').match(/(?:^|\s)lang_([A-Za-z_-]+)/);
+			const lang = (html || (body ? body[1] : '')).toLowerCase();
+
+			this.russianUI = lang ? /^ru/.test(lang) : (_('Try again') != 'Try again');
+		}
+
+		return this.russianUI;
+	},
+
+	/* Bilingual metadata (ARCHITECTURE §14.6): "<field>_en" when the
+	 * interface is not Russian and the field is present. */
+	localized(obj, field) {
+		const en = L.isObject(obj) ? obj[field + '_en'] : null;
+
+		if (typeof(en) == 'string' && en !== '' && !this.isRussianUI())
+			return en;
+
+		return L.isObject(obj) ? obj[field] : null;
+	},
+
+	isInfoWarning(warning) {
+		return INFO_WARNINGS.indexOf(L.isObject(warning) ? warning.code : warning) >= 0;
+	},
+
+	/* Table cell with the column title in data-title: LuCI themes print it
+	 * before the value when the table is shown as cards on a narrow screen. */
+	td(title, content, cls) {
+		const children = (content == null || typeof(content) == 'string' || typeof(content) == 'number') ? txt(content) : content;
+
+		return E('td', { 'class': cls ? 'td ' + cls : 'td', 'data-title': title || null }, children);
+	},
+
+	/* Reason of a failed check of one address (tester and probe). */
+	targetErrorText(t) {
+		const text = {
+			too_small: _('the answer was cut off'),
+			http_error: _('the server returned an HTTP error'),
+			timeout: _('no answer (timeout)'),
+			reset: _('the connection was reset'),
+			tls_cert: _('wrong certificate (substituted answer)'),
+			tls_error: _('encryption error'),
+			connect_failed: _('could not connect'),
+			local_error: _('check error on the router'),
+			failed: _('the address did not open')
+		}[t?.error] ?? String(t?.error ?? '');
+
+		return (+t?.http_status > 0) ? '%s (HTTP %d)'.format(text, +t.http_status) : text;
+	},
+
+	/* Table of checked addresses with their results. */
+	targetsTable(targets) {
+		const titles = [ _('Address'), _('Opened'), _('Time'), _('Received'), _('Error') ];
+		const rows = [ E('tr', { 'class': 'tr table-titles' }, titles.map(t => E('th', { 'class': 'th' }, txt(t)))) ];
+
+		for (const t of (Array.isArray(targets) ? targets : []))
+			rows.push(E('tr', { 'class': 'tr' }, [
+				E('td', { 'class': 'td', 'data-title': titles[0], 'style': 'word-break:break-all' }, txt(t.url)),
+				this.td(titles[1], t.ok ? _('yes') : _('no')),
+				this.td(titles[2], (+t.ms > 0) ? _('%d ms').format(+t.ms) : '—'),
+				this.td(titles[3], this.formatBytes(t.bytes)),
+				this.td(titles[4], [ E('div', {}, txt(t.ok ? '' : this.targetErrorText(t))), t.detail ? E('small', {}, txt(t.detail)) : '' ])
+			]));
+
+		return E('table', { 'class': 'table' }, rows);
 	},
 
 	isTimeout(err) {
@@ -361,8 +515,38 @@ return baseclass.extend({
 			],
 			test_running: [
 				_('Strategy selection is running'),
-				_('During the check the bypass is restarted several times, so connections through zaprett may briefly drop.'),
+				_('During the check the bypass for your devices keeps working: strategies are tried by a separate test engine.'),
 				'strategies'
+			],
+			ipv6_wan_unhandled: [
+				_('IPv6 connections go without the bypass'),
+				_('Your internet connection has IPv6, but zaprett processes only IPv4 now. Sites that the devices open over IPv6 are not unblocked. Turn on "Process IPv6" in "Settings".'),
+				'settings'
+			],
+			low_memory: [
+				_('The enabled lists are too large for this router'),
+				_('The enabled services or subscriptions use large lists, and the router has little memory: the engine may crash or the router may slow down. Turn off large subscriptions on the "Lists" page and services marked as not recommended in "Quick setup".'),
+				'lists'
+			],
+			monitor_degraded: [
+				_('Sites of the enabled services stopped opening'),
+				_('Several checks of the availability monitor in a row failed: the provider may have changed the blocking. Run automatic strategy selection. If automatic repair is on, zaprett is already looking for a working strategy.'),
+				'strategies'
+			],
+			flowtable_failed: [
+				_('The own acceleration table did not start'),
+				_('"Own acceleration table" is chosen for flow offloading, but the router did not accept it (no suitable network devices, or the kernel does not support it). zaprett works without acceleration: the bypass works, but on a fast connection the speed may be lower. You can leave it so or choose "Turn off automatically" for offloading in "Settings".'),
+				'settings'
+			],
+			game_filter_no_ipsets: [
+				_('The game filter is not working: no IP network list'),
+				_('The game filter processes only addresses from the enabled IP network lists, so that the rest of the traffic stays untouched. No such list is enabled now, so the filter is skipped. Enable the IP network list of the game on the "Lists" page ("IP networks" tab), or turn the game filter off in "Settings".'),
+				'lists'
+			],
+			dns_plain: [
+				_('DNS requests go without encryption'),
+				_('For some of the enabled services the provider may substitute DNS answers; then the site does not open even though the bypass works. Encrypted DNS hides the requests from the provider.'),
+				'dns'
 			]
 		}[code];
 
@@ -420,6 +604,9 @@ return baseclass.extend({
 			'repo-remove': _('Removing an item'),
 			'sources-update': _('Updating subscriptions'),
 			'test': _('Strategy selection'),
+			'probe': _('Checking the sites'),
+			'dns-setup': _('Setting up encrypted DNS'),
+			'diagnose': _('Finding out how the provider blocks'),
 			'autoupdate': _('Automatic update')
 		}[name] ?? String(name ?? '');
 	},
@@ -589,17 +776,19 @@ return baseclass.extend({
 
 	/* Polls "job_status" until the job leaves the running state.
 	 *   onUpdate(job) - called with every received state
-	 *   onFinish(job) - called once when the job is not running any more
-	 * Returns a function that stops watching. */
+	 *   onFinish(job) - called once when the job is not running any more;
+	 *                   with null when the state could not be read 5 times
+	 * Polling pauses while the tab is hidden. Returns a function that stops
+	 * watching. */
 	watchJob(onUpdate, onFinish, interval) {
 		let errors = 0;
 		let stopped = false;
+		let stopPoll = null;
 
 		const stop = () => {
 			if (!stopped) {
 				stopped = true;
-				poll.remove(step);
-				window.removeEventListener('pagehide', stop);
+				stopPoll?.();
 			}
 		};
 
@@ -621,14 +810,16 @@ return baseclass.extend({
 					onFinish(job);
 			}
 		}).catch(err => {
-			if (++errors >= 5) {
+			if (++errors >= 5 && !stopped) {
 				stop();
 				this.notifyError(_('Lost track of the background task'), err);
+
+				if (onFinish)
+					onFinish(null);
 			}
 		});
 
-		window.addEventListener('pagehide', stop);
-		poll.add(step, interval ?? 2);
+		stopPoll = this.pollVisible(step, interval ?? 2);
 
 		return stop;
 	},

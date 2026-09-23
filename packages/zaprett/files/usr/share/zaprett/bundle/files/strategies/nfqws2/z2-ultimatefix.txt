@@ -1,0 +1,6 @@
+--blob=quic_google:@${bin:quic_initial_www_google_com}
+--blob=tls_google:@${bin:tls_clienthello_www_google_com}
+--filter-udp=443 --filter-l7=quic ${hostlists} --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new
+--filter-udp=50000-65535 ${ipsets} --out-range=<d3 --lua-desync=fake:blob=quic_google:payload=all:repeats=6 --new
+--filter-tcp=80 ${hostlists} --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit --new
+--filter-tcp=443 ${hostlists} --payload=tls_client_hello --lua-desync=fake:blob=tls_google:tcp_seq=-10000:tcp_ack=-66000:ip_autottl=-2,3-20:ip6_autottl=-2,3-20:repeats=6 --lua-desync=fakedsplit:tcp_seq=-10000:tcp_ack=-66000:ip_autottl=-2,3-20:ip6_autottl=-2,3-20

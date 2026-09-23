@@ -14,5 +14,9 @@
   "source": "bundle",
   "sha256": "1aa084279e6a83fc2d7b196b4f0ca7c33b87c00cd42182b0988373e2c96ed34c",
   "installed_at": 1789603200,
-  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt7.json"
+  "manifest_url": "https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/strategies/nfqws/strategy-alt7.json",
+  "name_en": "strategy-alt7",
+  "description_en": "Strategy alt7 from the zapret for Windows repository",
+  "name_zh": "strategy-alt7",
+  "description_zh": "来自 Windows 版 zapret 仓库的 alt7 策略"
 }
