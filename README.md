@@ -16,7 +16,7 @@
 
 ---
 
-## Windows-приложение (бета)
+## Windows-приложение
 
 Нет роутера с OpenWrt или нужен обход только на одном компьютере? **zaprett для Windows 0.1.1** делает то же самое на
 ПК с Windows 10 (2004 и новее, включая LTSC 2021) и Windows 11 x64: мастер первой настройки, проверка сайтов, автоподбор
@@ -28,7 +28,7 @@
 | [![Главная](windows/docs/screenshots/light-ru-01-home.png)](windows/docs/screenshots/light-ru-01-home.png) | [![Мастер настройки](windows/docs/screenshots/light-ru-29-wizard-2-services.png)](windows/docs/screenshots/light-ru-29-wizard-2-services.png) |
 | **Главная**: состояние обхода и проверка сайтов | **Мастер**: выбор сервисов за пару минут |
 
-Это бета: установщик не подписан сертификатом разработчика, поэтому Windows покажет предупреждение SmartScreen.
+Установщик не подписан сертификатом разработчика, поэтому Windows покажет предупреждение SmartScreen.
 Установка, проверка файла по SHA256 и все возможности — **[руководство zaprett для Windows](windows/README.md)**
 ([English](windows/README.en.md), [简体中文](windows/README.zh-CN.md)).
 

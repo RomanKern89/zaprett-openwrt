@@ -1,4 +1,4 @@
-# zaprett for Windows (beta)
+# zaprett for Windows
 
 [Русский](README.md) · [简体中文](README.zh-CN.md) · [zaprett for OpenWrt routers](../README.en.md)
 
@@ -9,7 +9,7 @@ interface is available in Russian, English and Simplified Chinese.
 
 ![zaprett for Windows: home page](docs/screenshots/light-en-01-home.png)
 
-> **Version 0.1.1 is a beta.** The installer (MSI) is not signed with a code-signing certificate, so Windows shows a
+> **Version 0.1.1.** The installer (MSI) is not signed with a code-signing certificate, so Windows shows a
 > SmartScreen warning when you run it — see below for how to verify the file and what to click.
 >
 > The screenshots in this guide were taken in the interface's demo mode (the "DEMO" badge next to the name): the numbers
@@ -441,7 +441,7 @@ at `C:\ProgramData\zaprett\logs\zaprett.log`.
 single MSI with no extra components, the setup wizard, the bypass itself, isolated automatic selection (the main bypass
 is not restarted), uninstallation.
 
-**Limitations of 0.1.1 (beta):**
+**Limitations of 0.1.1:**
 
 - the MSI is not signed with a code-signing certificate — SmartScreen shows a warning (section 4);
 - no automatic updates yet — install a new version with a new MSI (section 8);

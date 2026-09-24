@@ -1,4 +1,4 @@
-# zaprett Windows 版（测试版）
+# zaprett Windows 版
 
 [Русский](README.md) · [English](README.en.md) · [OpenWrt 路由器版（英文）](../README.en.md)
 
@@ -8,7 +8,7 @@
 
 ![zaprett Windows 版主页](docs/screenshots/light-zh-CN-01-home.png)
 
-> **0.1.1 是测试版。** 安装程序（MSI）没有代码签名证书，运行时 Windows 会显示 SmartScreen 警告——下文说明如何校验文件以及
+> **版本 0.1.1。** 安装程序（MSI）没有代码签名证书，运行时 Windows 会显示 SmartScreen 警告——下文说明如何校验文件以及
 > 该点击哪里。
 >
 > 本文截图均在界面的演示模式下拍摄（名称旁有“演示”标记），其中的数字仅为示例。

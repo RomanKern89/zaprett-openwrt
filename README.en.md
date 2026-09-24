@@ -20,7 +20,7 @@ interface, 64 ready-made strategies and curated site lists.
 
 ---
 
-## Windows app (beta)
+## Windows app
 
 No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.1** does the same on a
 Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC: a first-run wizard, site checks, automatic
@@ -33,7 +33,7 @@ English, Russian and Chinese.
 | [![Home](windows/docs/screenshots/light-en-01-home.png)](windows/docs/screenshots/light-en-01-home.png) | [![Setup wizard](windows/docs/screenshots/light-en-29-wizard-2-services.png)](windows/docs/screenshots/light-en-29-wizard-2-services.png) |
 | **Home**: bypass state and site check | **Wizard**: choose services in a couple of minutes |
 
-It is a beta: the installer is not signed with a code-signing certificate, so Windows shows a SmartScreen warning.
+The installer is not signed with a code-signing certificate, so Windows shows a SmartScreen warning.
 Installation, SHA256 verification and all features — **[zaprett for Windows guide](windows/README.en.md)**
 ([Русский](windows/README.md), [简体中文](windows/README.zh-CN.md)).
 
