@@ -589,7 +589,7 @@ public sealed partial class FakeZaprettClient
         string At(int min) => t.AddMinutes(min).ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
         return
         [
-            $"{At(0)} zaprett: " + M("служба запущена, версия 0.1.0", "service started, version 0.1.0", "服务已启动，版本 0.1.0"),
+            $"{At(0)} zaprett: " + M("служба запущена, версия " + ProductVersion, "service started, version " + ProductVersion, "服务已启动，版本 " + ProductVersion),
             $"{At(0)} zaprett: " + M("движок winws v72.13 запущен, pid 7412, стратегия strategy-general", "engine winws v72.13 started, pid 7412, strategy strategy-general", "引擎 winws v72.13 已启动，pid 7412，策略 strategy-general"),
             $"{At(0)} winws: windivert initialized. capture is started.",
             $"{At(10)} zaprett: " + M("монитор: открылось 5 из 5", "monitor: 5 of 5 opened", "监控：5/5 可访问"),
@@ -600,6 +600,6 @@ public sealed partial class FakeZaprettClient
     }
 
     private static string FakeDiag() =>
-        "zaprett 0.1.0 (fake mode of the interface)\nWindows 11 Pro 26100 x64\nwinws v72.13, WinDivert 2.2.2\n" +
+        "zaprett " + ProductVersion + " (fake mode of the interface)\nWindows 11 Pro 26100 x64\nwinws v72.13, WinDivert 2.2.2\n" +
         "config: engine=winws strategy=strategy-general list_mode=whitelist\nrepo.url: https://raw.githubusercontent.com/…/index.json\n";
 }

@@ -14,12 +14,28 @@ internal sealed class FakeNotifyArea : INotifyArea
 
     public int Adds { get; private set; }
 
+    /// <summary>The shell is not ready: this many next adds fail and add nothing.</summary>
+    public int FailingAdds { get; set; }
+
+    /// <summary>The next add adds the icon but reports a failure (a time-out of Shell_NotifyIcon).</summary>
+    public bool NextAddTimesOut { get; set; }
+
     public bool Add()
     {
         Adds++;
+        if (FailingAdds > 0)
+        {
+            FailingAdds--;
+            return false;
+        }
         if (Icons > 0)
             return false;
         Icons = 1;
+        if (NextAddTimesOut)
+        {
+            NextAddTimesOut = false;
+            return false;
+        }
         return true;
     }
 
@@ -107,6 +123,52 @@ public sealed class TrayRegistrationTests
     }
 
     [Fact]
+    public void A_first_add_refused_by_a_shell_not_ready_is_retried_and_gives_one_icon()
+    {
+        var area = new FakeNotifyArea { FailingAdds = 2 };
+        var tray = new TrayRegistration(area);
+        tray.Create();
+        Assert.False(tray.IsAdded);
+        Assert.Equal(0, area.Icons);
+        tray.Retry();                // timer: the shell still refuses
+        Assert.False(tray.IsAdded);
+        tray.Update();               // the state changed: tried again, now it works
+        Assert.True(tray.IsAdded);
+        Assert.Equal(1, area.Icons);
+        tray.Retry();
+        tray.Update();
+        Assert.Equal(1, area.Icons);
+        Assert.Equal(3, area.Adds);
+    }
+
+    [Fact]
+    public void An_add_that_timed_out_but_added_the_icon_is_not_added_twice()
+    {
+        var area = new FakeNotifyArea { NextAddTimesOut = true };
+        var tray = new TrayRegistration(area);
+        tray.Create();
+        Assert.True(tray.IsAdded);
+        Assert.Equal(1, area.Icons);
+        tray.Retry();
+        tray.Update();
+        Assert.Equal(1, area.Adds);
+    }
+
+    [Fact]
+    public void Nothing_is_added_before_create_or_after_exit()
+    {
+        var area = new FakeNotifyArea();
+        var tray = new TrayRegistration(area);
+        tray.Retry();
+        tray.Update();
+        Assert.Equal(0, area.Adds);
+        tray.Create();
+        tray.Dispose();
+        tray.Retry();
+        Assert.Equal(0, area.Icons);
+    }
+
+    [Fact]
     public void Exit_removes_the_icon_and_nothing_brings_it_back()
     {
         var area = new FakeNotifyArea();
@@ -118,6 +180,27 @@ public sealed class TrayRegistrationTests
         tray.OnTaskbarCreated();
         tray.Create();
         Assert.Equal(0, area.Icons);
+    }
+}
+
+public sealed class TrayImagesTests
+{
+    [Fact]
+    public void The_image_of_the_state_is_used_when_it_loaded()
+    {
+        var loaded = new Dictionary<string, IntPtr> { ["on"] = 11, ["off"] = 12, ["warn"] = 13, ["error"] = 14 };
+        Assert.Equal((IntPtr)12, TrayImages.Pick("off", loaded));
+        Assert.Equal((IntPtr)14, TrayImages.Pick("error", loaded));
+    }
+
+    [Fact]
+    public void An_image_that_did_not_load_never_reaches_the_shell()
+    {
+        // the "off" image failed (LoadImage gave NULL): an icon without an image stays invisible, so another is used
+        var loaded = new Dictionary<string, IntPtr> { ["on"] = 11, ["off"] = IntPtr.Zero, ["warn"] = 13, ["error"] = 14 };
+        Assert.NotEqual(IntPtr.Zero, TrayImages.Pick("off", loaded));
+        Assert.NotEqual(IntPtr.Zero, TrayImages.Pick("unknown", loaded));
+        Assert.Equal(IntPtr.Zero, TrayImages.Pick("off", new Dictionary<string, IntPtr>()));
     }
 }
 

@@ -113,6 +113,14 @@ public sealed partial class WizardViewModel : PageViewModel
     [ObservableProperty] public partial string TestResultText { get; set; } = "";
     [ObservableProperty] public partial bool HasTestResult { get; set; }
     [ObservableProperty] public partial bool IsAutostart { get; set; }
+
+    /// <summary>repo.autoupdate, offered on the last step; sent on "Finish" only when it changed.</summary>
+    [ObservableProperty] public partial bool IsRepoAutoupdate { get; set; }
+
+    [ObservableProperty] public partial string RepoAutoupdateHint { get; set; } = "";
+
+    /// <summary>repo.autoupdate as the service has it (null: not read).</summary>
+    private bool? _repoAutoupdateLoaded;
     [ObservableProperty] public partial string DoneTitle { get; set; } = "";
     [ObservableProperty] public partial string DoneText { get; set; } = "";
     [ObservableProperty] public partial string DoneKind { get; set; } = K.Ok;
@@ -271,9 +279,11 @@ public sealed partial class WizardViewModel : PageViewModel
             case WizardStep.Fix:
                 PrepareDone();
                 Step = WizardStep.Done;
+                var repo = await LoadRepoAutoupdateAsync();
                 // the switch is turned on once its page is shown (a switch created already on is drawn pale)
                 await Task.Delay(100);
                 IsAutostart = true;
+                IsRepoAutoupdate = repo;
                 break;
         }
     }
@@ -516,13 +526,39 @@ public sealed partial class WizardViewModel : PageViewModel
             (DoneKind, DoneTitle, DoneText) = (K.Ok, L.T("Wizard.Done.Title"), L.T("Wizard.Done.Text"));
     }
 
-    /// <summary>Saves the autostart choice and closes the wizard.</summary>
+    /// <summary>The value of repo.autoupdate and the description of the switch (a failed read keeps the default "on").</summary>
+    private async Task<bool> LoadRepoAutoupdateAsync()
+    {
+        JsonObject? config = null;
+        try
+        {
+            var r = await State.CallAsync("settings.get");
+            config = r.Obj("settings") ?? r.Obj("config");
+            _repoAutoupdateLoaded = RepoSource.Autoupdate(config);
+        }
+        catch (ZaprettCallException)
+        {
+            _repoAutoupdateLoaded = null;
+        }
+        RepoAutoupdateHint = RepoSource.Hint(config);
+        return _repoAutoupdateLoaded ?? RepoSource.DefaultAutoupdate;
+    }
+
+    /// <summary>Saves the autostart and repository choices and closes the wizard.</summary>
     [RelayCommand]
     private async Task Finish()
     {
         var ok = await Try(() => State.SetAutostartAsync(IsAutostart), "Wizard.Err.Autostart");
         if (!ok)
             return;
+        if (IsRepoAutoupdate != (_repoAutoupdateLoaded ?? RepoSource.DefaultAutoupdate))
+        {
+            ok = await Try(() => State.CallAsync("settings.set", new JsonObject { ["repo"] = new JsonObject { ["autoupdate"] = IsRepoAutoupdate } }),
+                "Wizard.Err.RepoAutoupdate");
+            if (!ok)
+                return;
+            _repoAutoupdateLoaded = IsRepoAutoupdate;
+        }
         Complete();
         await RefreshQuietAsync();
     }

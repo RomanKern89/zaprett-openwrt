@@ -8,7 +8,21 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <Company>zaprett-openwrt</Company>
     <Product>zaprett for Windows</Product>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Copyright>MIT License</Copyright>
+    <!-- ProductVersion stays exactly the Version above: code signing (SignPath, docs/CODE_SIGNING.md) requires the same product
+         version on every signed file. The commit goes to the Comments field instead (target below). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
+
+  <!-- "commit <sha>" in the Comments field of the version resource (AssemblyDescription), from the same source control
+       information the SDK used for ProductVersion "+<sha>". build\check-versions.ps1 requires one commit on every
+       binary when it builds from git (stale binaries in an MSI, ZERR-043). -->
+  <Target Name="ZaprettCommitInVersionResource" BeforeTargets="GetAssemblyAttributes"
+          DependsOnTargets="InitializeSourceControlInformation"
+          Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">
+    <PropertyGroup Condition="'$(SourceRevisionId)' != ''">
+      <Description>commit $(SourceRevisionId)</Description>
+    </PropertyGroup>
+  </Target>
 </Project>

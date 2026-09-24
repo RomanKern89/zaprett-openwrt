@@ -70,6 +70,13 @@ public sealed partial class SettingsViewModel : PageViewModel
     [ObservableProperty] public partial bool AutoRepair { get; set; }
     [ObservableProperty] public partial Choice? Channel { get; set; }
     [ObservableProperty] public partial bool CheckUpdates { get; set; }
+
+    /// <summary>repo.autoupdate: strategies and lists from the repository are updated once a day (<see cref="RepoSource"/>).
+    /// Starts off like every switch of the page and gets its value from Load: a ToggleSwitch created already on keeps
+    /// the pale colours of the middle of its animation (light-en-20 of 2026-09-24).</summary>
+    [ObservableProperty] public partial bool RepoAutoupdate { get; set; }
+
+    [ObservableProperty] public partial string RepoAutoupdateHint { get; set; } = "";
     [ObservableProperty] public partial string UpdateText { get; set; } = "";
 
     /// <summary>
@@ -235,6 +242,8 @@ public sealed partial class SettingsViewModel : PageViewModel
         var upd = config.Obj("update");
         Channel = Channels.FirstOrDefault(c => c.Value == upd.Str("channel")) ?? Channels[0];
         CheckUpdates = upd.Bool("check", true);
+        RepoAutoupdate = RepoSource.Autoupdate(config);
+        RepoAutoupdateHint = RepoSource.Hint(config);
         IsLoaded = true;
         IsDirty = false;
         _loading = false;
@@ -264,7 +273,11 @@ public sealed partial class SettingsViewModel : PageViewModel
         };
         var update = new JsonObject { ["channel"] = Channel?.Value ?? "stable", ["check"] = CheckUpdates };
         var full = new JsonObject { ["main"] = main, ["monitor"] = monitor, ["update"] = update };
-        return Diff(full, _loaded ?? []);
+        var patch = Diff(full, _loaded ?? []);
+        // compared with the effective value: a config.json without repo.autoupdate means "on"
+        if (RepoAutoupdate != RepoSource.Autoupdate(_loaded))
+            patch["repo"] = new JsonObject { ["autoupdate"] = RepoAutoupdate };
+        return patch;
     }
 
     /// <summary>Keeps only values that differ from the loaded config (nested objects compared per key).</summary>
@@ -311,7 +324,7 @@ public sealed partial class SettingsViewModel : PageViewModel
         {
             case nameof(QuicBlock) or nameof(GameFilter) or nameof(GamePortsTcp) or nameof(GamePortsUdp) or nameof(Ipv6) or nameof(Watchdog)
                 or nameof(NetworkMode) or nameof(Ssids) or nameof(SkipCorporate) or nameof(MonitorEnabled) or nameof(MonitorInterval)
-                or nameof(MonitorThreshold) or nameof(AutoRepair) or nameof(Channel) or nameof(CheckUpdates):
+                or nameof(MonitorThreshold) or nameof(AutoRepair) or nameof(Channel) or nameof(CheckUpdates) or nameof(RepoAutoupdate):
                 IsDirty = BuildPatch().Count > 0;
                 if (e.PropertyName == nameof(NetworkMode))
                     OnPropertyChanged(nameof(IsSsidMode));

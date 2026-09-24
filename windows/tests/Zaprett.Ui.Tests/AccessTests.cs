@@ -214,6 +214,7 @@ public sealed class ReadOnlyBindingTests
         { "SettingsPage.xaml", "IsOn=\"{x:Bind Vm.AutoRepair," },
         { "SettingsPage.xaml", "SelectedItem=\"{x:Bind Vm.Channel," },
         { "SettingsPage.xaml", "IsOn=\"{x:Bind Vm.CheckUpdates," },
+        { "SettingsPage.xaml", "IsOn=\"{x:Bind Vm.RepoAutoupdate," },
         { "SettingsPage.xaml", "Command=\"{x:Bind Vm.InstallUpdateCommand}\"" },
         { "SettingsPage.xaml", "Command=\"{x:Bind Vm.RunWizardCommand}\"" },
         { "SettingsPage.xaml", "Command=\"{x:Bind Vm.SaveCommand}\"" },

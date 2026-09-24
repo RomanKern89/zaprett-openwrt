@@ -24,19 +24,39 @@ public sealed class TrayRegistration(INotifyArea area, Action<string>? log = nul
 
     public bool IsDisposed { get; private set; }
 
+    /// <summary>Create was called: from now on a missing icon is added again (a failed first add is retried).</summary>
+    public bool IsCreated { get; private set; }
+
     /// <summary>First add; a second call does nothing.</summary>
     public void Create()
     {
         if (IsAdded || IsDisposed)
             return;
+        IsCreated = true;
         AddFresh("added");
+    }
+
+    /// <summary>
+    /// A first add that failed (the shell was not ready yet: right after sign-in, or while Explorer is busy with a
+    /// starting setup) is tried again: on every update of the state and by the retry timer of the icon.
+    /// </summary>
+    public void Retry()
+    {
+        if (IsDisposed || !IsCreated || IsAdded)
+            return;
+        AddFresh("added on retry");
     }
 
     /// <summary>State, tooltip or balloon changed. A failed modify means the shell lost the icon: it is added again.</summary>
     public void Update()
     {
-        if (IsDisposed || !IsAdded)
+        if (IsDisposed || !IsCreated)
             return;
+        if (!IsAdded)
+        {
+            Retry();
+            return;
+        }
         if (!area.Modify())
         {
             log?.Invoke("tray: modify failed, adding the icon again");
@@ -73,6 +93,15 @@ public sealed class TrayRegistration(INotifyArea area, Action<string>? log = nul
     private void AddFresh(string what)
     {
         IsAdded = area.Add();
+        // NIM_ADD may report a failure (a time-out) although the shell did add the icon: then it answers a modify,
+        // and it is used instead of adding a second one
+        if (!IsAdded && area.Modify())
+        {
+            IsAdded = true;
+            area.SetVersion();
+            log?.Invoke("tray: icon " + what + " (it was there already)");
+            return;
+        }
         if (IsAdded)
         {
             area.SetVersion();
@@ -80,6 +109,28 @@ public sealed class TrayRegistration(INotifyArea area, Action<string>? log = nul
         }
         else
             log?.Invoke("tray: Shell_NotifyIcon(NIM_ADD) failed");
+    }
+}
+
+/// <summary>
+/// The handle of the tray image for a state. An image that could not be loaded (LoadImage gave NULL) must never go
+/// to Shell_NotifyIcon: an icon without an image is kept by the shell but not shown (Windows 10, 2026-09-24: added
+/// in the state "off", invisible until the first modify). Then the image of another state is used.
+/// </summary>
+public static class TrayImages
+{
+    public static readonly string[] States = ["on", "off", "warn", "error"];
+
+    public static IntPtr Pick(string state, IReadOnlyDictionary<string, IntPtr> loaded)
+    {
+        if (loaded.TryGetValue(state, out var h) && h != IntPtr.Zero)
+            return h;
+        foreach (var s in new[] { "off", "on", "warn", "error" })
+        {
+            if (loaded.TryGetValue(s, out var other) && other != IntPtr.Zero)
+                return other;
+        }
+        return IntPtr.Zero;
     }
 }
 

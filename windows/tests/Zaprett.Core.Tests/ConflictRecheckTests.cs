@@ -22,7 +22,7 @@ public sealed class ConflictRecheckTests
     static void SitesUp(Harness h) => h.F.Http.Probe = r => new ProbeResult(r.Url, true, 50, 200000, null, 200);
 
     static int Rechecks(Harness h) => h.F.Log.Lines.Count(l =>
-        l.Contains("внеочередная", StringComparison.Ordinal) || l.Contains("extra availability check", StringComparison.Ordinal));
+        l.Contains("внеочередная проверка доступности", StringComparison.Ordinal) || l.Contains("extra availability check", StringComparison.Ordinal));
 
     static async Task<JsonObject> Monitor(Harness h) => (JsonObject)(await h.Call("monitor.status"))["monitor"]!;
 
@@ -471,6 +471,55 @@ public sealed class ConflictRecheckTests
         await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
         Assert.Contains(h.F.Log.Lines, l => l.Contains("extra availability check", StringComparison.Ordinal));
         Assert.DoesNotContain(h.F.Log.Lines, l => l.Contains("внеочередная", StringComparison.Ordinal));
+    }
+
+    static int Postponed(Harness h) => h.F.Log.Lines.Count(l => l.StartsWith("I ", StringComparison.Ordinal) &&
+        (l.Contains("внеочередная проверка отложена", StringComparison.Ordinal) || l.Contains("extra check is put off", StringComparison.Ordinal)));
+
+    [Fact]
+    public async Task APostponedExtraCheck_IsLoggedOncePerSeries()
+    {
+        using var h = await DegradedAsync();
+        // series 1: the engine is down, the extra check is put off and retried every 30 s
+        h.F.Conflicts.Items.Add(FakeConflicts.Winws());
+        await h.Call("status");
+        h.F.Engine.Kill("main");
+        h.F.Conflicts.Items.Clear();
+        SitesUp(h);
+        await h.Call("status");
+        await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.Equal(1, Postponed(h));
+        Assert.Contains(h.F.Log.Lines, l => l.Contains("движок не работает", StringComparison.Ordinal) || l.Contains("the engine is not running", StringComparison.Ordinal));
+        for (var i = 0; i < 3; i++)
+        {
+            var before = h.D.LastMonitorRecheck;
+            h.F.Clock.Now += TimeSpan.FromSeconds(Checks.Health.RecheckRetry + 1);
+            await h.Call("status");
+            Assert.NotSame(before, h.D.LastMonitorRecheck);
+            await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+        Assert.Equal(1, Postponed(h));
+        Assert.Equal(0, Rechecks(h));
+        // the engine is back: the check runs and says so
+        await h.Call("start");
+        h.F.Clock.Now += TimeSpan.FromSeconds(Checks.Health.RecheckRetry + 1);
+        await h.Call("status");
+        await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.Equal(1, Rechecks(h));
+        Assert.Equal(1, Postponed(h));
+        // series 2: a new change, put off again (another reason) — one new line
+        h.F.Conflicts.Items.Add(FakeConflicts.Winws());
+        await h.Call("status");
+        h.F.Engine.Phase = EnginePhases.WaitingNetwork;
+        h.F.Conflicts.Items.Clear();
+        h.F.Clock.Now += TimeSpan.FromSeconds(Checks.Health.RecheckInterval + 1);
+        await h.Call("status");
+        await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
+        h.F.Clock.Now += TimeSpan.FromSeconds(Checks.Health.RecheckRetry + 1);
+        await h.Call("status");
+        await h.D.LastMonitorRecheck!.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.Equal(2, Postponed(h));
+        Assert.Contains(h.F.Log.Lines, l => l.Contains("ждёт выбранную сеть", StringComparison.Ordinal) || l.Contains("waits for the selected network", StringComparison.Ordinal));
     }
 
     static void InterlockedMax(ref int target, int value)

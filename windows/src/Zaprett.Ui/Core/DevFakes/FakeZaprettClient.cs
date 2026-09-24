@@ -87,6 +87,16 @@ public sealed partial class FakeZaprettClient : IZaprettClient
 
     public string StrategyId { get; private set; } = "strategy-general";
 
+    /// <summary>
+    /// The version the fake service reports: the one this build carries (Directory.Build.props, X.Y.Z without the
+    /// "+commit" of SourceLink), so the screenshots of the settings and the log show the version they document.
+    /// </summary>
+    public static string ProductVersion { get; } =
+        (typeof(FakeZaprettClient).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion ?? "0.0.0")
+        .Split('+')[0];
+
     /// <summary>How long the status waits in the scenario SlowStart.</summary>
     public TimeSpan SlowStartDelay { get; set; } = TimeSpan.FromSeconds(4);
 
@@ -225,7 +235,7 @@ public sealed partial class FakeZaprettClient : IZaprettClient
     private JsonObject Dispatch(string method, JsonObject a) => method switch
     {
         "status" => BuildStatus(),
-        "version" => Ok(new() { ["version"] = "0.1.0", ["winws"] = "v72.13", ["winws2"] = "1.0.5.2" }),
+        "version" => Ok(new() { ["version"] = ProductVersion, ["winws"] = "v72.13", ["winws2"] = "1.0.5.2" }),
         "presets" => BuildPresets(),
         "page" => BuildPage(a.Str("name") ?? "overview"),
         "start" => Service(true, true),
@@ -527,7 +537,7 @@ public sealed partial class FakeZaprettClient : IZaprettClient
             ["install_id"] = InstallId,
             ["tray_autostart"] = TrayAutostart,
             ["can_modify"] = CanModify,
-            ["version"] = "0.1.0",
+            ["version"] = ProductVersion,
             ["job"] = _job == null ? null : new JsonObject
             {
                 ["id"] = _job.Str("id"), ["name"] = _job.Str("name"), ["state"] = _job.Str("state"), ["progress"] = _job.Int("progress"),

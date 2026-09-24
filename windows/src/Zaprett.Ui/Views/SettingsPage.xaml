@@ -81,6 +81,10 @@
                 </ui:SettingCard>
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Updates')}" AutomationProperties.HeadingLevel="Level2" />
+                <ui:SettingCard Glyph="&#xE895;" Header="{x:Bind loc:L.T('Settings.RepoAutoupdate')}" Description="{x:Bind Vm.RepoAutoupdateHint, Mode=OneWay}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.RepoAutoupdate, Mode=TwoWay}" MinWidth="0"
+                                  AutomationProperties.Name="{x:Bind loc:L.T('Settings.RepoAutoupdate')}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
+                </ui:SettingCard>
                 <!-- the service of 0.1.0 cannot update the program: manual instructions instead of controls that do nothing -->
                 <ui:SettingCard Glyph="&#xE896;" Header="{x:Bind loc:L.T('Settings.Update.ManualTitle')}" Description="{x:Bind loc:L.T('Settings.Update.ManualText')}"
                                 Visibility="{x:Bind Vm.ShowUpdatesUnavailable, Mode=OneWay}">

@@ -46,4 +46,17 @@ public sealed class FakeDataTests
         Assert.NotEmpty(services);
         Assert.Contains(services, s => !string.IsNullOrEmpty(s.Str("description_zh")));
     }
+
+    [Fact]
+    public async Task The_fake_reports_the_version_of_this_build()
+    {
+        // the screenshots show it in the settings and in the log: it must not stay at an old release
+        var props = File.ReadAllText(Path.Combine(Repo.Root, "Directory.Build.props"));
+        var version = System.Text.RegularExpressions.Regex.Match(props, "<Version>([^<]+)</Version>").Groups[1].Value;
+        Assert.Matches(@"^\d+\.\d+\.\d+$", version);
+        await using var fake = new FakeZaprettClient { JobSeconds = 0.01 };
+        Assert.Equal(version, (await fake.CallAsync("version")).Str("version"));
+        Assert.Equal(version, (await fake.CallAsync("status")).Str("version"));
+        Assert.Contains("version " + version, (await fake.CallAsync("log", new System.Text.Json.Nodes.JsonObject { ["lang"] = "en" })).ToJsonString(), StringComparison.Ordinal);
+    }
 }

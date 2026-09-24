@@ -212,6 +212,17 @@
     <CustomAction Id="ZaprettApplyTray" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
                   Execute="deferred" Impersonate="no" Return="ignore" />
 
+    <!-- Upgrade: the service of the NEW version starts at StartServices, and only then RemoveExistingProducts removes
+         the old version - running the old package's own actions. The removal of 0.1.1 runs its ZaprettPrepare
+         (it ran for a removal inside a major upgrade too), which stops the service and unloads the driver: after an
+         upgrade from 0.1.1 the service stayed stopped, no bypass, no tray (D23). So after RemoveExistingProducts the
+         new version starts its service again when its start type is Automatic, waits for Running, and the service
+         brings the tray back from run\ui-relaunch.json. A failure is logged, never fails the setup. -->
+    <SetProperty Id="ZaprettStartService" Sequence="execute" Before="ZaprettStartService"
+                 Value="[ZAPRETT_PS] -Action StartService -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+    <CustomAction Id="ZaprettStartService" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
     <SetProperty Id="ZaprettUninstallActions" Sequence="execute" Before="ZaprettUninstallActions"
                  Value="[ZAPRETT_PS] -Action Uninstall -InstallDir &quot;[INSTALLFOLDER].&quot; -DataDir &quot;[DATAFOLDER].&quot; -RemoveData &quot;[REMOVEDATA]&quot;" />
     <CustomAction Id="ZaprettUninstallActions" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
@@ -285,12 +296,18 @@
       <!-- only once the server runs elevated (MsiRunningElevated, set by Windows Installer): when the UAC prompt is
            declined the execute sequence still starts without elevation and then fails (1730), and a tray closed
            there would be lost; restore-ui.ps1 on the UserExit / FatalError page is the second line of defence -->
+      <!-- not while this version is being removed by a newer one (UPGRADINGPRODUCTCODE): the newer version's
+           service and tray are already running then -->
       <Custom Action="ZaprettCloseUi" Before="CostInitialize"
-              Condition="(Installed OR WIX_UPGRADE_DETECTED) AND MsiRunningElevated" />
+              Condition="(Installed OR WIX_UPGRADE_DETECTED) AND MsiRunningElevated AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="ZaprettRestartService" After="InstallInitialize"
               Condition="(Installed OR WIX_UPGRADE_DETECTED) AND NOT (REMOVE~=&quot;ALL&quot;)" />
-      <Custom Action="ZaprettPrepare" After="ZaprettRestartService"
-              Condition="NOT (REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE)" />
+      <!-- install, repair, upgrade of THIS package only; never a removal - also not the removal of this version by a
+           newer one (UPGRADINGPRODUCTCODE): that runs after the newer version has installed and started its service,
+           and stopping it there left the service stopped (D23). The newer version's own ZaprettPrepare has already
+           freed everything before its InstallFiles; the removal then only deletes files the newer version does not
+           have, which its running service does not use. -->
+      <Custom Action="ZaprettPrepare" After="ZaprettRestartService" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettStopUi" After="ZaprettPrepare"
               Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="ZaprettInstallRollback" After="InstallFiles"
@@ -298,6 +315,8 @@
       <Custom Action="ZaprettInstallActions" After="ZaprettInstallRollback" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettWarmup" Before="StartServices" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettApplyTray" After="RemoveExistingProducts" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettStartService" After="ZaprettApplyTray"
+              Condition="WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettDnsOff" Before="StopServices"
               Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="ZaprettUninstallActions" After="StopServices"

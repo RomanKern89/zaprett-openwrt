@@ -176,6 +176,9 @@ public sealed class Health
     long lastRecheck = long.MinValue / 2;
     int unknownStreak;
 
+    /// <summary>The postponement of the extra check was written to the log in this series of passing skips.</summary>
+    bool postponedLogged;
+
     /// <summary>The extra check started last (tests wait for it); null when none was started.</summary>
     public Task? LastRecheck { get; private set; }
 
@@ -209,13 +212,14 @@ public sealed class Health
     async Task RecheckAsync(Func<CancellationToken, Task<JsonObject>> runCheck, CancellationToken lifetime)
     {
         var outcome = RecheckOutcome.Failed;
+        string? skipped = null;
         try
         {
             // the language of the service, not of the window whose status call noticed the change
             T.Use(c.Config.Load().Language);
             await c.P.Clock.Delay(RecheckDelay, lifetime).ConfigureAwait(false);
             var r = await runCheck(lifetime).ConfigureAwait(false);
-            var skipped = R.Str(r["skipped"]);
+            skipped = R.Str(r["skipped"]);
             outcome = !R.IsOk(r) ? RecheckOutcome.Failed
                 : skipped != null && TransientSkips.Contains(skipped) ? RecheckOutcome.Transient : RecheckOutcome.Done;
         }
@@ -229,6 +233,7 @@ public sealed class Health
         }
         finally
         {
+            var logPostponed = false;
             lock (conflictGate)
             {
                 recheckRunning = false;
@@ -238,7 +243,19 @@ public sealed class Health
                     // a skip that passes by itself is retried soon; a failure waits the whole interval (no storm of probes)
                     lastRecheck = outcome == RecheckOutcome.Transient ? c.Now - RecheckInterval + RecheckRetry : c.Now;
                 }
+                // one line per series of passing skips (retried every 30 s), a new series after a check that ran
+                if (outcome == RecheckOutcome.Transient)
+                {
+                    logPostponed = !postponedLogged;
+                    postponedLogged = true;
+                }
+                else if (outcome == RecheckOutcome.Done)
+                {
+                    postponedLogged = false;
+                }
             }
+            if (logPostponed)
+                c.P.Log.Info(T.S("health.log_recheck_postponed", T.S("health.postponed." + skipped)));
         }
     }
 

@@ -696,5 +696,9 @@
   "Settings.TrayAutostartUnknown": "The service could not read this setting from the registry. Open the settings later or restart the zaprett service.",
   "Settings.Err.TrayAutostart": "Could not change the icon at sign-in",
   "Access.ReadOnly.Title": "View only",
-  "Access.ReadOnly.Text": "Only administrators of this computer and members of the \"zaprett Operators\" group can change zaprett settings. The interface language and theme are saved for you."
+  "Access.ReadOnly.Text": "Only administrators of this computer and members of the \"zaprett Operators\" group can change zaprett settings. The interface language and theme are saved for you.",
+  "Settings.RepoAutoupdate": "Update strategies and lists from the repository daily",
+  "Settings.RepoAutoupdateText": "Once a day zaprett connects to {0} and updates the strategies and lists installed from it. When off, they stay as they are until you update them yourself.",
+  "Repo.GitHub": "GitHub, repository {0}",
+  "Wizard.Err.RepoAutoupdate": "Could not save the repository update setting"
 }

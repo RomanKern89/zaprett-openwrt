@@ -696,5 +696,9 @@
   "Settings.TrayAutostartUnknown": "服务无法从注册表读取此设置。请稍后再打开设置，或重新启动 zaprett 服务。",
   "Settings.Err.TrayAutostart": "无法更改登录时的图标设置",
   "Access.ReadOnly.Title": "仅查看",
-  "Access.ReadOnly.Text": "只有本机管理员和“zaprett Operators”组的成员才能更改 zaprett 设置。界面语言和主题会为你单独保存。"
+  "Access.ReadOnly.Text": "只有本机管理员和“zaprett Operators”组的成员才能更改 zaprett 设置。界面语言和主题会为你单独保存。",
+  "Settings.RepoAutoupdate": "每天从仓库更新策略和列表",
+  "Settings.RepoAutoupdateText": "zaprett 每天连接一次 {0}，更新从中安装的策略和列表。关闭后，它们保持不变，直到你手动更新。",
+  "Repo.GitHub": "GitHub 上的仓库 {0}",
+  "Wizard.Err.RepoAutoupdate": "无法保存仓库更新设置"
 }

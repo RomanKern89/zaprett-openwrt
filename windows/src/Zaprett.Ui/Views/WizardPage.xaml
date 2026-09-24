@@ -269,9 +269,16 @@
                         </Grid>
                         <TextBlock Text="{x:Bind Vm.DoneTitle, Mode=OneWay}" FontFamily="{StaticResource DisplayFont}" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" />
                         <TextBlock Style="{StaticResource Body}" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Vm.DoneText, Mode=OneWay}" MaxWidth="640" HorizontalAlignment="Left" />
-                        <ui:SettingCard Glyph="&#xE7E8;" Header="{x:Bind loc:L.T('Settings.Autostart')}" Description="{x:Bind loc:L.T('Wizard.AutostartText')}" MaxWidth="640" HorizontalAlignment="Left">
+                        <!-- both choices in one column of the same width -->
+                        <StackPanel Spacing="8" MaxWidth="640" HorizontalAlignment="Left">
+                        <ui:SettingCard Glyph="&#xE7E8;" Header="{x:Bind loc:L.T('Settings.Autostart')}" Description="{x:Bind loc:L.T('Wizard.AutostartText')}">
                             <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.IsAutostart, Mode=TwoWay}" MinWidth="0" />
                         </ui:SettingCard>
+                        <ui:SettingCard Glyph="&#xE895;" Header="{x:Bind loc:L.T('Settings.RepoAutoupdate')}" Description="{x:Bind Vm.RepoAutoupdateHint, Mode=OneWay}">
+                            <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.IsRepoAutoupdate, Mode=TwoWay}" MinWidth="0"
+                                          AutomationProperties.Name="{x:Bind loc:L.T('Settings.RepoAutoupdate')}" />
+                        </ui:SettingCard>
+                        </StackPanel>
                         <Button x:Name="FinishButton" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Wizard.Finish')}" Command="{x:Bind Vm.FinishCommand}" Padding="28,8" />
                     </StackPanel>
                 </StackPanel>

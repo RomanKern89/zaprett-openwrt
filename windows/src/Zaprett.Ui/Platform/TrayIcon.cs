@@ -20,9 +20,18 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     private const int NinSelect = 0x0400;
     private const int NinKeySelect = 0x0401;
     private const uint NimAdd = 0, NimModify = 1, NimDelete = 2, NimSetVersion = 4;
-    private const uint NifMessage = 0x1, NifIcon = 0x2, NifTip = 0x4, NifInfo = 0x10, NifShowTip = 0x80;
+    private const uint NifMessage = 0x1, NifIcon = 0x2, NifTip = 0x4, NifState = 0x8, NifInfo = 0x10, NifShowTip = 0x80;
+    private const uint NisHidden = 0x1;
     private const uint NiifInfo = 0x1;
     private const int CmdToggle = 1, CmdCheck = 2, CmdOpen = 3, CmdExit = 4;
+    private const uint WmTimer = 0x0113;
+    private const uint RetryMs = 3000;
+    private static readonly IntPtr RetryTimer = 1;
+
+    /// <summary>One more modify with the image shortly after the icon was added: on Windows 10 an icon added right
+    /// after the installer closed was kept by the shell but stayed invisible until its first modify (2026-09-24).</summary>
+    private const uint ReshowMs = 2000;
+    private static readonly IntPtr ReshowTimer = 2;
 
     private readonly MainWindow _window;
     private readonly AppState _state;
@@ -60,11 +69,30 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
         _hwnd = CreateWindowEx(0, cls.lpszClassName, "zaprett tray", 0, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, cls.hInstance, IntPtr.Zero);
         if (_hwnd == IntPtr.Zero)
             throw new Win32Exception(Marshal.GetLastWin32Error());
-        foreach (var s in new[] { "on", "off", "warn", "error" })
-            _icons[s] = LoadImage(IntPtr.Zero, Path.Combine(AppContext.BaseDirectory, "Assets", $"tray-{s}.ico"), 1,
-                GetSystemMetrics(49), GetSystemMetrics(50), 0x10);
+        int cx = GetSystemMetrics(49), cy = GetSystemMetrics(50);
+        foreach (var s in TrayImages.States)
+        {
+            _icons[s] = LoadImage(IntPtr.Zero, Path.Combine(AppContext.BaseDirectory, "Assets", $"tray-{s}.ico"), 1, cx, cy, 0x10);
+            if (_icons[s] == IntPtr.Zero)
+                App.Log($"tray: image {s} not loaded ({cx}x{cy}), error {Marshal.GetLastWin32Error()}");
+        }
         _registration.Create();
         _shell.PropertyChanged += OnShellChanged;
+        if (!_registration.IsAdded)
+            SetTimer(_hwnd, RetryTimer, RetryMs, IntPtr.Zero);
+        else
+            AfterAdded();
+    }
+
+    /// <summary>Writes where the shell put the icon (a check for the next test run) and schedules the second modify.</summary>
+    private void AfterAdded()
+    {
+        var id = new NotifyIconIdentifier { cbSize = (uint)Marshal.SizeOf<NotifyIconIdentifier>(), hWnd = _hwnd, uID = 1 };
+        var hr = ShellNotifyIconGetRect(ref id, out var rect);
+        App.Log(hr == 0
+            ? $"tray: shown in state {_iconState} at {rect.Left},{rect.Top} {rect.Right - rect.Left}x{rect.Bottom - rect.Top}"
+            : $"tray: no place in the notification area yet (state {_iconState}, 0x{hr:X8})");
+        SetTimer(_hwnd, ReshowTimer, ReshowMs, IntPtr.Zero);
     }
 
     private void OnShellChanged(object? sender, PropertyChangedEventArgs e)
@@ -83,7 +111,10 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
             uID = 1,
             uFlags = flags,
             uCallbackMessage = CallbackMessage,
-            hIcon = _icons.GetValueOrDefault(_iconState, _icons.GetValueOrDefault("off")),
+            hIcon = TrayImages.Pick(_iconState, _icons),
+            // visible: never NIS_HIDDEN (only with NIF_STATE the shell reads these two)
+            dwState = 0,
+            dwStateMask = NisHidden,
             szTip = Truncate(_shell.TrayTip, 127),
             szInfo = "",
             szInfoTitle = "",
@@ -95,7 +126,7 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
 
     bool INotifyArea.Add()
     {
-        var data = Data(NifMessage | NifIcon | NifTip | NifShowTip);
+        var data = Data(NifMessage | NifIcon | NifTip | NifShowTip | NifState);
         return ShellNotifyIcon(NimAdd, ref data);
     }
 
@@ -108,7 +139,7 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     bool INotifyArea.Modify()
     {
         var before = _iconState;
-        var data = Data(NifIcon | NifTip | NifShowTip);
+        var data = Data(NifIcon | NifTip | NifShowTip | NifState);
         var ok = ShellNotifyIcon(NimModify, ref data);
         if (before != _iconState)
             App.Log($"tray: state {before} -> {_iconState}, modify={ok}");
@@ -150,9 +181,28 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
                 ShowMenu();
             return IntPtr.Zero;
         }
+        if (msg == WmTimer && wParam == RetryTimer)
+        {
+            _registration.Retry();
+            if (_registration.IsAdded || _registration.IsDisposed)
+            {
+                KillTimer(hwnd, RetryTimer);
+                if (_registration.IsAdded)
+                    AfterAdded();
+            }
+            return IntPtr.Zero;
+        }
+        if (msg == WmTimer && wParam == ReshowTimer)
+        {
+            KillTimer(hwnd, ReshowTimer);
+            _registration.Update();
+            return IntPtr.Zero;
+        }
         if (msg == _taskbarCreated && _taskbarCreated != 0)
         {
             _registration.OnTaskbarCreated();
+            if (_registration.IsAdded)
+                AfterAdded();
             return IntPtr.Zero;
         }
         return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -210,6 +260,11 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     public void Dispose()
     {
         _shell.PropertyChanged -= OnShellChanged;
+        if (_hwnd != IntPtr.Zero)
+        {
+            KillTimer(_hwnd, RetryTimer);
+            KillTimer(_hwnd, ReshowTimer);
+        }
         _registration.Dispose();
         if (_hwnd != IntPtr.Zero)
         {
@@ -222,6 +277,12 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     }
 
     // ---------- Win32 ----------
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetTimer(IntPtr hWnd, IntPtr id, uint elapse, IntPtr proc);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool KillTimer(IntPtr hWnd, IntPtr id);
 
     private delegate IntPtr WndProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
@@ -263,6 +324,24 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    private struct NotifyIconIdentifier
+    {
+        public uint cbSize;
+        public IntPtr hWnd;
+        public uint uID;
+        public Guid guidItem;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     private struct Point
     {
         public int X;
@@ -272,6 +351,9 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
 #pragma warning disable SYSLIB1054 // classic P/Invoke keeps the marshalling of the structs above simple
     [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW", CharSet = CharSet.Unicode)]
     private static extern bool ShellNotifyIcon(uint message, ref NotifyIconData data);
+
+    [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconGetRect")]
+    private static extern int ShellNotifyIconGetRect(ref NotifyIconIdentifier id, out Rect rect);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern ushort RegisterClassEx(ref WndClassEx cls);

@@ -11,6 +11,8 @@
   -Action Warmup     (before StartServices) run "zaprett-svc.exe --warmup" once and log how long it took: the first
                      start of the new files (antivirus scan, loading) then happens here and not within the 30 s the
                      service control manager gives the service. Killed after $WarmupTimeoutSeconds s; never fails.
+  -Action StartService (upgrade, after the old version is removed) start the zaprett service again when its start
+                     type is Automatic and it is not running (the removal of 0.1.1 stops it), wait for Running.
   -Action Rollback   (rollback of a first install) delete the group again.
   -Action Uninstall  (real removal only, never on a major upgrade) stop winws.exe / winws2.exe started from our
                      folder, delete the WinDivert driver service only when its ImagePath points into our folder,
@@ -19,7 +21,7 @@
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Rollback', 'Uninstall', 'ApplyTray', 'Warmup')][string]$Action,
+    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Rollback', 'Uninstall', 'ApplyTray', 'Warmup', 'StartService')][string]$Action,
     [Parameter(Mandatory = $true)][string]$InstallDir,
     [string]$UserSid = '',
     [string]$DataDir = '',
@@ -42,6 +44,10 @@ $TrayChoiceName = 'TrayAutostart'
 $RunKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
 $RunName = 'zaprett'
 $WarmupTimeoutSeconds = 90
+$ServiceName = 'zaprett'
+# the service stops within 40 s (then ends its process ~1.5 s later); a start is reported within the SCM's 30 s
+$ServiceStopWaitSeconds = 45
+$ServiceStartWaitSeconds = 60
 
 # Output goes to the MSI log through WixQuietExec, which decodes it as the OEM code page and writes it back as OEM
 # bytes into a log read in the ANSI code page. So the bytes are written here in the ANSI code page: the OEM round
@@ -212,6 +218,22 @@ function Invoke-Warmup([string]$Dir) {
     }
 }
 
+function Start-OurService {
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if ($null -eq $svc) { Write-Log "service: $ServiceName is not installed"; return }
+    $mode = (Get-CimInstance -ClassName Win32_Service -Filter "Name='$ServiceName'").StartMode
+    if ($svc.Status -eq 'Running') { Write-Log "service: already running (start type $mode)"; return }
+    if ($mode -ne 'Auto') { Write-Log "service: $($svc.Status), start type $mode - left as it is"; return }
+    if ($svc.Status -eq 'StopPending') {
+        $svc.WaitForStatus('Stopped', [TimeSpan]::FromSeconds($ServiceStopWaitSeconds))
+    }
+    $watch = [Diagnostics.Stopwatch]::StartNew()
+    if ($svc.Status -ne 'StartPending') { $svc.Start() }
+    $svc.WaitForStatus('Running', [TimeSpan]::FromSeconds($ServiceStartWaitSeconds))
+    Write-Log ("service: started again, Running after {0} s" -f
+        $watch.Elapsed.TotalSeconds.ToString('0.0', [Globalization.CultureInfo]::InvariantCulture))
+}
+
 function Stop-Engine([string]$Dir) {
     foreach ($p in @(Get-Process -Name $EngineProcesses -ErrorAction SilentlyContinue)) {
         $path = $null
@@ -307,6 +329,11 @@ if ($Action -eq 'Rollback') {
         Remove-TrayRunValue $dir
         Remove-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -ErrorAction SilentlyContinue
     }
+    exit 0
+}
+
+if ($Action -eq 'StartService') {
+    Invoke-Step 'service start' { Start-OurService }
     exit 0
 }
 
