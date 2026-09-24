@@ -12,7 +12,7 @@ namespace Zaprett.Ui.Platform;
 /// (on / off / warn / error), left click opens the window, right click shows the menu
 /// "Turn on/off · Check now · Open · Exit interface". Re-added when Explorer restarts ("TaskbarCreated").
 /// </summary>
-public sealed partial class TrayIcon : IDisposable
+public sealed partial class TrayIcon : IDisposable, INotifyArea
 {
     private const int WmApp = 0x8000;
     private const int CallbackMessage = WmApp + 1;
@@ -30,9 +30,9 @@ public sealed partial class TrayIcon : IDisposable
     private readonly WndProc _proc;
     private readonly uint _taskbarCreated;
     private readonly Dictionary<string, IntPtr> _icons = [];
+    private readonly TrayRegistration _registration;
     private IntPtr _hwnd;
     private string _iconState = "off";
-    private bool _added;
 
     public TrayIcon(MainWindow window, AppState state)
     {
@@ -41,9 +41,10 @@ public sealed partial class TrayIcon : IDisposable
         _shell = App.Get<ShellViewModel>();
         _proc = WindowProc;
         _taskbarCreated = RegisterWindowMessage("TaskbarCreated");
+        _registration = new TrayRegistration(this, App.Log);
     }
 
-    public bool IsAdded => _added;
+    public bool IsAdded => _registration.IsAdded;
 
     public void Create()
     {
@@ -62,12 +63,14 @@ public sealed partial class TrayIcon : IDisposable
         foreach (var s in new[] { "on", "off", "warn", "error" })
             _icons[s] = LoadImage(IntPtr.Zero, Path.Combine(AppContext.BaseDirectory, "Assets", $"tray-{s}.ico"), 1,
                 GetSystemMetrics(49), GetSystemMetrics(50), 0x10);
-        Add();
-        _shell.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName is nameof(ShellViewModel.TrayState) or nameof(ShellViewModel.TrayTip))
-                Update();
-        };
+        _registration.Create();
+        _shell.PropertyChanged += OnShellChanged;
+    }
+
+    private void OnShellChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ShellViewModel.TrayState) or nameof(ShellViewModel.TrayTip))
+            Update();
     }
 
     private NotifyIconData Data(uint flags)
@@ -88,35 +91,43 @@ public sealed partial class TrayIcon : IDisposable
         };
     }
 
-    private void Add()
+    // ---------- INotifyArea: the only calls of Shell_NotifyIcon for the icon itself (TrayRegistration decides) ----------
+
+    bool INotifyArea.Add()
     {
         var data = Data(NifMessage | NifIcon | NifTip | NifShowTip);
-        _added = ShellNotifyIcon(NimAdd, ref data);
-        if (_added)
-        {
-            ShellNotifyIcon(NimSetVersion, ref data);
-            App.Log("tray: icon added, state " + _iconState);
-        }
-        else
-            App.Log("tray: Shell_NotifyIcon(NIM_ADD) failed");
+        return ShellNotifyIcon(NimAdd, ref data);
     }
 
-    public void Update()
+    bool INotifyArea.SetVersion()
     {
-        if (!_added)
-            return;
+        var data = Data(0);
+        return ShellNotifyIcon(NimSetVersion, ref data);
+    }
+
+    bool INotifyArea.Modify()
+    {
         var before = _iconState;
         var data = Data(NifIcon | NifTip | NifShowTip);
         var ok = ShellNotifyIcon(NimModify, ref data);
         if (before != _iconState)
             App.Log($"tray: state {before} -> {_iconState}, modify={ok}");
+        return ok;
     }
+
+    bool INotifyArea.Delete()
+    {
+        var data = Data(0);
+        return ShellNotifyIcon(NimDelete, ref data);
+    }
+
+    public void Update() => _registration.Update();
 
     public void UpdateMenuTexts() => Update();
 
     public void ShowBalloon(string title, string text)
     {
-        if (!_added)
+        if (!_registration.IsAdded)
             return;
         var data = Data(NifInfo);
         data.szInfoTitle = Truncate(title, 63);
@@ -141,7 +152,7 @@ public sealed partial class TrayIcon : IDisposable
         }
         if (msg == _taskbarCreated && _taskbarCreated != 0)
         {
-            Add();
+            _registration.OnTaskbarCreated();
             return IntPtr.Zero;
         }
         return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -198,12 +209,8 @@ public sealed partial class TrayIcon : IDisposable
 
     public void Dispose()
     {
-        if (_added)
-        {
-            var data = Data(0);
-            ShellNotifyIcon(NimDelete, ref data);
-            _added = false;
-        }
+        _shell.PropertyChanged -= OnShellChanged;
+        _registration.Dispose();
         if (_hwnd != IntPtr.Zero)
         {
             DestroyWindow(_hwnd);

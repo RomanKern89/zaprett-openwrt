@@ -89,7 +89,13 @@ public sealed class WizardTests
         await vm.FinishCommand.ExecuteAsync(null);
         Assert.True(finished);
         Assert.True(vm.State.Prefs.WizardDone);
-        Assert.Contains(fake.Calls, c => c == "enable");
+        // passed for this installation of the service data (D11)
+        Assert.Equal(fake.InstallId, vm.State.Prefs.WizardDoneFor);
+        // the autostart choice is its own setting: "autostart", never the old enable/disable (they also stop the bypass)
+        Assert.Contains(fake.Calls, c => c == "autostart");
+        Assert.DoesNotContain(fake.Calls, c => c is "enable" or "disable");
+        Assert.True(fake.Autostart);
+        Assert.True(fake.Running);
     }
 
     [Fact]

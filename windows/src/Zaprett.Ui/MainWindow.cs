@@ -40,6 +40,15 @@ public sealed class MainWindow : Window
         AppWindow.Closing += OnClosing;
         BuildShell(options.Page);
         ApplyTheme(options.Theme ?? state.Prefs.Theme);
+        Shell.Loaded += LogStartupTime;
+    }
+
+    /// <summary>Start-up time of the window (process start to the first Loaded): measures ReadyToRun choices.</summary>
+    private void LogStartupTime(object sender, RoutedEventArgs e)
+    {
+        ((FrameworkElement)sender).Loaded -= LogStartupTime;
+        var started = System.Diagnostics.Process.GetCurrentProcess().StartTime;
+        App.Log($"startup: window loaded {(DateTime.Now - started).TotalMilliseconds:0} ms after process start");
     }
 
     public ShellPage Shell { get; private set; } = null!;
@@ -118,6 +127,9 @@ public sealed class MainWindow : Window
 
     public void CreateTray()
     {
+        // one icon per process: a second call (whatever path leads here) must not add another
+        if (_tray != null)
+            return;
         _tray = new TrayIcon(this, _state);
         _tray.Create();
     }

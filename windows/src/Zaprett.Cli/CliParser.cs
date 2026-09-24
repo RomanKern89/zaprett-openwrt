@@ -57,8 +57,19 @@ public static partial class CliParser
         return parts.Length is 1 or 2 && parts.All(IsId);
     }
 
+    /// <summary>Asking for help: "help" as the command, or --help / -h / /? anywhere (Windows and Unix habits).</summary>
+    public static bool IsHelpRequest(IReadOnlyList<string> argv) =>
+        argv.Any(a => a is "--help" or "-h" or "/?" or "-?") || (argv.FirstOrDefault(a => !a.StartsWith('-')) == "help");
+
     public static CliParseResult Parse(IReadOnlyList<string> argv)
     {
+        if (argv.Any(a => a is "--help" or "-h" or "/?" or "-?"))
+        {
+            // --lang still applies to the help text
+            int li = argv.ToList().IndexOf("--lang");
+            string? helpLang = li >= 0 && li + 1 < argv.Count ? CliText.Normalize(argv[li + 1]) : null;
+            return new CliParseResult(null, null, true, helpLang);
+        }
         var flags = new HashSet<string>(StringComparer.Ordinal);
         var opts = new Dictionary<string, string>(StringComparer.Ordinal);
         var pos = new List<string>();
@@ -214,6 +225,10 @@ public static partial class CliParser
                 return Ok(Cmd("monitor." + sub));
             case "log" when n0 == 1:
                 return Ok(Cmd("log"));
+            case "autostart" when (sub is "on" or "off") && n0 == 2:
+                // only whether the bypass starts with Windows; the engine now is left as it is (enable/disable do both)
+                args["enable"] = sub == "on";
+                return Ok(Cmd("autostart"));
             case "dns" when sub == "status" && n0 == 2:
                 return Ok(Cmd("dns.status"));
             case "dns" when (sub is "setup" or "off") && n0 == 2:

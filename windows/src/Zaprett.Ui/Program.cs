@@ -31,12 +31,25 @@ public static class Program
         return Environment.ExitCode;
     }
 
+    private static string? LaunchArguments(AppActivationArguments e) =>
+        e.Kind == ExtendedActivationKind.Launch && e.Data is Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs launch
+            ? launch.Arguments
+            : null;
+
     private static bool IsFirstInstance()
     {
         var instance = AppInstance.FindOrRegisterForKey(InstanceKey);
         if (instance.IsCurrent)
         {
-            instance.Activated += (_, _) => App.Current?.ShowMainWindow();
+            // a second start: the Start menu shortcut brings the window; --tray (Run key at sign-in, restart after
+            // an update) only finds the running instance and its one icon
+            instance.Activated += (_, e) =>
+            {
+                if (Core.Services.ActivationPolicy.ShowsWindow(LaunchArguments(e)))
+                    App.Current?.ShowMainWindow();
+                else
+                    App.Log("activation: second start with --tray, the window stays as it is");
+            };
             return true;
         }
         var activation = AppInstance.GetCurrent().GetActivatedEventArgs();

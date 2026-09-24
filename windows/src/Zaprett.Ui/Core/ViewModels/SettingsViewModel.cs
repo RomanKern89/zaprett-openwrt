@@ -72,6 +72,38 @@ public sealed partial class SettingsViewModel : PageViewModel
     [ObservableProperty] public partial bool CheckUpdates { get; set; }
     [ObservableProperty] public partial string UpdateText { get; set; } = "";
 
+    /// <summary>
+    /// The icon at Windows sign-in: HKLM Run value "zaprett" = "…\zaprett-ui.exe" --tray (written by the installer,
+    /// TRAYAUTOSTART). Only the service may change HKLM, so the value is read from status.tray_autostart (the registry
+    /// as the service sees it now) and changed with tray.autostart {enable}. A service without the field: no switch.
+    /// </summary>
+    [ObservableProperty] public partial bool TrayAutostart { get; set; }
+
+    /// <summary>A tray.autostart call is on its way: a refresh in between must not move the switch back.</summary>
+    private bool _trayChanging;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TrayAutostartHint), nameof(CanChangeTrayAutostart))]
+    public partial bool TrayAutostartDenied { get; set; }
+
+    /// <summary>The field is there but null: the service could not read the registry, the state is unknown.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TrayAutostartHint), nameof(CanChangeTrayAutostart))]
+    public partial bool TrayAutostartUnknown { get; set; }
+
+    /// <summary>
+    /// The service reported the field at least once. Only the answer of "status" carries it (the service adds it in
+    /// front of the core; the "page" overview the shared state is refreshed with does not, checked on Windows 10 on
+    /// 2026-09-24), so absence in a later refresh does not hide the switch. An older service never reports it: no switch.
+    /// </summary>
+    [ObservableProperty] public partial bool TrayAutostartSupported { get; set; }
+
+    public bool CanChangeTrayAutostart => CanModify && !TrayAutostartDenied && !TrayAutostartUnknown;
+
+    public string TrayAutostartHint => TrayAutostartDenied || !CanModify ? L.T("Settings.TrayAutostartDenied")
+        : TrayAutostartUnknown ? L.T("Settings.TrayAutostartUnknown")
+        : L.T("Settings.TrayAutostartText");
+
     /// <summary>Page of the releases: the manual way to update while the service cannot update the program.</summary>
     public const string ReleasesUrl = "https://github.com/RomanKern89/zaprett-openwrt/releases";
 
@@ -123,14 +155,62 @@ public sealed partial class SettingsViewModel : PageViewModel
         Notifications = State.Prefs.Notifications;
         CloseToTray = State.Prefs.CloseToTray;
         _loading = false;
+        await LoadTrayAutostartAsync();
     }
+
+    /// <summary>Asks "status" itself: the shared state may not have it yet (the page opened before the first answer)
+    /// or may have it from "page" without tray_autostart.</summary>
+    private async Task LoadTrayAutostartAsync()
+    {
+        await ApplyTrayAutostart(State.Status);
+        try
+        {
+            await ApplyTrayAutostart(await State.CallAsync("status"));
+        }
+        catch (ZaprettCallException)
+        {
+            // the state keeps what it had; the next refresh or opening of the page tries again
+        }
+    }
+
+    /// <summary>Takes the switch from an answer that has the field; an answer without it changes nothing. When the
+    /// card appears only now, the switch is turned on after it is shown: a ToggleSwitch whose template is applied while
+    /// it is already on is drawn pale (seen on 2026-09-24 with the fake scenario slowstart).</summary>
+    private async Task ApplyTrayAutostart(JsonObject? status)
+    {
+        if (status?.ContainsKey("tray_autostart") != true || _trayChanging)
+            return;
+        var unknown = status["tray_autostart"] is not JsonValue;
+        var on = status.Bool("tray_autostart");
+        if (!TrayAutostartSupported)
+        {
+            SetTrayAutostartSilently(false, unknown);
+            TrayAutostartSupported = true;
+            await Task.Delay(100);
+            if (_trayChanging)
+                return;
+        }
+        SetTrayAutostartSilently(on, unknown);
+    }
+
+    private void SetTrayAutostartSilently(bool on, bool unknown)
+    {
+        var loading = _loading;
+        _loading = true;
+        TrayAutostartUnknown = unknown;
+        TrayAutostart = on;
+        _loading = loading;
+    }
+
+    protected override void OnStateChanged() => _ = ApplyTrayAutostart(State.Status);
 
     public void Load(JsonObject config)
     {
         _loading = true;
         _loaded = config.Clone();
         var main = config.Obj("main");
-        Autostart = State.Status?.Get("enabled") != null ? State.Status.Bool("enabled") : main.Bool("enabled");
+        Autostart = State.Status != null ? AppState.AutostartOf(State.Status)
+            : main.Get("autostart") != null ? main.Bool("autostart") : main.Bool("enabled");
         Engine = Engines.FirstOrDefault(e => e.Value == main.Str("engine")) ?? Engines[0];
         DnsMode = DnsModes.FirstOrDefault(d => d.Value == config.Obj("dns").Str("mode")) ?? DnsModes[0];
         var dns = State.Dns ?? State.Status.Obj("dns");
@@ -220,6 +300,11 @@ public sealed partial class SettingsViewModel : PageViewModel
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
+        if (e.PropertyName == nameof(CanModify))
+        {
+            OnPropertyChanged(nameof(CanChangeTrayAutostart));
+            OnPropertyChanged(nameof(TrayAutostartHint));
+        }
         if (_loading)
             return;
         switch (e.PropertyName)
@@ -231,9 +316,13 @@ public sealed partial class SettingsViewModel : PageViewModel
                 if (e.PropertyName == nameof(NetworkMode))
                     OnPropertyChanged(nameof(IsSsidMode));
                 break;
+            case nameof(TrayAutostart):
+                _ = ChangeTrayAutostartAsync(TrayAutostart);
+                break;
             case nameof(Autostart):
                 var autostart = Autostart;
-                _ = CallOrRevert(() => State.CallAsync(autostart ? "enable" : "disable"), "Settings.Err.Autostart", () => Autostart = !autostart);
+                // only the behaviour after a restart: the bypass stays as it is now (the button on the home page)
+                _ = CallOrRevert(() => State.SetAutostartAsync(autostart), "Settings.Err.Autostart", () => Autostart = !autostart);
                 break;
             case nameof(Engine) when Engine != null:
                 var engine = Engine.Value;
@@ -265,6 +354,34 @@ public sealed partial class SettingsViewModel : PageViewModel
 
     /// <summary>A switch that calls the service at once goes back to its old position when the call fails
     /// (for example "access_denied" for a user without rights), so the page never shows a state that is not there.</summary>
+    /// <summary>The service writes HKLM and answers with the value read back; a refusal for lack of rights leaves the
+    /// switch disabled with the explanation (the user is not an administrator nor in "zaprett Operators").</summary>
+    private async Task ChangeTrayAutostartAsync(bool enable)
+    {
+        _trayChanging = true;
+        try
+        {
+            var r = await State.CallAsync("tray.autostart", new JsonObject { ["enable"] = enable });
+            _loading = true;
+            TrayAutostart = r["tray_autostart"] is JsonValue ? r.Bool("tray_autostart") : enable;
+            _loading = false;
+            State.RequestRefresh();
+        }
+        catch (ZaprettCallException e)
+        {
+            _loading = true;
+            TrayAutostart = !enable;
+            _loading = false;
+            if (e.Code == "access_denied")
+                TrayAutostartDenied = true;
+            ShowError(L.T("Settings.Err.TrayAutostart"), e);
+        }
+        finally
+        {
+            _trayChanging = false;
+        }
+    }
+
     private async Task CallOrRevert(Func<Task> call, string failTitleKey, Action revert)
     {
         if (await Try(call, failTitleKey, busy: false))
@@ -279,7 +396,14 @@ public sealed partial class SettingsViewModel : PageViewModel
     private async Task ChangeLanguageAsync(string lang)
     {
         State.Prefs.Language = lang;
+        // without the rights the language is this user's own: nothing is sent, and the shared one does not replace it
+        State.Prefs.LanguagePersonal = !CanModify;
         State.Prefs.Save();
+        if (!CanModify)
+        {
+            State.Platform.ApplyLanguage(lang);
+            return;
+        }
         await Try(() => State.CallAsync("settings.set", new JsonObject { ["ui"] = new JsonObject { ["language"] = lang } }),
             "Settings.Err.Save", busy: false);
         State.Platform.ApplyLanguage(lang);
@@ -400,6 +524,7 @@ public sealed partial class SettingsViewModel : PageViewModel
     private void RunWizard()
     {
         State.Prefs.WizardDone = false;
+        State.Prefs.WizardDoneFor = null;
         State.Prefs.Save();
         Nav?.Navigate("wizard");
     }

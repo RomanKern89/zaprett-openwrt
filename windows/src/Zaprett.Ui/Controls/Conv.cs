@@ -15,7 +15,14 @@ public static class Conv
 
     public static Visibility ShowText(string? value) => string.IsNullOrWhiteSpace(value) ? Visibility.Collapsed : Visibility.Visible;
 
+    public static bool HasText(string? value) => !string.IsNullOrWhiteSpace(value);
+
     public static Visibility ShowBoth(bool a, bool b) => a && b ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>IsEnabled of a control that changes the service: CanModify and its own condition.</summary>
+    public static bool And(bool a, bool b) => a && b;
+
+    public static bool AndNot(bool a, bool b) => a && !b;
 
     public static InfoBarSeverity Severity(string kind) => kind switch
     {

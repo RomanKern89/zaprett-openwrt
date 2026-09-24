@@ -20,7 +20,7 @@ public static class ConfigDocument
             ["schema"] = 1,
             ["main"] = new JsonObject
             {
-                ["enabled"] = c.Enabled, ["engine"] = c.Engine, ["strategy"] = c.Strategy, ["strategy_winws2"] = c.StrategyWinws2,
+                ["enabled"] = c.Enabled, ["autostart"] = c.Autostart, ["engine"] = c.Engine, ["strategy"] = c.Strategy, ["strategy_winws2"] = c.StrategyWinws2,
                 ["list_mode"] = c.ListMode, ["lists"] = R.Arr(c.Lists), ["exclude_lists"] = R.Arr(c.ExcludeLists),
                 ["ipsets"] = R.Arr(c.Ipsets), ["exclude_ipsets"] = R.Arr(c.ExcludeIpsets), ["ipv6"] = c.Ipv6, ["debug"] = c.Debug,
                 ["watchdog"] = c.Watchdog, ["quic_block"] = c.QuicBlock, ["game_filter"] = c.GameFilter,

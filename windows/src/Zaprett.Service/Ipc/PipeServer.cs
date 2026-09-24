@@ -29,6 +29,11 @@ public sealed record PipeServerOptions
     public int MaxSubscriptionsPerUser { get; init; } = 3;
     /// <summary>The first request must arrive within this time after connecting.</summary>
     public TimeSpan FirstRequestTimeout { get; init; } = TimeSpan.FromSeconds(30);
+    /// <summary>The pipe may still belong to the previous process for a moment: after a stop that ran past its limit the
+    /// SCM is told STOPPED 1.5 s before that process exits (StopSequence.ExitDelay), and a start in between found the
+    /// pipe taken. The first instance is tried this many more times, <see cref="FirstInstanceRetryDelay"/> apart.</summary>
+    public int FirstInstanceRetries { get; init; } = 5;
+    public TimeSpan FirstInstanceRetryDelay { get; init; } = TimeSpan.FromSeconds(1);
 }
 
 /// <summary>
@@ -70,6 +75,7 @@ public sealed class PipeServer : IDisposable
     public async Task RunAsync(CancellationToken ct)
     {
         bool first = true;
+        int taken = 0;
         var handlers = new ConcurrentDictionary<Task, byte>();
         try
         {
@@ -85,6 +91,14 @@ public sealed class PipeServer : IDisposable
                 catch (Exception e) when (e is IOException or UnauthorizedAccessException)
                 {
                     _slots.Release();
+                    if (first && taken < _options.FirstInstanceRetries)
+                    {
+                        taken++;
+                        _log.Info($"ipc: pipe {_options.PipeName} is taken ({e.Message}), try {taken} of {_options.FirstInstanceRetries} " +
+                                  $"in {_options.FirstInstanceRetryDelay.TotalSeconds:0.#} s");
+                        await Task.Delay(_options.FirstInstanceRetryDelay, ct).ConfigureAwait(false);
+                        continue;
+                    }
                     if (first)
                         throw new InvalidOperationException($@"cannot create \\.\pipe\{_options.PipeName}: {e.Message}", e);
                     _log.Warn("ipc: cannot create a pipe instance: " + e.Message);

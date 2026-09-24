@@ -53,7 +53,7 @@ public sealed partial class ShellPage : Page
     public void Start(string? page)
     {
         // screenshots open every screen themselves
-        var decision = _window.IsScreenshotRun ? false : WizardDecision.ShouldOpen(_state.Prefs.WizardDone, _state.Status);
+        var decision = _window.IsScreenshotRun ? false : WizardDecision.ShouldOpen(_state.Prefs.WizardDone, _state.Prefs.WizardDoneFor, _state.Status);
         if (decision == true)
         {
             ShowWizard();
@@ -73,19 +73,18 @@ public sealed partial class ShellPage : Page
         if (e.PropertyName != nameof(AppState.Status) || _state.Status == null)
             return;
         _state.PropertyChanged -= DecideWizardWhenStatusArrives;
-        var decision = WizardDecision.ShouldOpen(_state.Prefs.WizardDone, _state.Status);
+        var decision = WizardDecision.ShouldOpen(_state.Prefs.WizardDone, _state.Prefs.WizardDoneFor, _state.Status);
         if (decision == true && CurrentPage == "home")
             ShowWizard();
         else if (decision == false)
             MarkWizardDone();
     }
 
+    /// <summary>Not for a user who may only read: the wizard was not offered to them, it was not passed.</summary>
     private void MarkWizardDone()
     {
-        if (_state.Prefs.WizardDone)
-            return;
-        _state.Prefs.WizardDone = true;
-        _state.Prefs.Save();
+        if (_state.CanModify)
+            _state.Prefs.MarkWizardDone(WizardDecision.InstallId(_state.Status));
     }
 
     /// <summary>Opens a page by tag; "wizard" opens the wizard, "dns" the settings.</summary>
@@ -93,7 +92,9 @@ public sealed partial class ShellPage : Page
     {
         if (page == "wizard")
         {
-            ShowWizard();
+            // every step of the wizard changes the service (the menu item is disabled for this user as well)
+            if (_state.CanModify)
+                ShowWizard();
             return;
         }
         if (page == "dns")

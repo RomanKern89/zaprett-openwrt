@@ -79,17 +79,37 @@ public class ConflictTests
 {
     private const string Install = @"C:\Program Files\zaprett";
 
-    private static ConflictSnapshot Snap(IEnumerable<ServiceEntry>? services = null, IEnumerable<(string, string?)>? processes = null,
+    private static ConflictSnapshot Snap(IEnumerable<ServiceEntry>? services = null, IEnumerable<ProcessEntry>? processes = null,
         IEnumerable<(string, string, NetworkInterfaceType)>? adapters = null, IEnumerable<string>? proxies = null, string install = Install) =>
         new((services ?? []).ToList(), (processes ?? []).ToList(), (adapters ?? []).ToList(), (proxies ?? []).ToList(), install);
 
     private static Dictionary<string, string> Items(ConflictSnapshot s) =>
         ConflictScanner.Evaluate(s).Select(i => (i!["id"]!.GetValue<string>(), i["severity"]!.GetValue<string>())).ToDictionary();
 
+    private static List<JsonObject> All(ConflictSnapshot s) => ConflictScanner.Evaluate(s).Select(i => (JsonObject)i!).ToList();
+
+    private static ProcessEntry Ours(int pid) => new(pid, "winws", $@"{Install}\engine\winws.exe", true);
+
     [Fact]
     public void CleanSystem_HasNoItems() => Assert.Empty(Items(Snap(
         services: [new("zaprett", "zaprett", true, $"\"{Install}\\zaprett-svc.exe\""), new("WinDivert", "WinDivert", true, $@"\??\{Install}\engine\WinDivert64.sys")],
-        processes: [("winws", $@"{Install}\engine\winws.exe"), ("explorer", @"C:\Windows\explorer.exe")])));
+        processes: [Ours(100), new(4, "explorer", @"C:\Windows\explorer.exe", false)])));
+
+    [Fact]
+    public void ForeignWinDivert_BlocksWhenLoaded_InfoWhenOnlyRegistered()
+    {
+        var all = All(Snap(services:
+        [
+            new("WinDivert", "WinDivert", true, @"\??\C:\GoodbyeDPI\x86_64\WinDivert64.sys"),
+            new("WinDivert14", "WinDivert14", false, @"C:\old\WinDivert64.sys"),
+        ]));
+        var loaded = all.Single(i => i["id"]!.GetValue<string>() == "foreign_windivert");
+        Assert.Equal("block", loaded["severity"]!.GetValue<string>());
+        Assert.Equal("driver", loaded["kind"]!.GetValue<string>());
+        Assert.Equal(@"C:\GoodbyeDPI\x86_64\WinDivert64.sys", loaded["path"]!.GetValue<string>());
+        Assert.Contains(@"C:\GoodbyeDPI\x86_64\WinDivert64.sys", loaded["fix"]!.GetValue<string>());
+        Assert.Equal("info", all.Single(i => i["id"]!.GetValue<string>() == "windivert_registered")["severity"]!.GetValue<string>());
+    }
 
     [Fact]
     public void OurDriverFromAnotherFolder_IsForeign()
@@ -98,50 +118,170 @@ public class ConflictTests
         Assert.Equal("block", items["foreign_windivert"]);
     }
 
+    // D9: a foreign winws.exe run by hand shares the driver our winws loaded — only its WinDivert.dll shows it
     [Fact]
-    public void ForeignWinDivert_BlocksWhenLoaded_InfoWhenOnlyRegistered()
+    public void ForeignWinwsProcess_UsingOurLoadedDriver_IsFound_WithPathAndPid()
     {
-        var items = Items(Snap(services:
-        [
-            new("WinDivert", "WinDivert", true, @"\??\C:\GoodbyeDPI\x86_64\WinDivert64.sys"),
-            new("WinDivert14", "WinDivert14", false, @"C:\old\WinDivert64.sys"),
-        ]));
-        Assert.Equal("block", items["foreign_windivert"]);
-        Assert.Equal("info", items["windivert_registered"]);
+        var all = All(Snap(
+            services: [new("WinDivert", "WinDivert", true, $@"\??\{Install}\engine\WinDivert64.sys")],
+            processes: [Ours(100), new(6180, "winws", @"C:\zt\foreign\winws.exe", true)]));
+        var item = Assert.Single(all);
+        Assert.Equal("foreign_windivert_user", item["id"]!.GetValue<string>());
+        Assert.Equal("block", item["severity"]!.GetValue<string>());
+        Assert.Equal("process", item["kind"]!.GetValue<string>());
+        Assert.Equal(6180, item["pid"]!.GetValue<int>());
+        Assert.Equal(@"C:\zt\foreign\winws.exe", item["path"]!.GetValue<string>());
+        Assert.Contains(@"C:\zt\foreign\winws.exe", item["detail"]!.GetValue<string>());
+        Assert.Contains("pid 6180", item["detail"]!.GetValue<string>());
+        string fix = item["fix"]!.GetValue<string>();
+        Assert.Contains("taskkill /PID 6180", fix);
+        Assert.DoesNotContain("service", fix, StringComparison.OrdinalIgnoreCase);   // it is no service
+        Assert.DoesNotContain("Flowseal", fix);
     }
 
     [Fact]
-    public void OtherBypassTools_AreFound()
+    public void OurWinws_IsExcludedByPath_NotByName()
     {
-        var items = Items(Snap(
-            services: [new("GoodbyeDPI", "GoodbyeDPI", true, @"C:\gdpi\goodbyedpi.exe"), new("zapret", "zapret", false, @"C:\flowseal\bin\winws.exe")],
-            processes: [("AdguardSvc", @"C:\Program Files\Adguard\AdguardSvc.exe"), ("KillerNetworkService", null)]));
-        Assert.Equal("block", items["goodbyedpi"]);
-        Assert.Equal("warn", items["zapret"]);        // installed but not running
+        Assert.Empty(Items(Snap(processes: [Ours(100)])));
+        // same name elsewhere is foreign, even without WinDivert.dll (name rule)
+        var item = Assert.Single(All(Snap(processes: [new(7, "winws", @"C:\zapret-discord-youtube\bin\winws.exe", false)])));
+        Assert.Equal("zapret", item["id"]!.GetValue<string>());
+        Assert.Equal("process", item["kind"]!.GetValue<string>());
+        Assert.Equal(7, item["pid"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void Service_AdviceNamesTheService()
+    {
+        var all = All(Snap(services: [new("zapret", "zapret", true, @"C:\flowseal\bin\winws.exe"), new("GoodbyeDPI", "GoodbyeDPI", false, @"C:\gdpi\goodbyedpi.exe")]));
+        var z = all.Single(i => i["id"]!.GetValue<string>() == "zapret");
+        Assert.Equal("service", z["kind"]!.GetValue<string>());
+        Assert.Equal("zapret", z["service"]!.GetValue<string>());
+        Assert.Contains("sc stop \"zapret\"", z["fix"]!.GetValue<string>());
+        Assert.Contains("start= disabled", z["fix"]!.GetValue<string>());
+        Assert.Equal("block", z["severity"]!.GetValue<string>());
+        Assert.Equal("warn", all.Single(i => i["id"]!.GetValue<string>() == "goodbyedpi")["severity"]!.GetValue<string>());   // installed, not running
+    }
+
+    [Fact]
+    public void RunningService_HasItsPidAndExe_AsNumbersAndPaths()
+    {
+        var z = Assert.Single(All(Snap(services: [new("zapret", "zapret", true, "\"C:\\flowseal\\bin\\winws.exe\" --wf-tcp=443", 4321)])));
+        Assert.Equal(4321, z["pid"]!.GetValue<int>());                 // a JSON number, not a string
+        Assert.Equal(System.Text.Json.JsonValueKind.Number, z["pid"]!.GetValueKind());
+        Assert.Equal(@"C:\flowseal\bin\winws.exe", z["path"]!.GetValue<string>());
+        var stopped = Assert.Single(All(Snap(services: [new("zapret", "zapret", false, @"C:\flowseal\bin\winws.exe --x")])));
+        Assert.Null(stopped["pid"]);
+        Assert.Equal(@"C:\flowseal\bin\winws.exe", stopped["path"]!.GetValue<string>());
+    }
+
+    [Theory]
+    [InlineData("\"C:\\Program Files\\x\\a.exe\" --run", @"C:\Program Files\x\a.exe")]
+    [InlineData(@"C:\x\a.exe --run", @"C:\x\a.exe")]
+    [InlineData(@"C:\x\a.exe", @"C:\x\a.exe")]
+    public void ServiceExe_IsCutFromImagePath(string image, string exe) => Assert.Equal(exe, ConflictScanner.ServiceExe(image));
+
+    [Fact]
+    public void ProcessPid_IsANumber()
+    {
+        var item = Assert.Single(All(Snap(processes: [new(6180, "winws", @"C:\zt\foreign\winws.exe", true)])));
+        Assert.Equal(System.Text.Json.JsonValueKind.Number, item["pid"]!.GetValueKind());
+    }
+
+    [Fact]
+    public void ServiceProcess_IsNotReportedTwice()
+    {
+        var all = All(Snap(
+            services: [new("zapret", "zapret", true, "\"C:\\flowseal\\bin\\winws.exe\" --wf-tcp=443")],
+            processes: [new(9, "winws", @"C:\flowseal\bin\winws.exe", false)]));
+        Assert.Single(all, i => i["id"]!.GetValue<string>() == "zapret");
+    }
+
+    [Fact]
+    public void WinDivertUser_IsNotReportedAgainByName()
+    {
+        var all = All(Snap(processes: [new(11, "goodbyedpi", @"C:\gdpi\goodbyedpi.exe", true)]));
+        var item = Assert.Single(all);
+        Assert.Equal("foreign_windivert_user", item["id"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void PathUnknown_IsSaid()
+    {
+        var item = Assert.Single(All(Snap(processes: [new(12, "winws", null, true)])));
+        Assert.Contains("path unknown", item["detail"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void OtherTools_AreFound()
+    {
+        var items = Items(Snap(processes: [new(1, "AdguardSvc", @"C:\Program Files\Adguard\AdguardSvc.exe", false), new(2, "KillerNetworkService", null, false)]));
         Assert.Equal("warn", items["adguard"]);
         Assert.Equal("warn", items["killer"]);
     }
 
     [Fact]
-    public void ForeignWinwsProcess_Blocks_OurOwnDoesNot()
-    {
-        Assert.Equal("block", Items(Snap(processes: [("winws", @"C:\zapret-discord-youtube\bin\winws.exe")]))["zapret"]);
-        Assert.Empty(Items(Snap(processes: [("winws", $@"{Install}\engine\winws.exe")])));
-    }
-
-    [Fact]
-    public void VpnProxyAndPath_AreReported()
+    public void VpnAndProxy_AreReported()
     {
         var items = Items(Snap(
             adapters: [("wt0", "WireGuard Tunnel", NetworkInterfaceType.Unknown), ("Ethernet", "Intel(R) Ethernet", NetworkInterfaceType.Ethernet)],
             proxies: ["127.0.0.1:8080"], install: @"C:\Программы\zaprett"));
-        // non-ASCII install paths work (S-2): no item for them any more
-        Assert.False(items.ContainsKey("install-path"));
         Assert.Equal("info", items["vpn:wt0"]);
         Assert.False(items.ContainsKey("vpn:Ethernet"));
         Assert.Equal("info", items["proxy"]);
+        Assert.False(items.ContainsKey("install-path"));
+    }
+
+    [Fact]
+    public void ForeignUsers_ExcludeOurFolderByPath()
+    {
+        var users = ProcessSnapshot.ForeignWinDivertUsers(
+            [Ours(1), new(2, "winws", @"C:\zt\foreign\winws.exe", true), new(3, "x", @"C:\Program Files\zaprett-old\x.exe", true),
+             new(4, "y", @"C:\y.exe", false)], Install);
+        Assert.Equal([2, 3], users.Select(u => u.Pid));   // "zaprett-old" is not our folder
     }
 }
+
+/// <summary>Module detection on this machine, read only.</summary>
+public class ProcessSnapshotTests
+{
+    [Fact]
+    public void Modules_OfOwnProcess()
+    {
+        using var me = System.Diagnostics.Process.GetCurrentProcess();
+        Assert.True(ProcessSnapshot.HasModule(me, "kernel32.dll"));
+        Assert.False(ProcessSnapshot.HasModule(me, ProcessSnapshot.WinDivertModule));
+        var snap = ProcessSnapshot.Take();
+        var self = snap.Single(p => p.Pid == me.Id);
+        Assert.Equal(me.MainModule!.FileName, self.Path);
+        Assert.False(self.UsesWinDivert);
+    }
+
+    [Fact]
+    public void Candidates_HaveWinDivertDllBesideTheExe()
+    {
+        using var dir = new TempDir();
+        string exe = Path.Combine(dir.Path, "winws.exe");
+        Assert.False(ProcessSnapshot.HasWinDivertBeside(exe));
+        File.WriteAllBytes(Path.Combine(dir.Path, ProcessSnapshot.WinDivertModule), [0]);
+        Assert.True(ProcessSnapshot.HasWinDivertBeside(exe));
+    }
+
+    [Fact]
+    public void LoadedWinDivertDll_IsSeen()
+    {
+        // any DLL loaded under the name WinDivert.dll (a copy of version.dll: loading needs no driver)
+        using var dir = new TempDir();
+        string fake = Path.Combine(dir.Path, ProcessSnapshot.WinDivertModule);
+        File.Copy(Path.Combine(Environment.SystemDirectory, "version.dll"), fake);
+        using var me = System.Diagnostics.Process.GetCurrentProcess();
+        Assert.False(ProcessSnapshot.HasModule(me, ProcessSnapshot.WinDivertModule));   // negative control
+        var lib = System.Runtime.InteropServices.NativeLibrary.Load(fake);
+        Assert.True(ProcessSnapshot.HasModule(me, ProcessSnapshot.WinDivertModule));
+        System.Runtime.InteropServices.NativeLibrary.Free(lib);
+    }
+}
+
 
 public class DnsAndFirewallTests
 {
@@ -333,6 +473,16 @@ public class SystemReadOnlyTests
         Assert.NotNull(ranges);
         Assert.Equal(2, ranges.Count);
         Assert.All(ranges, r => Assert.InRange(r.Start, 1, 65535));
+    }
+
+    [Fact]
+    public void RunningServices_HavePids()
+    {
+        var list = SystemInfo.ListServices(System.ServiceProcess.ServiceController.GetServices());
+        var eventLog = list.Single(s => s.Name.Equals("EventLog", StringComparison.OrdinalIgnoreCase));
+        Assert.True(eventLog.Running);
+        Assert.True(eventLog.Pid > 0);
+        Assert.All(list.Where(s => !s.Running), s => Assert.Null(s.Pid));
     }
 
     [Fact]

@@ -34,5 +34,19 @@ public sealed class Harness : IDisposable
         return D.Context.Jobs.Read()!;
     }
 
-    public void Dispose() => F.Dispose();
+    /// <summary>A background extra monitor check must not outlive the sandbox it writes into (class ZERR-048).</summary>
+    public void Dispose()
+    {
+        var done = true;
+        try
+        {
+            done = D.LastMonitorRecheck?.Wait(TimeSpan.FromSeconds(30)) ?? true;
+        }
+        catch (AggregateException)
+        {
+        }
+        if (!done)
+            throw new TimeoutException("the extra monitor check still runs after 30 s: the sandbox is kept");
+        F.Dispose();
+    }
 }

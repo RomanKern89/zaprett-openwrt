@@ -97,6 +97,24 @@ public sealed class JobTests
     }
 
     [Fact]
+    public async Task Test_RunsDespiteABlockingConflict_AndFlagsTheResults()
+    {
+        using var h = new Harness();
+        await h.Call("start");
+        var clean = (JsonObject)(await h.Job("test.start", A(("strategies", new JsonArray("strategy-general")))))["result"]!;
+        Assert.False(R.Bool(clean["conflict_blocking"]));
+        Assert.Empty((JsonArray)clean["conflicts_blocking"]!);
+        h.F.Conflicts.Items.Add(FakeConflicts.Winws());
+        var j = await h.Job("test.start", A(("strategies", new JsonArray("strategy-general"))));
+        Assert.Equal("done", R.Str(j["state"]));
+        var res = (JsonObject)j["result"]!;
+        Assert.True(R.Bool(res["conflict_blocking"]));
+        Assert.Equal("zapret", R.Str(Assert.Single((JsonArray)res["conflicts_blocking"]!)!["id"]));
+        Assert.Single((JsonArray)(await h.Call("test.status"))["results"]!["conflicts_blocking"]!);
+        Assert.Contains(h.F.Log.Lines, l => l.StartsWith("W ", StringComparison.Ordinal) && l.Contains("zapret / winws", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Test_Exclusive_RanksRestoresAndApplies()
     {
         using var h = new Harness();

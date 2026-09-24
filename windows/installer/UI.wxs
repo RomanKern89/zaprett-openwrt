@@ -7,14 +7,19 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     <UI Id="ZaprettUI">
-      <!-- font and sizes from the WixUI strings of each culture (Tahoma, or a CJK font for zh-CN) -->
-      <TextStyle Id="WixUI_Font_Normal" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Normal_Size)" />
-      <TextStyle Id="WixUI_Font_Bigger" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Bigger_Size)" />
-      <TextStyle Id="WixUI_Font_Title" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Title_Size)" Bold="yes" />
+      <!-- one size set for every language; the face per culture (ZaprettFontFace): Tahoma for ru/en, Microsoft YaHei UI
+           for zh-CN (with the WixUI default for zh-CN some characters, e.g. 别 够 夹, were drawn with a small fallback
+           font on an English Windows 10) -->
+      <TextStyle Id="WixUI_Font_Normal" FaceName="!(loc.ZaprettFontFace)" Size="8" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="!(loc.ZaprettFontFace)" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="!(loc.ZaprettFontFace)" Size="9" Bold="yes" />
       <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
 
       <DialogRef Id="ErrorDlg" />
       <DialogRef Id="FatalError" />
+      <!-- FilesInUse must exist: without it InstallValidate ends in error 2803 as soon as a process with a window
+           holds a file (seen on an upgrade of 0.1.0 with the window open). Our own zaprett-ui is closed before that
+           by ZaprettCloseUi (Package.wxs), so the dialog only appears for foreign processes. -->
       <DialogRef Id="FilesInUse" />
       <DialogRef Id="MsiRMFilesInUse" />
       <DialogRef Id="PrepareDlg" />
@@ -22,7 +27,32 @@
       <DialogRef Id="ResumeDlg" />
       <DialogRef Id="UserExit" />
 
-      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+      <!-- "Start zaprett" on the finish page of a FIRST install only: the window opens (with the wizard), as the
+           signed-in user from this client process. After a repair or an upgrade the service brings the tray icon
+           back itself (prepare.ps1 records the sessions in run\ui-relaunch.json), so there is no checkbox then. -->
+      <Publish Dialog="ZaprettExitDialog" Control="Finish" Event="DoAction" Value="ZaprettLaunchUi" Order="1"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;) AND NOT MsiRunningElevated" />
+      <!-- msiexec itself elevated (admin console, "Run as administrator"): a process it starts would be elevated too,
+           so tools\launch-ui.ps1 starts the UI through a one-shot scheduled task of the user with the Limited (not
+           elevated) token. WixQuietExec in immediate mode takes its command line from WixQuietExecCmdLine. -->
+      <Publish Dialog="ZaprettExitDialog" Control="Finish" Property="WixQuietExecCmdLine" Order="2"
+               Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;[#LaunchUiPs1]&quot; -Exe &quot;[#UiExe]&quot;"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;) AND MsiRunningElevated" />
+      <Publish Dialog="ZaprettExitDialog" Control="Finish" Event="DoAction" Value="ZaprettLaunchUiUnelevated" Order="3"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;) AND MsiRunningElevated" />
+      <Publish Dialog="ZaprettExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+
+      <!-- A repair or upgrade that ends without success (UAC declined, cancelled, failed): the tray the setup client
+           closed (ZaprettCloseUi) may still be waiting in HKCU\Software\zaprett\UiRelaunchPending for a ZaprettPrepare
+           that never took it. scripts/restore-ui.ps1 (embedded as ZAPRETT_RESTORE_UI) deletes the value and starts
+           the tray again in this session; with nothing pending it does nothing. Order 0: before the pages' own
+           EndDialog (Order 1 in WixUI; the installer starts the events of a control in the Ordering order). Its
+           command line is set once in the UI sequence (SetZaprettRestoreUiCmd, Package.wxs): WixQuietExecCmdLine is a
+           private property, so the server keeps its own, and the finish page of a success sets it again anyway. -->
+      <Publish Dialog="UserExit" Control="Finish" Event="DoAction" Value="ZaprettRestoreUi" Order="0"
+               Condition="Installed OR WIX_UPGRADE_DETECTED" />
+      <Publish Dialog="FatalError" Control="Finish" Event="DoAction" Value="ZaprettRestoreUi" Order="0"
+               Condition="Installed OR WIX_UPGRADE_DETECTED" />
 
       <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" Condition="NOT Installed" />
       <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="Installed AND PATCH" />
@@ -66,8 +96,80 @@
         <Control Id="Title" Type="Text" X="15" Y="6" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgTitle)" />
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgDescription)" />
         <Control Id="Text" Type="Text" X="20" Y="54" Width="330" Height="146" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgText)" />
-        <Control Id="TrayCheckBox" Type="CheckBox" X="20" Y="208" Width="330" Height="17" Property="TRAYAUTOSTART" CheckBoxValue="1" Text="!(loc.ZaprettWarningDlgTray)" />
+        <Control Id="TrayCheckBox" Type="CheckBox" X="20" Y="208" Width="330" Height="17" Property="TRAYAUTOSTART" CheckBoxValue="1" Text="!(loc.ZaprettWarningDlgTray)"
+                 HideCondition="WIX_UPGRADE_DETECTED" />
+        <!-- an upgrade keeps the choice made at the first install or later in Settings, so no checkbox then -->
+
       </Dialog>
+      <!-- Status line of the progress page. WiX v4+ ships no ActionText table, and Windows Installer then shows
+           its raw built-in templates ("Файл: [1], каталог: [9], размер: [6]"). -->
+      <ProgressText Action="InstallFiles" Message="!(loc.PtInstallFiles)" Template="!(loc.PtTplFile)" />
+      <ProgressText Action="RemoveFiles" Message="!(loc.PtRemoveFiles)" Template="!(loc.PtTplFileNoSize)" />
+      <ProgressText Action="StopServices" Message="!(loc.PtStopServices)" Template="!(loc.PtTplService1)" />
+      <ProgressText Action="DeleteServices" Message="!(loc.PtDeleteServices)" Template="!(loc.PtTplService1)" />
+      <ProgressText Action="InstallServices" Message="!(loc.PtInstallServices)" Template="!(loc.PtTplService2)" />
+      <ProgressText Action="StartServices" Message="!(loc.PtStartServices)" Template="!(loc.PtTplService1)" />
+      <ProgressText Action="WriteRegistryValues" Message="!(loc.PtWriteRegistry)" Template="!(loc.PtTplRegistry)" />
+      <ProgressText Action="RemoveRegistryValues" Message="!(loc.PtRemoveRegistry)" Template="!(loc.PtTplRegistryNoValue)" />
+      <ProgressText Action="CreateShortcuts" Message="!(loc.PtCreateShortcuts)" Template="!(loc.PtTplShortcut)" />
+      <ProgressText Action="RemoveShortcuts" Message="!(loc.PtRemoveShortcuts)" Template="!(loc.PtTplShortcut)" />
+      <ProgressText Action="CreateFolders" Message="!(loc.PtCreateFolders)" Template="!(loc.PtTplFolder)" />
+      <ProgressText Action="RemoveFolders" Message="!(loc.PtRemoveFolders)" Template="!(loc.PtTplFolder)" />
+      <ProgressText Action="InstallValidate" Message="!(loc.PtInstallValidate)" />
+      <ProgressText Action="InstallFinalize" Message="!(loc.PtInstallFinalize)" />
+      <ProgressText Action="RemoveExistingProducts" Message="!(loc.PtRemoveExisting)" Template="!(loc.PtTplRemoveExisting)" />
+      <ProgressText Action="ProcessComponents" Message="!(loc.PtRegister)" />
+      <ProgressText Action="RegisterProduct" Message="!(loc.PtRegister)" />
+      <ProgressText Action="RegisterUser" Message="!(loc.PtRegister)" />
+      <ProgressText Action="PublishFeatures" Message="!(loc.PtRegister)" />
+      <ProgressText Action="PublishProduct" Message="!(loc.PtRegister)" />
+      <ProgressText Action="UnpublishFeatures" Message="!(loc.PtUnregister)" />
+      <ProgressText Action="Rollback" Message="!(loc.PtRollback)" />
+      <ProgressText Action="RollbackCleanup" Message="!(loc.PtRollbackCleanup)" />
+      <ProgressText Action="ZaprettPrepare" Message="!(loc.PtPrepare)" />
+      <ProgressText Action="ZaprettInstallActions" Message="!(loc.PtInstallActions)" />
+      <ProgressText Action="ZaprettUninstallActions" Message="!(loc.PtUninstallActions)" />
+      <ProgressText Action="ZaprettDnsOff" Message="!(loc.PtDnsOff)" />
+    </UI>
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <!-- normal case: the client runs with the user's own (not elevated) token -->
+    <CustomAction Id="ZaprettLaunchUi" FileRef="UiExe" ExeCommand="" Execute="immediate" Return="asyncNoWait" />
+    <!-- the setup itself was started elevated: tools\launch-ui.ps1 via WixQuietExec (command line published into
+         WixQuietExecCmdLine by the Finish button). The explorer.exe form used before returned 1631 and started
+         nothing. A failed start never fails the setup (Return="ignore", the script always exits 0). -->
+    <CustomAction Id="ZaprettLaunchUiUnelevated" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="immediate" Return="ignore" />
+    <CustomAction Id="ZaprettRestoreUi" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="immediate" Return="ignore" />
+
+    <!-- Own copy of the WixUI finish page ExitDialog (same layout and strings; own id, so the stock one is not linked).
+         The "Start zaprett" option is a small check box plus a transparent text label, because a CheckBox control
+         paints its whole rectangle in the dialog colour (the grey bar over the white page). The check box still
+         carries the text, so screen readers (UIA name) announce it; it is only 10 units wide, so just the box itself
+         is drawn and the visible words come from the transparent label. -->
+    <UI>
+      <Dialog Id="ZaprettExitDialog" Width="370" Height="270" Title="!(loc.ExitDialog_Title)">
+        <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="!(loc.WixUIFinish)" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Disabled="yes" Text="!(loc.WixUICancel)" />
+        <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="234" TabSkip="no" Text="!(loc.ExitDialogBitmap)" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="!(loc.WixUIBack)" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="40" Transparent="yes" NoPrefix="yes" Text="!(loc.ExitDialogDescription)" />
+        <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="60" Transparent="yes" NoPrefix="yes" Text="!(loc.ExitDialogTitle)" />
+        <Control Id="LaunchCheckBox" Type="CheckBox" X="135" Y="192" Width="10" Height="12" Hidden="yes"
+                 Property="WIXUI_EXITDIALOGOPTIONALCHECKBOX" CheckBoxValue="1" Text="!(loc.LaunchTrayCheckbox)"
+                 ShowCondition="NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;)" />
+        <Control Id="LaunchLabel" Type="Text" X="151" Y="193" Width="200" Height="24" Transparent="yes" NoPrefix="yes" Hidden="yes"
+                 Text="!(loc.LaunchTrayCheckbox)"
+                 ShowCondition="NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;)" />
+      </Dialog>
+      <InstallUISequence>
+        <Show Dialog="ZaprettExitDialog" OnExit="success" />
+      </InstallUISequence>
+      <AdminUISequence>
+        <Show Dialog="ZaprettExitDialog" OnExit="success" />
+      </AdminUISequence>
     </UI>
 
     <UIRef Id="WixUI_Common" />

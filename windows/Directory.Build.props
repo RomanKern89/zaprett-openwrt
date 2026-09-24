@@ -8,7 +8,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <Company>zaprett-openwrt</Company>
     <Product>zaprett for Windows</Product>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Copyright>MIT License</Copyright>
   </PropertyGroup>
 </Project>

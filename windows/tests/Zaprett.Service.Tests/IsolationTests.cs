@@ -88,7 +88,8 @@ public class EngineReadinessAndIsolationTests
 {
     private static readonly string Cmd = Path.Combine(Environment.SystemDirectory, "cmd.exe");
 
-    private static EngineRestartPolicy Policy(double readySeconds = 3) =>
+    // 6 s: under a full parallel test run (and other sessions building on the machine) cmd.exe can take seconds to print
+    private static EngineRestartPolicy Policy(double readySeconds = 6) =>
         new(TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(10), 5, TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(200),
             EngineRestartPolicy.WinwsReadyMarker, TimeSpan.FromSeconds(readySeconds));
 
@@ -96,15 +97,39 @@ public class EngineReadinessAndIsolationTests
     private static string[] Engine(string marker, int seconds) =>
         ["/c", $"echo {marker}& ping -n {seconds} 127.0.0.1 >nul& rem"];
 
+    // Two winws must never hold WinDivert at the same time: a packet the dying process captured is lost (restart →
+    // the first connection times out). A restart starts the new process only after the old one has exited.
+    [Fact]
+    public async Task Restart_NewProcessStartsOnlyAfterTheOldOneExited()
+    {
+        var log = new MemoryLog();
+        await using var engine = new EngineControl(log, new SystemClock(), Policy());
+        string[] args = Engine("windivert initialized", 60);
+        await engine.StartAsync("main", Cmd, args, default);
+        for (int i = 0; i < 10; i++)
+        {
+            using var old = ProcTimes.Open(engine.GetState("main").Pid!.Value);
+            await engine.StartAsync("main", Cmd, args, default);
+            using var fresh = ProcTimes.Open(engine.GetState("main").Pid!.Value);
+            var (_, oldExit) = old.Times();
+            var (newStart, _) = fresh.Times();
+            // the old process had exited (exit time set) before the new one was created
+            Assert.True(oldExit > 0, $"restart {i}: old process still running");
+            Assert.True(newStart >= oldExit, $"restart {i}: new created {newStart} before old exit {oldExit}");
+        }
+    }
+
     [Fact]
     public async Task ReadyMarker_MeansRunning()
     {
         var log = new MemoryLog();
         await using var engine = new EngineControl(log, new SystemClock(), Policy());
-        var sw = Stopwatch.StartNew();
         var s = await engine.StartAsync("main", Cmd, Engine("windivert initialized", 20), default);
+        // returned on the marker, told by state: the 20 s engine still runs (a start that waited for its end would
+        // report it gone) and it is already capturing
         Assert.True(s.Running);
-        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(3), "did not return on the marker");
+        Assert.True(engine.GetState("main").Running);
+        Assert.Equal(EngineControl.PhaseCapturing, engine.GetPhase("main"));
     }
 
     [Fact]
@@ -117,6 +142,47 @@ public class EngineReadinessAndIsolationTests
         Assert.False(engine.GetState("main").Running);
         Assert.Contains(log.Lines, l => l.Contains("no 'windivert initialized'"));
         Assert.Empty(engine.GetJobProcessIds("main"));
+    }
+
+    // network_filter: winws waits for the selected network and opens WinDivert only when it appears
+    [Fact]
+    public async Task WaitingForNetwork_IsRunning_ThenCapturing()
+    {
+        var log = new MemoryLog();
+        await using var engine = new EngineControl(log, new SystemClock(), EngineRestartPolicy.Winws with
+        {
+            // 6 s, not 1 s: with all test assemblies running in parallel (and other sessions' builds) cmd.exe alone can
+            // take seconds to print; the ready line comes ~11 s after the start, well after this
+            RestartDelay = TimeSpan.FromSeconds(30), ReadyTimeout = TimeSpan.FromSeconds(6),
+        });
+        var s = await engine.StartAsync("main", Cmd,
+            ["/c", "echo logical network is not present. waiting it to appear.& ping -n 12 127.0.0.1 >nul& echo logical network now present& echo windivert initialized. capture is started.& ping -n 30 127.0.0.1 >nul& rem"], default);
+        // returned on the waiting line, told by state and not by a stopwatch: had the start waited for the ready line,
+        // the phase would be "capturing" and the ready line would be in the journal already
+        Assert.True(s.Running);
+        Assert.Equal(EngineControl.PhaseWaitingNetwork, engine.GetPhase("main"));
+        Assert.Equal(Zaprett.Core.Platform.EnginePhases.WaitingNetwork, s.Phase);   // what the core's status reads
+        // the engine's own output line (the "started pid …" line carries the whole command line, marker text included)
+        Assert.DoesNotContain(log.Lines, l => l.Contains("[out]: windivert initialized"));
+        Assert.Contains(log.Lines, l => l.Contains("engine main: waiting for the selected network"));
+        // the ready line comes ~11 s later, past the ready timeout (6 s): the same process goes on to capture, it is not
+        // killed as a failed start
+        int pid = s.Pid!.Value;
+        Assert.True(await Wait.UntilAsync(() => engine.GetPhase("main") == EngineControl.PhaseCapturing, TimeSpan.FromSeconds(60)),
+            "never reached capturing");
+        Assert.Equal(pid, engine.GetState("main").Pid);
+        Assert.DoesNotContain(log.Lines, l => l.Contains("no 'windivert initialized'"));
+        Assert.Equal(Zaprett.Core.Platform.EnginePhases.Capturing, engine.GetState("main").Phase);
+    }
+
+    [Fact]
+    public async Task Phases_AreCapturingAfterReady_AndNullWhenStopped()
+    {
+        await using var engine = new EngineControl(new MemoryLog(), new SystemClock(), Policy());
+        await engine.StartAsync("main", Cmd, Engine("windivert initialized. capture is started.", 30), default);
+        Assert.Equal(EngineControl.PhaseCapturing, engine.GetPhase("main"));
+        await engine.StopAsync("main", default);
+        Assert.Null(engine.GetPhase("main"));
     }
 
     [Fact]
@@ -210,7 +276,7 @@ public class EngineReadinessAndIsolationTests
         await using var rig = new Rig(dynamicUnknown: true);
         var e = rig.Engine;
         Assert.True((await e.StartAsync("main", Cmd, [.. Engine("windivert initialized", 30), "--wf-tcp=443"], default)).Running);
-        Assert.Contains(rig.Log.Lines, l => l.Contains("dynamic TCP port ranges unknown, assuming the Windows default 49152-65535"));
+        Assert.Contains(rig.Log.Lines, l => l.StartsWith("INFO engine isolation: dynamic TCP port ranges unknown, assuming the Windows default 49152-65535", StringComparison.Ordinal));
         Assert.Contains(rig.Log.Lines, l => l.Contains("engine main: started") && l.Contains("filter-main.txt"));
         int starts = rig.MainStarts, stops = rig.MainStops;
         await e.StartAsync("test", Cmd, [.. Engine("windivert initialized", 30), "--wf-tcp=443"], default);
@@ -341,10 +407,17 @@ public class ProbePortRetryTests
     public async Task PortInTimeWait_IsSkipped()
     {
         await using var srv = new ScriptedServer(ScriptedServer.Respond(200, 10));
-        // leave 40310 -> server in TIME_WAIT on our side: we close first
+        // two free ports of our own (fixed numbers collided with another test run on the machine)
+        int a, b;
+        using (var block = PortBlock.Take(2))
+        {
+            a = block.First;
+            b = block.Last;
+        }
+        // leave a -> server in TIME_WAIT on our side: we close first
         using (var s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
         {
-            s.Bind(new IPEndPoint(IPAddress.Any, 40310));
+            s.Bind(new IPEndPoint(IPAddress.Any, a));
             await s.ConnectAsync(new IPEndPoint(IPAddress.Loopback, srv.Port));
             // active close on our side, then wait for the server's FIN: our end goes to TIME_WAIT
             s.Shutdown(SocketShutdown.Send);
@@ -354,11 +427,11 @@ public class ProbePortRetryTests
         }
         await Task.Delay(200);
         var probe = new HttpProbe();
-        var only = await probe.ProbeAsync(new ProbeRequest($"http://127.0.0.1:{srv.Port}/", 0, TimeSpan.FromSeconds(3), 40310, 40310), default);
+        var only = await probe.ProbeAsync(new ProbeRequest($"http://127.0.0.1:{srv.Port}/", 0, TimeSpan.FromSeconds(3), a, a), default);
         Assert.Equal("local_error", only.Error);   // the single port is blocked by TIME_WAIT
-        var two = await probe.ProbeAsync(new ProbeRequest($"http://127.0.0.1:{srv.Port}/", 0, TimeSpan.FromSeconds(3), 40310, 40311), default);
+        var two = await probe.ProbeAsync(new ProbeRequest($"http://127.0.0.1:{srv.Port}/", 0, TimeSpan.FromSeconds(3), a, b), default);
         Assert.True(two.Ok, two.Error);
-        Assert.Contains(40311, srv.ClientPorts);
+        Assert.Contains(b, srv.ClientPorts);
     }
 }
 
@@ -400,4 +473,37 @@ public class InstallAndNetworkTests
         Assert.All(d.Calls, c => Assert.True(c.Caller.IsAdmin));
         Assert.True(File.Exists(Path.Combine(paths.DataDir, InstallOptions.MarkerFile)));
     }
+}
+
+/// <summary>Creation and exit time (FILETIME ticks) of a process through a handle held across its exit.</summary>
+internal sealed partial class ProcTimes : IDisposable
+{
+    private readonly Microsoft.Win32.SafeHandles.SafeProcessHandle _h;
+
+    private ProcTimes(Microsoft.Win32.SafeHandles.SafeProcessHandle h) => _h = h;
+
+    public static ProcTimes Open(int pid)
+    {
+        var h = OpenProcess(0x1000 | 0x00100000, false, (uint)pid);   // QUERY_LIMITED_INFORMATION | SYNCHRONIZE
+        Assert.False(h.IsInvalid, "cannot open pid " + pid);
+        return new ProcTimes(h);
+    }
+
+    /// <summary>(creation, exit); exit is 0 while the process runs.</summary>
+    public (long Creation, long Exit) Times()
+    {
+        Assert.True(GetProcessTimes(_h, out long c, out long e, out _, out _));
+        return (c, e);
+    }
+
+    public void Dispose() => _h.Dispose();
+
+    [System.Runtime.InteropServices.LibraryImport("kernel32.dll", SetLastError = true)]
+    private static partial Microsoft.Win32.SafeHandles.SafeProcessHandle OpenProcess(uint access,
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)] bool inherit, uint pid);
+
+    [System.Runtime.InteropServices.LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static partial bool GetProcessTimes(Microsoft.Win32.SafeHandles.SafeProcessHandle h, out long creation, out long exit,
+        out long kernel, out long user);
 }

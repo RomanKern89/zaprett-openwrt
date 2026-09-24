@@ -102,6 +102,12 @@ public sealed partial class Screenshotter
 
         await wizard.NextCommand.ExecuteAsync(null);
         await Shot("wizard-6-done", scrollParts: false);
+
+        // last, so the numbers of the earlier shots stay: another program takes the traffic
+        await Scenario(S.Blocked);
+        window.Shell.Navigate("services");
+        await Open<HomeViewModel>("home");
+        await Shot("home-conflict", scrollParts: false);
     }
 
     private void ScrollToEnd()

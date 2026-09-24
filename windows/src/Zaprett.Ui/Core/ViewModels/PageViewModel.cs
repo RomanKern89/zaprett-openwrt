@@ -35,6 +35,13 @@ public abstract partial class PageViewModel : ObservableObject, IDisposable
 
     protected INavigator? Nav { get; }
 
+    /// <summary>
+    /// The user may change the service (status.can_modify, true when the service does not say). Every control that
+    /// sends a change binds its IsEnabled to it (or to a property that includes it); the reason is shown once by
+    /// the shell (<see cref="ShellViewModel.IsReadOnly"/>).
+    /// </summary>
+    public bool CanModify => State.CanModify;
+
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial bool HasMessage { get; set; }
     [ObservableProperty] public partial string MessageKindValue { get; set; } = MessageKind.Info;
@@ -93,10 +100,25 @@ public abstract partial class PageViewModel : ObservableObject, IDisposable
     {
     }
 
-    private void OnStateChangedHandler(object? sender, EventArgs e) => OnStateChanged();
+    private void OnStateChangedHandler(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(CanModify));
+        OnStateChanged();
+    }
 
     [RelayCommand]
     public void Open(string page) => Nav?.Navigate(page);
+
+    /// <summary>
+    /// Before a manual automatic selection: while another program takes the traffic every candidate fails, so the
+    /// results would be wrong. The person may still go on ("Select anyway") or cancel.
+    /// </summary>
+    protected async Task<bool> ConfirmSelectionDespiteConflictAsync()
+    {
+        var conflict = BlockingConflict.FromStatus(State.Status);
+        return conflict == null
+            || await State.Platform.ConfirmAsync(L.T("Test.Conflict.Title"), L.F("Test.Conflict.Text", conflict.Name), L.T("Test.Conflict.Anyway"));
+    }
 
     public void Dispose()
     {

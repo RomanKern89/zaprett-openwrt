@@ -8,7 +8,7 @@ namespace Zaprett.Service.Hosting;
 
 /// <summary>Runs the pipe server and forwards dispatcher and engine events to subscribers; stops engines on shutdown.</summary>
 public sealed class IpcHostService(ICommandDispatcher dispatcher, PlatformServices platform, PipeServerOptions options,
-    IHostApplicationLifetime lifetime, ServiceMode mode) : BackgroundService
+    IHostApplicationLifetime lifetime, ServiceMode mode, StartupGate gate, CoreStartup? startup = null) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -49,10 +49,11 @@ public sealed class IpcHostService(ICommandDispatcher dispatcher, PlatformServic
         {
             if (mode.IsService)
                 await InstallOptions.ApplyOnceAsync(dispatcher, platform.Paths, platform.Log, InstallOptions.Read(), ct).ConfigureAwait(false);
-            if (dispatcher is CommandDispatcher core)
+            if (startup is not null)
             {
-                var r = await core.StartupAsync(ct).ConfigureAwait(false);
-                platform.Log.Info("core startup: " + r.ToJsonString());
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var r = await startup.Run(ct).ConfigureAwait(false);
+                platform.Log.Info($"core startup ({sw.Elapsed.TotalSeconds:0.0} s): " + r.ToJsonString());
             }
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -62,6 +63,11 @@ public sealed class IpcHostService(ICommandDispatcher dispatcher, PlatformServic
         {
             // the service keeps serving the pipe: the user can see and fix the state
             platform.Log.Error("core startup failed: " + e);
+        }
+        finally
+        {
+            // the scheduler (watchdog, monitor, autoupdate) starts only now
+            gate.Open();
         }
     }
 

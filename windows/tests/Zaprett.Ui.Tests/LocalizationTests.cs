@@ -34,7 +34,7 @@ public sealed partial class LocalizationTests
         string[] warnings = ["no_active_lists", "engine_missing", "no_strategy", "strategy_missing", "generate_failed", "bad_config",
             "config_was_invalid", "list_missing", "source_not_downloaded", "profile_unfiltered", "wide_port_range", "empty_profile_removed",
             "strategy_option_ignored", "not_running", "test_running", "low_memory", "monitor_degraded", "game_filter_no_ipsets", "dns_plain",
-            "ipv6_wan_unhandled", "windivert_foreign", "conflicts_found"];
+            "ipv6_wan_unhandled", "windivert_foreign", "conflicts_found", "waiting_network", "conflict_blocking"];
         foreach (var w in warnings)
         {
             yield return $"Warn.{w}.Title";
@@ -63,6 +63,8 @@ public sealed partial class LocalizationTests
             yield return "Lists.User." + id;
         foreach (var r in new[] { "Intro", "Services", "Conflicts", "Apply", "Fix", "Done" })
             yield return "Wizard.Rail." + r;
+        foreach (var k in new[] { "goodbyedpi", "zapret", "adguard", "killer", "intel-cns", "checkpoint", "smartbyte", "foreign_windivert_user" })
+            yield return "Conflict.Why." + k;
     }
 
     private static IEnumerable<string> UsedKeys()

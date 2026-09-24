@@ -23,7 +23,7 @@
                             <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Diag.HowText')}" />
                         </StackPanel>
                         <Button AutomationProperties.Name="{x:Bind loc:L.T('Diag.Run')}" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.DiagnoseCommand}"
-                                IsEnabled="{x:Bind ui:Conv.Not(Vm.IsDiagnosing), Mode=OneWay}">
+                                IsEnabled="{x:Bind ui:Conv.AndNot(Vm.CanModify, Vm.IsDiagnosing), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE721;" FontSize="14" />
                                 <TextBlock Text="{x:Bind loc:L.T('Diag.Run')}" />
@@ -44,7 +44,7 @@
                             <TextBlock Style="{StaticResource Body}" Text="{x:Bind Vm.SummaryAdvice, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.SummaryAdvice), Mode=OneWay}" />
                             <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind Vm.SummaryCounts, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.SummaryCounts), Mode=OneWay}" />
                             <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
-                                <Button Content="{x:Bind loc:L.T('Dns.TurnOn')}" Command="{x:Bind Vm.TurnOnDnsCommand}" Visibility="{x:Bind Vm.CanTurnOnDns, Mode=OneWay}" />
+                                <Button Content="{x:Bind loc:L.T('Dns.TurnOn')}" Command="{x:Bind Vm.TurnOnDnsCommand}" Visibility="{x:Bind Vm.CanTurnOnDns, Mode=OneWay}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                                 <Button Content="{x:Bind loc:L.T('Diag.ToStrategies')}" Command="{x:Bind Vm.OpenCommand}" CommandParameter="strategies"
                                         Visibility="{x:Bind Vm.SuggestStrategies, Mode=OneWay}" />
                             </StackPanel>
@@ -154,7 +154,7 @@
                     <Grid>
                         <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Bind loc:L.T('Diag.Log')}" AutomationProperties.HeadingLevel="Level2" />
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                            <ToggleSwitch AutomationProperties.Name="{x:Bind loc:L.T('Diag.Debug')}" IsOn="{x:Bind Vm.IsDebug, Mode=TwoWay}" OnContent="{x:Bind loc:L.T('Diag.Debug')}" OffContent="{x:Bind loc:L.T('Diag.Debug')}" MinWidth="0" />
+                            <ToggleSwitch AutomationProperties.Name="{x:Bind loc:L.T('Diag.Debug')}" IsOn="{x:Bind Vm.IsDebug, Mode=TwoWay}" OnContent="{x:Bind loc:L.T('Diag.Debug')}" OffContent="{x:Bind loc:L.T('Diag.Debug')}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                             <Button Content="{x:Bind loc:L.T('Common.Refresh')}" Command="{x:Bind Vm.LoadLogCommand}" />
                         </StackPanel>
                     </Grid>

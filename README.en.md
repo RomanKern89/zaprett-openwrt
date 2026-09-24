@@ -22,7 +22,7 @@ interface, 64 ready-made strategies and curated site lists.
 
 ## Windows app (beta)
 
-No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.0** does the same on a
+No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.1** does the same on a
 Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC: a first-run wizard, site checks, automatic
 strategy selection that does not stop the bypass, a monitor, diagnostics, own lists and subscriptions. One MSI
 installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines); the interface is in

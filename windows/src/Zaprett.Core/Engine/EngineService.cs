@@ -32,6 +32,9 @@ public sealed class EngineService
 
     public bool Running => c.P.Engine.GetState(Main).Running;
 
+    /// <summary>The main engine runs but waits for the network of the network filter (bypasses nothing yet).</summary>
+    public bool WaitingNetwork => c.P.Engine.GetState(Main) is { Running: true, Phase: EnginePhases.WaitingNetwork };
+
     public string StatusPath => c.RunFile("status.json");
 
     public async Task<GenerateResult> GenerateAsync(ZaprettConfig cfg, GenerateOptions? opts, CancellationToken ct)
@@ -92,6 +95,28 @@ public sealed class EngineService
         try
         {
             return await StartUnlockedAsync(cfg, null, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    /// <summary>The watchdog's start: decided outside the lock, so it is checked again under it. A start (or a stop) that
+    /// held the lock meanwhile has already done the job, and a second start would only restart the engine. started is true
+    /// only when this call started the engine.</summary>
+    public async Task<JsonObject> EnsureMainAsync(CancellationToken ct)
+    {
+        await gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var cfg = c.Config.Load();
+            if (c.P.Engine.GetState(Main).Running || !cfg.Enabled || c.UserStopped)
+                return R.Ok(new JsonObject { ["started"] = false });
+            var r = await StartUnlockedAsync(cfg, null, ct).ConfigureAwait(false);
+            if (R.IsOk(r))
+                r["started"] = true;
+            return r;
         }
         finally
         {

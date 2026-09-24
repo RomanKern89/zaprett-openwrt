@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Zaprett.Ui.Core.Json;
 using Zaprett.Ui.Core.Loc;
 using Zaprett.Ui.Core.Services;
+using Zaprett.Ui.Core.Text;
 using K = Zaprett.Ui.Core.Text.Kind;
 
 namespace Zaprett.Ui.Core.ViewModels;
@@ -36,6 +37,14 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty] public partial string TrayTip { get; set; } = "zaprett";
     [ObservableProperty] public partial bool IsFake { get; set; }
 
+    /// <summary>The service says this user may only read: the shell shows why every change is locked, and the
+    /// wizard (all of whose steps change the service) is not offered.</summary>
+    [ObservableProperty] public partial bool IsReadOnly { get; set; }
+
+    public bool CanModify => !IsReadOnly;
+
+    partial void OnIsReadOnlyChanged(bool value) => OnPropertyChanged(nameof(CanModify));
+
     private void OnStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(AppState.Connection) or nameof(AppState.UnavailableReason))
@@ -45,6 +54,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public void Update()
     {
         IsFake = _state.IsFake;
+        IsReadOnly = _state.Connection == ConnectionState.Available && !_state.CanModify;
         IsConnecting = _state.Connection == ConnectionState.Connecting;
         IsServiceDown = _state.Connection == ConnectionState.Unavailable;
         DownText = L.T("Shell.Down.Text");
@@ -61,6 +71,10 @@ public sealed partial class ShellViewModel : ObservableObject
             return (K.None, L.T("Shell.Pill.Connecting"), "off");
         var st = _state.Status;
         var monitor = _state.Monitor.Str("state") ?? st.Obj("monitor").Str("state");
+        if (BlockingConflict.FromStatus(st) != null)
+            return (K.Fail, L.T("Shell.Pill.Conflict"), "error");
+        if (st.Bool("running") && UiText.IsWaitingNetwork(st))
+            return (K.Warn, L.T("Shell.Pill.Waiting"), "warn");
         if (st.Bool("running") && monitor is "degraded")
             return (K.Warn, L.T("Shell.Pill.Degraded"), "warn");
         if (st.Bool("running"))

@@ -64,13 +64,13 @@
                         </StackPanel>
                     </CheckBox>
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Test.Start')}" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.StartTestCommand}" Visibility="{x:Bind Vm.IsNotTesting, Mode=OneWay}">
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Test.Start')}" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.StartTestCommand}" Visibility="{x:Bind Vm.IsNotTesting, Mode=OneWay}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE768;" FontSize="14" />
                                 <TextBlock Text="{x:Bind loc:L.T('Test.Start')}" />
                             </StackPanel>
                         </Button>
-                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Test.Stop')}" Command="{x:Bind Vm.StopTestCommand}" Visibility="{x:Bind Vm.IsTesting, Mode=OneWay}">
+                        <Button AutomationProperties.Name="{x:Bind loc:L.T('Test.Stop')}" Command="{x:Bind Vm.StopTestCommand}" Visibility="{x:Bind Vm.IsTesting, Mode=OneWay}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE71A;" FontSize="14" />
                                 <TextBlock Text="{x:Bind loc:L.T('Test.Stop')}" />
@@ -90,11 +90,14 @@
                              Visibility="{x:Bind ui:Conv.ShowText(Vm.ModeText), Mode=OneWay}" />
                     <TextBlock Style="{StaticResource Body}" FontWeight="SemiBold" Text="{x:Bind Vm.ResultText, Mode=OneWay}"
                                Visibility="{x:Bind ui:Conv.ShowText(Vm.ResultText), Mode=OneWay}" />
+                    <!-- collapsed as well as closed: a closed InfoBar still takes the spacing of the panel -->
+                    <InfoBar IsOpen="{x:Bind ui:Conv.HasText(Vm.ConflictNote), Mode=OneWay}" IsClosable="False" Severity="Warning"
+                             Message="{x:Bind Vm.ConflictNote, Mode=OneWay}" Visibility="{x:Bind ui:Conv.ShowText(Vm.ConflictNote), Mode=OneWay}" />
 
                     <StackPanel Spacing="6" Visibility="{x:Bind Vm.HasResults, Mode=OneWay}">
                         <Grid>
                             <TextBlock Style="{StaticResource Secondary}" VerticalAlignment="Center" Text="{x:Bind Vm.BaselineText, Mode=OneWay}" />
-                            <Button HorizontalAlignment="Right" Content="{x:Bind loc:L.T('Test.ApplyBest')}" Command="{x:Bind Vm.ApplyBestCommand}" />
+                            <Button HorizontalAlignment="Right" Content="{x:Bind loc:L.T('Test.ApplyBest')}" Command="{x:Bind Vm.ApplyBestCommand}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                         </Grid>
                         <Grid Padding="12,6" ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -210,7 +213,7 @@
                                 <ui:StrategyText Text="{x:Bind Vm.EditorText, Mode=OneWay}" />
                             </Border>
                             <StackPanel Spacing="10">
-                                <Button AutomationProperties.Name="{x:Bind loc:L.T('Strategies.SaveCheck')}" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.SaveAndCheckCommand}" HorizontalAlignment="Stretch">
+                                <Button AutomationProperties.Name="{x:Bind loc:L.T('Strategies.SaveCheck')}" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.SaveAndCheckCommand}" HorizontalAlignment="Stretch" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <ProgressRing IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}" Width="16" Height="16" />
                                         <TextBlock Text="{x:Bind loc:L.T('Strategies.SaveCheck')}" />
@@ -222,8 +225,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Button Content="{x:Bind loc:L.T('Strategies.MakeCurrent')}" Command="{x:Bind Vm.SelectCommand}" CommandParameter="{x:Bind Vm.Selected, Mode=OneWay}"
-                                            HorizontalAlignment="Stretch" />
-                                    <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Delete')}" Command="{x:Bind Vm.DeleteCommand}" Visibility="{x:Bind Vm.IsEditable, Mode=OneWay}" />
+                                            HorizontalAlignment="Stretch" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
+                                    <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Delete')}" Command="{x:Bind Vm.DeleteCommand}" Visibility="{x:Bind Vm.IsEditable, Mode=OneWay}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                                 </Grid>
                             </StackPanel>
 

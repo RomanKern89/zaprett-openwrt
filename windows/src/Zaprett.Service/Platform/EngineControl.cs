@@ -13,8 +13,13 @@ public sealed record EngineRestartPolicy(
     TimeSpan Cooldown,
     TimeSpan StartupGrace,
     string? ReadyMarker = null,
-    TimeSpan? ReadyTimeout = null)
+    TimeSpan? ReadyTimeout = null,
+    string? WaitingMarker = null)
 {
+    /// <summary>winws with --ssid-filter/--nlm-filter and no such network: it waits and opens WinDivert only when the
+    /// network appears (nfqws.c). The instance is up, in phase "waiting_network".</summary>
+    public const string WinwsWaitingMarker = "logical network is not present";
+
     /// <summary>winws prints this once the WinDivert filter is open (S-1: 0.1–0.85 s on the spike VM).</summary>
     public const string WinwsReadyMarker = "windivert initialized";
 
@@ -22,7 +27,10 @@ public sealed record EngineRestartPolicy(
         new(TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(10), 5, TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(1));
 
     /// <summary>The service's policy: an instance is up only after <see cref="WinwsReadyMarker"/> (S-1).</summary>
-    public static EngineRestartPolicy Winws { get; } = Default with { ReadyMarker = WinwsReadyMarker, ReadyTimeout = TimeSpan.FromSeconds(5) };
+    public static EngineRestartPolicy Winws { get; } = Default with
+    {
+        ReadyMarker = WinwsReadyMarker, ReadyTimeout = TimeSpan.FromSeconds(5), WaitingMarker = WinwsWaitingMarker,
+    };
 }
 
 /// <summary>
@@ -45,6 +53,17 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
     // start/stop of instances run one at a time
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly EngineIsolation? _isolation;
+    // where the debug output of an instance started with --debug=1 goes (EngineDebugLog); null: into the journal
+    private readonly string? _runDir;
+    private readonly Dictionary<string, int> _starting = new(StringComparer.Ordinal);
+
+    private static readonly TimeSpan StopWaitLimit = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan OutputWaitLimit = TimeSpan.FromSeconds(2);
+
+    // the phases of Zaprett.Core (EngineState.Phase)
+    public const string PhaseStarting = EnginePhases.Starting;
+    public const string PhaseWaitingNetwork = EnginePhases.WaitingNetwork;
+    public const string PhaseCapturing = EnginePhases.Capturing;
 
     public const string MainInstance = "main";
     public const string TestInstance = "test";
@@ -52,12 +71,14 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
     /// <summary>Engine events for subscribers: ("status", {engine:{instance, state, ...}}).</summary>
     public event Action<string, JsonObject>? Event;
 
-    public EngineControl(ILog log, IClock clock, EngineRestartPolicy? policy = null, EngineIsolation? isolation = null)
+    public EngineControl(ILog log, IClock clock, EngineRestartPolicy? policy = null, EngineIsolation? isolation = null,
+        string? runDir = null)
     {
         _log = log;
         _clock = clock;
         _policy = policy ?? EngineRestartPolicy.Default;
         _isolation = isolation;
+        _runDir = runDir;
     }
 
     public static bool IsValidInstanceName(string name) =>
@@ -67,6 +88,33 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
     {
         if (!IsValidInstanceName(instance))
             throw new ArgumentException("invalid engine instance name", nameof(instance));
+        // from here until StartAsync returns the instance counts as running (phase "starting"): the watchdog must not
+        // see "not running" while a start asked by someone else is in progress (the Windows 11 test machine, "enable" + watchdog tick)
+        using (MarkStarting(instance))
+            return await StartGatedAsync(instance, executable, args, ct).ConfigureAwait(false);
+    }
+
+    private StartingMark MarkStarting(string instance)
+    {
+        lock (_lock)
+            _starting[instance] = _starting.GetValueOrDefault(instance) + 1;
+        return new StartingMark(this, instance);
+    }
+
+    private readonly struct StartingMark(EngineControl owner, string instance) : IDisposable
+    {
+        public void Dispose()
+        {
+            lock (owner._lock)
+            {
+                if (--owner._starting[instance] == 0)
+                    owner._starting.Remove(instance);
+            }
+        }
+    }
+
+    private async Task<EngineState> StartGatedAsync(string instance, string executable, IReadOnlyList<string> args, CancellationToken ct)
+    {
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -128,8 +176,11 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
             return;
         string exe = main.Executable;
         var original = main.OriginalArgs;
-        await StopCoreAsync(MainInstance, ct).ConfigureAwait(false);
-        await StartCoreAsync(MainInstance, exe, original, original, false, ct).ConfigureAwait(false);
+        using (MarkStarting(MainInstance))
+        {
+            await StopCoreAsync(MainInstance, ct).ConfigureAwait(false);
+            await StartCoreAsync(MainInstance, exe, original, original, false, ct).ConfigureAwait(false);
+        }
     }
 
     /// <summary>Restarts a running "main" that has no exclusion filter yet with it. Nothing happens when main is
@@ -146,8 +197,11 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
             return;
         string exe = main.Executable;
         var original = main.OriginalArgs;
-        await StopCoreAsync(MainInstance, ct).ConfigureAwait(false);
-        await StartCoreAsync(MainInstance, exe, original, isolated, true, ct).ConfigureAwait(false);
+        using (MarkStarting(MainInstance))
+        {
+            await StopCoreAsync(MainInstance, ct).ConfigureAwait(false);
+            await StartCoreAsync(MainInstance, exe, original, isolated, true, ct).ConfigureAwait(false);
+        }
     }
 
     private async Task<EngineState> StartCoreAsync(string instance, string executable, IReadOnlyList<string> originalArgs,
@@ -170,21 +224,28 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         {
             // up = still alive after the grace period
             await Task.WhenAny(proc.Exited, _clock.Delay(_policy.StartupGrace, ct)).ConfigureAwait(false);
-            return GetState(instance);
+            return ActualState(instance);
         }
         // up = the ready line appeared (S-1: --dry-run does not open the WinDivert filter, only a real start does)
         var readyTimeout = _policy.ReadyTimeout ?? TimeSpan.FromSeconds(5);
         var ready = inst.Ready!.Task;
-        await Task.WhenAny(ready, proc.Exited, _clock.Delay(readyTimeout, ct)).ConfigureAwait(false);
+        var waiting = inst.Waiting!.Task;
+        await Task.WhenAny(ready, waiting, proc.Exited, _clock.Delay(readyTimeout, ct)).ConfigureAwait(false);
         if (ready.IsCompleted)
-            return GetState(instance);
+            return ActualState(instance);
+        if (waiting.IsCompleted && !proc.Exited.IsCompleted)
+        {
+            // network_filter: up and waiting for the network; WinDivert opens when it appears ("capturing" then)
+            _log.Info($"engine {instance}: waiting for the selected network (network_filter), WinDivert opens when it appears");
+            return ActualState(instance);
+        }
         if (!proc.Exited.IsCompleted)
         {
             _log.Error($"engine {instance}: no '{_policy.ReadyMarker}' within {readyTimeout.TotalSeconds:0.#} s, stopping it");
             await StopCoreAsync(instance, ct).ConfigureAwait(false);
             return new EngineState(instance, false, null, null, 0);
         }
-        return GetState(instance);
+        return ActualState(instance);
     }
 
     public async Task StopAsync(string instance, CancellationToken ct)
@@ -217,6 +278,18 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         // the supervisor ends right after the cancellation; waiting without ct keeps the cleanup below certain
         if (inst.Supervisor is not null)
             await inst.Supervisor.ConfigureAwait(false);
+        // the old process must be gone (its WinDivert handle closed) before a new instance can start
+        Task<int>? exited;
+        lock (inst)
+            exited = inst.Process?.Exited;
+        if (exited is not null && await Task.WhenAny(exited, Task.Delay(StopWaitLimit, CancellationToken.None)).ConfigureAwait(false) != exited)
+            _log.Warn($"engine {instance}: the process did not exit within {StopWaitLimit.TotalSeconds:0} s after it was killed");
+        // the output pump ends right after the exit: the last lines (and the debug file's buffer) are written out
+        Task? output;
+        lock (inst)
+            output = inst.Output;
+        if (output is not null)
+            await Task.WhenAny(output, Task.Delay(OutputWaitLimit, CancellationToken.None)).ConfigureAwait(false);
         lock (inst)
             inst.Process?.Dispose();
         inst.Job.Dispose();
@@ -224,19 +297,46 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         _log.Info($"engine {instance}: stopped");
     }
 
-    public EngineState GetState(string instance)
+    public EngineState GetState(string instance) => StateOf(instance, honourStarting: true);
+
+    private EngineState ActualState(string instance) => StateOf(instance, honourStarting: false);
+
+    private EngineState StateOf(string instance, bool honourStarting)
+    {
+        Instance? inst;
+        bool starting;
+        lock (_lock)
+        {
+            _instances.TryGetValue(instance, out inst);
+            starting = honourStarting && _starting.ContainsKey(instance);
+        }
+        if (inst is null)
+            return starting
+                ? new EngineState(instance, true, null, null, 0, PhaseStarting)
+                : new EngineState(instance, false, null, null, 0);
+        lock (inst)
+        {
+            bool running = inst.Process is { } p && !p.Exited.IsCompleted;
+            if (!running && starting)
+                return new EngineState(instance, true, null, null, CrashesInWindow(inst), PhaseStarting);
+            // a start in progress replaces this process: it is "starting" until StartAsync returns
+            string phase = starting ? PhaseStarting : inst.Phase;
+            return new EngineState(instance, running, running ? inst.Process!.Pid : null, running ? inst.StartedAt : null,
+                CrashesInWindow(inst), running ? phase : PhaseCapturing);
+        }
+    }
+
+    /// <summary>Phase of a running instance: starting, waiting_network (network_filter, no such network yet) or
+    /// capturing; null when it does not run.</summary>
+    public string? GetPhase(string instance)
     {
         Instance? inst;
         lock (_lock)
             _instances.TryGetValue(instance, out inst);
         if (inst is null)
-            return new EngineState(instance, false, null, null, 0);
+            return null;
         lock (inst)
-        {
-            bool running = inst.Process is { } p && !p.Exited.IsCompleted;
-            return new EngineState(instance, running, running ? inst.Process!.Pid : null, running ? inst.StartedAt : null,
-                CrashesInWindow(inst));
-        }
+            return inst.Process is { } p && !p.Exited.IsCompleted ? inst.Phase : null;
     }
 
     /// <summary>Process ids in an instance's job (the engine and anything it started).</summary>
@@ -259,16 +359,26 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         {
             var proc = Win32Process.Start(inst.Executable, inst.Args, Path.GetDirectoryName(inst.Executable), inst.Job);
             var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var waiting = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (inst)
             {
                 inst.Process?.Dispose();
                 inst.Process = proc;
                 inst.StartedAt = _clock.Now;
                 inst.Ready = ready;
+                inst.Waiting = waiting;
+                inst.Phase = _policy.ReadyMarker is null ? PhaseCapturing : PhaseStarting;
             }
             _log.Info($"engine {inst.Name}: started pid {proc.Pid}: {WindowsCommandLine.Build(inst.Executable, inst.Args)}");
-            _ = PumpAsync(inst.Name, "out", proc.StdOut, ready);
-            _ = PumpAsync(inst.Name, "err", proc.StdErr, ready);
+            var debug = _runDir is not null && EngineDebugLog.IsConsoleDebug(inst.Args)
+                ? new EngineDebugLog(EngineDebugLog.FileFor(_runDir, inst.Name), _log)
+                : null;
+            if (debug is not null)
+                _log.Info($"engine {inst.Name}: debug output goes to {debug.Path}");
+            var output = PumpAsync(inst, "out", proc.StdOut, ready, waiting, debug);
+            lock (inst)
+                inst.Output = output;
+            _ = PumpAsync(inst, "err", proc.StdErr, ready, waiting, null);
             return true;
         }
         catch (Exception e) when (e is Win32Exception or IOException or ArgumentException)
@@ -278,8 +388,10 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         }
     }
 
-    private async Task PumpAsync(string instance, string stream, Stream s, TaskCompletionSource ready)
+    private async Task PumpAsync(Instance inst, string stream, Stream s, TaskCompletionSource ready, TaskCompletionSource waiting,
+        EngineDebugLog? debug)
     {
+        string instance = inst.Name;
         try
         {
             using var reader = new StreamReader(s, Encoding.UTF8);
@@ -287,13 +399,38 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) is not null)
                 if (line.Length > 0)
                 {
+                    debug?.WriteLine(line);
+                    bool isMarker = true;
                     if (_policy.ReadyMarker is { } marker && line.Contains(marker, StringComparison.OrdinalIgnoreCase))
+                    {
+                        lock (inst)
+                            if (ReferenceEquals(inst.Ready, ready))
+                                inst.Phase = PhaseCapturing;
                         ready.TrySetResult();
-                    _log.Info($"engine {instance} [{stream}]: {(line.Length > 2000 ? line[..2000] : line)}");
+                    }
+                    else if (_policy.WaitingMarker is { } wait && line.Contains(wait, StringComparison.OrdinalIgnoreCase))
+                    {
+                        lock (inst)
+                            if (ReferenceEquals(inst.Ready, ready))
+                                inst.Phase = PhaseWaitingNetwork;
+                        waiting.TrySetResult();
+                    }
+                    else
+                    {
+                        isMarker = false;
+                    }
+                    // with debugging the output is thousands of lines: the journal keeps only the ready/waiting lines
+                    if (debug is null || isMarker)
+                        _log.Info($"engine {instance} [{stream}]: {(line.Length > 2000 ? line[..2000] : line)}");
                 }
         }
         catch (Exception e) when (e is IOException or ObjectDisposedException)
         {
+        }
+        finally
+        {
+            // the engine's output ended (it exited or was stopped): the rest of the buffer goes to the file
+            debug?.Dispose();
         }
     }
 
@@ -402,6 +539,9 @@ public sealed class EngineControl : IEngineControl, IAsyncDisposable
         public string[] OriginalArgs { get; init; } = [];
         public bool Isolated { get; init; }
         public TaskCompletionSource? Ready { get; set; }
+        public TaskCompletionSource? Waiting { get; set; }
+        public string Phase { get; set; } = PhaseStarting;
         public Task? Supervisor { get; set; }
+        public Task? Output { get; set; }
     }
 }

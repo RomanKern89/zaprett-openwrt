@@ -6,7 +6,7 @@
     engine\   winws.exe, cygwin1.dll, WinDivert.dll, WinDivert64.sys  (engine.lock.json)
     engine2\  winws2.exe, its cygwin1.dll / WinDivert*, lua\*.lua
     data\     bundle\, guard\, presets.json  (one source of truth with the router package)
-    tools\    installer-actions.ps1
+    tools\    installer-actions.ps1, launch-ui.ps1
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -20,7 +20,9 @@
            Language="!(loc.ProductLanguage)">
     <SummaryInformation Description="!(loc.ProductDescription)" Manufacturer="zaprett-openwrt" />
 
-    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+    <!-- afterInstallExecute: the old version goes away after the new one is installed, so that ZaprettPrepare (a
+         deferred action, see below) runs before anything of the old version is touched -->
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" Schedule="afterInstallExecute" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!-- Windows 10 2004 (build 19041) or newer, x64: same minimum as the app (TargetPlatformMinVersion); covers 20H2-22H2 and LTSC 2021 (19044). MSI reports VersionNT/WindowsBuild of Windows 8.1 on
@@ -33,8 +35,25 @@
     <Launch Condition="Installed OR (ZAPRETT_WINBUILD &gt;= 19041)" Message="!(loc.RequiresWin10)" />
 
     <!-- Public properties (msiexec /i zaprett.msi /qn AUTOSTART=1 SERVICES=youtube,discord) -->
-    <Property Id="AUTOSTART" Value="0" Secure="yes" />
+    <!-- AUTOSTART and SERVICES are remembered: a repair or upgrade without them on the command line keeps the values
+         of the installed version (HKLM\SOFTWARE\zaprett AutoStart / Services) instead of writing the defaults over
+         them (seen: 0.1.0 installed with AUTOSTART=1 SERVICES=youtube,discord, after the upgrade AutoStart=0 and no
+         Services). The service applies them only on its first start (install-options.applied), so this keeps the
+         registry truthful and changes nothing for an existing installation. A value given explicitly wins. -->
+    <Property Id="AUTOSTART" Secure="yes" />
     <Property Id="SERVICES" Secure="yes" />
+    <Property Id="ZAPRETT_SAVED_AUTOSTART">
+      <RegistrySearch Id="SavedAutoStart" Root="HKLM" Key="SOFTWARE\zaprett" Name="AutoStart" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="ZAPRETT_SAVED_SERVICES">
+      <RegistrySearch Id="SavedServices" Root="HKLM" Key="SOFTWARE\zaprett" Name="Services" Type="raw" Bitness="always64" />
+    </Property>
+    <SetProperty Id="AUTOSTART" Action="SetAutoStartFromSaved" Value="[ZAPRETT_SAVED_AUTOSTART]" After="AppSearch"
+                 Sequence="both" Condition="NOT AUTOSTART AND ZAPRETT_SAVED_AUTOSTART" />
+    <SetProperty Id="AUTOSTART" Action="SetAutoStartDefault" Value="0" After="SetAutoStartFromSaved"
+                 Sequence="both" Condition="NOT AUTOSTART" />
+    <SetProperty Id="SERVICES" Action="SetServicesFromSaved" Value="[ZAPRETT_SAVED_SERVICES]" After="AppSearch"
+                 Sequence="both" Condition="NOT SERVICES AND ZAPRETT_SAVED_SERVICES" />
     <Property Id="REMOVEDATA" Secure="yes" />
     <Property Id="TRAYAUTOSTART" Value="1" Secure="yes" />
     <!-- LANG = ru | en | zh-CN: ui.language of a NEW config.json (an existing one is never touched). Defaults to the
@@ -46,8 +65,19 @@
          /x /qn ended with 1601 after RM stopped the service). The service stops winws itself (Job Object),
          ZaprettStopUi closes the tray UI, ZaprettUninstallActions stops stray winws. -->
     <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+    <!-- Unattended runs (/qn, /qb, /qr: UILevel below 5) never restart the computer by themselves: if a file is ever
+         in use again, the result is 3010, not a sudden reboot (Windows Installer reboots on its own in quiet mode,
+         seen as 1641 on a test VM). An explicit REBOOT=... on the command line (Force, ReallySuppress) wins; the full UI
+         keeps the normal "restart required" prompt when a restart is really needed. -->
+    <SetProperty Id="REBOOT" Value="ReallySuppress" Sequence="execute" Before="InstallValidate"
+                 Condition="UILevel &lt; 5 AND NOT REBOOT" />
+    <!-- icon in "Apps & features" / "Programs and Features": the zaprett mark of the UI -->
+    <Icon Id="zaprett.ico" SourceFile="$(sys.SOURCEFILEDIR)..\src\Zaprett.Ui\Assets\zaprett.ico" />
+    <Property Id="ARPPRODUCTICON" Value="zaprett.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/RomanKern89/zaprett-openwrt" />
     <Property Id="ARPCOMMENTS" Value="!(loc.ProductDescription)" />
+    <!-- size in "Apps" (KB): the staged files as counted by build.ps1, the same after an upgrade as after a clean install -->
+    <Property Id="ARPSIZE" Value="$(ZaprettArpSizeKb)" />
 
     <!-- Install location: C:\Program Files\zaprett by default; another folder may be chosen in the UI or with
          INSTALLFOLDER=... (ARCHITECTURE-WIN §12.1, S-2: spaces and non-ASCII are fine for winws). -->
@@ -85,7 +115,12 @@
         <ServiceInstall Id="ZaprettService" Name="zaprett" DisplayName="!(loc.ServiceDisplayName)"
                         Description="!(loc.ServiceDescription)" Type="ownProcess" Start="auto"
                         Account="LocalSystem" ErrorControl="normal" Vital="yes">
-          <ServiceConfig DelayedAutoStart="yes" OnInstall="yes" OnReinstall="yes" />
+          <!-- plain Automatic, NOT delayed: bypass must work right after sign-in (delayed start left 1.5-2 min without
+               it). "no" is set explicitly so that a repair also clears the flag of an older delayed install. -->
+          <ServiceConfig DelayedAutoStart="no" OnInstall="yes" OnReinstall="yes" />
+          <!-- recovery actions also when the service stops by itself with an error exit code (pipe conflict, data
+               folder error), not only when it crashes: fFailureActionsOnNonCrashFailures -->
+          <ServiceConfig FailureActionsWhen="failedToStopOrReturnedError" OnInstall="yes" OnReinstall="yes" />
           <util:ServiceConfig FirstFailureActionType="restart" SecondFailureActionType="restart"
                               ThirdFailureActionType="restart" RestartServiceDelayInSeconds="5"
                               ResetPeriodInDays="1" />
@@ -113,6 +148,9 @@
       <Component Id="InstallerActionsScript" Directory="TOOLSFOLDER">
         <File Id="InstallerActionsPs1" Source="$(StageDir)tools\installer-actions.ps1" KeyPath="yes" />
       </Component>
+      <Component Id="LaunchUiScript" Directory="TOOLSFOLDER">
+        <File Id="LaunchUiPs1" Source="$(StageDir)tools\launch-ui.ps1" KeyPath="yes" />
+      </Component>
 
       <!-- C:\ProgramData\zaprett: SYSTEM and Administrators full control, Users read, not inherited from ProgramData -->
       <Component Id="DataFolder" Directory="DATAFOLDER" Guid="{2D8B5F0A-7C41-4E6B-A3D9-58E1F7B24C06}">
@@ -133,11 +171,12 @@
         <RegistryValue Root="HKLM" Key="SOFTWARE\zaprett" Name="Services" Type="string" Value="[SERVICES]" KeyPath="yes" />
       </Component>
 
-      <!-- Tray icon at every user logon (checkbox on the warning dialog, TRAYAUTOSTART=0 from the command line) -->
-      <Component Id="TrayAutostart" Directory="INSTALLFOLDER" Condition="TRAYAUTOSTART = &quot;1&quot;">
-        <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Name="zaprett"
-                       Type="string" Value="&quot;[INSTALLFOLDER]zaprett-ui.exe&quot; --tray" KeyPath="yes" />
-      </Component>
+      <!-- Tray icon at every user logon: NOT a component any more. The user's choice lives in
+           HKLM\SOFTWARE\zaprett\TrayAutostart (REG_DWORD 1/0), changed by the service from Settings; a component would
+           bring HKLM\...\Run\zaprett back on every repair and upgrade. ZaprettInstallActions records the choice once
+           (first install: TRAYAUTOSTART; upgrade from 0.1.x without it: whether Run\zaprett is there), ZaprettApplyTray
+           makes Run\zaprett match it after the old version is removed (its removal deletes the value it owned), and
+           the service does the same at every start. Real removal deletes both. -->
     </ComponentGroup>
 
     <ComponentGroup Id="Engine2Components">
@@ -149,7 +188,7 @@
     <SetProperty Id="ZAPRETT_PS" Sequence="execute" After="CostFinalize"
                  Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;[TOOLSFOLDER]installer-actions.ps1&quot;" />
     <SetProperty Id="ZaprettInstallActions" Sequence="execute" Before="ZaprettInstallActions"
-                 Value="[ZAPRETT_PS] -Action Install -InstallDir &quot;[INSTALLFOLDER].&quot; -UserSid &quot;[UserSID]&quot; -DataDir &quot;[DATAFOLDER].&quot; -Language &quot;[LANG]&quot;" />
+                 Value="[ZAPRETT_PS] -Action Install -InstallDir &quot;[INSTALLFOLDER].&quot; -UserSid &quot;[UserSID]&quot; -DataDir &quot;[DATAFOLDER].&quot; -Language &quot;[LANG]&quot; -TrayAutostart &quot;[TRAYAUTOSTART]&quot; -Existing &quot;[Installed][WIX_UPGRADE_DETECTED]&quot;" />
     <CustomAction Id="ZaprettInstallActions" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
                   Execute="deferred" Impersonate="no" Return="check" />
     <!-- a first install that fails later takes the group it created with it (runs before the files are rolled back) -->
@@ -157,6 +196,21 @@
                  Value="[ZAPRETT_PS] -Action Rollback -InstallDir &quot;[INSTALLFOLDER].&quot; -DataDir &quot;[DATAFOLDER].&quot;" />
     <CustomAction Id="ZaprettInstallRollback" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
                   Execute="rollback" Impersonate="no" Return="ignore" />
+
+    <!-- Before StartServices: zaprett-svc.exe in its warmup mode, once as LocalSystem, so that the first run of the new files
+         (antivirus scan of fresh files, loading) is not counted in the 30 s the SCM gives the service to start - on a
+         clean Windows 10 that first start took 27 s. The script stops it after 90 s and logs how long it ran; a
+         failed or slow warmup never fails the setup. -->
+    <SetProperty Id="ZaprettWarmup" Sequence="execute" Before="ZaprettWarmup"
+                 Value="[ZAPRETT_PS] -Action Warmup -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+    <CustomAction Id="ZaprettWarmup" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <!-- after RemoveExistingProducts: Run\zaprett = the recorded choice (see the TrayAutostart comment above) -->
+    <SetProperty Id="ZaprettApplyTray" Sequence="execute" Before="ZaprettApplyTray"
+                 Value="[ZAPRETT_PS] -Action ApplyTray -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+    <CustomAction Id="ZaprettApplyTray" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
 
     <SetProperty Id="ZaprettUninstallActions" Sequence="execute" Before="ZaprettUninstallActions"
                  Value="[ZAPRETT_PS] -Action Uninstall -InstallDir &quot;[INSTALLFOLDER].&quot; -DataDir &quot;[DATAFOLDER].&quot; -RemoveData &quot;[REMOVEDATA]&quot;" />
@@ -171,21 +225,79 @@
     <CustomAction Id="ZaprettDnsOff" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
                   Execute="deferred" Impersonate="no" Return="ignore" />
 
-    <!-- The tray UI (one zaprett-ui.exe per signed-in user) holds its exe: close it before any file is replaced or
-         removed, so that neither upgrade nor removal needs a reboot. It must run before RemoveExistingProducts
-         (the old version's removal), which sits before InstallInitialize, so this action is immediate: WixQuietExec
-         then takes its command line from the property WixQuietExecCmdLine. Nothing to close is fine: exit 0 keeps
-         the "process not found" code 128 of taskkill out of the MSI log. -->
-    <SetProperty Id="WixQuietExecCmdLine" Sequence="execute" Before="ZaprettStopUi"
+    <!-- ZaprettPrepare: nothing of an installed zaprett may be in use when files are replaced or removed, or Windows
+         Installer asks for a reboot (1903 / 3010 on engine\WinDivert64.sys held by the loaded driver). It has to be a
+         DEFERRED action without impersonation (LocalSystem): an immediate action runs with the user's token, which
+         is the FILTERED one when the setup is started by a double click (UAC elevates only the server) - it then
+         could not stop the service nor unload the driver (seen on a real 0.1.0 -> 0.1.1 upgrade). A deferred action
+         cannot run before an early RemoveExistingProducts, so the old version is removed after the new one is
+         installed (MajorUpgrade Schedule="afterInstallExecute"; the component GUIDs are stable, so shared files
+         stay). Order: InstallInitialize, ZaprettRestartService (rollback), ZaprettPrepare, ..., InstallFiles, ...,
+         StartServices, InstallExecute, RemoveExistingProducts.
+         - install, repair, upgrade: scripts/prepare.ps1 (embedded by build.ps1 as ZAPRETT_PREPARE, -EncodedCommand)
+           closes the tray UI of every session (recording them in run\ui-relaunch.json), stops the service, our
+           winws / winws2 and unloads OUR WinDivert driver; the service starts again at StartServices;
+         - real removal: ZaprettStopUi only closes the tray UI of every session (also as LocalSystem), because
+           ZaprettDnsOff needs the running service; StopServices / ZaprettUninstallActions stop the rest.
+         exit 0 keeps the "process not found" code 128 of taskkill out of the MSI log. -->
+    <!-- ZAPRETT_PREPARE and ZAPRETT_CLOSE_UI: EmbeddedScripts.wxs, generated by build.ps1 -->
+    <PropertyRef Id="ZAPRETT_PREPARE" />
+    <SetProperty Id="ZaprettPrepare" Sequence="execute" Before="ZaprettPrepare"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [ZAPRETT_PREPARE]" />
+    <CustomAction Id="ZaprettPrepare" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <SetProperty Id="ZaprettStopUi" Sequence="execute" Before="ZaprettStopUi"
                  Value="&quot;[System64Folder]cmd.exe&quot; /d /c &quot;&quot;[System64Folder]taskkill.exe&quot; /F /IM zaprett-ui.exe &gt;nul 2&gt;&amp;1 &amp; exit /b 0&quot;" />
     <CustomAction Id="ZaprettStopUi" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <!-- ZaprettCloseUi: InstallValidate (before any deferred action) finds the files held by a running zaprett-ui
+         and shows "files in use" when that process has a window on the desktop of the setup client (processes
+         without a window - the service, winws - are skipped: "Window could not be found" in the log, no dialog).
+         So a repair or upgrade first closes the setup user's OWN zaprett-ui from the install folder (a user may end
+         their own processes without elevation): scripts/close-ui.ps1, embedded as ZAPRETT_CLOSE_UI, an immediate
+         action (as that user) before CostInitialize, so that file costing no longer sees the files in use. It runs
+         in the execute sequence, so also with /passive and /qb (they skip InstallUISequence). The sessions it
+         closed the tray in go to HKCU\Software\zaprett\UiRelaunchPending; ZaprettPrepare (LocalSystem) moves them
+         into run\ui-relaunch.json for the service. A real removal (the maintenance dialog "Remove") closes it the
+         same way but records nothing: ZAPRETT_CLOSE_UI_REMOVE is the same script with $NoRelaunch set.
+         WixQuietExec in immediate mode runs WixQuietExecCmdLine. -->
+    <SetProperty Id="WixQuietExecCmdLine" Action="SetZaprettCloseUiCmd" Sequence="execute" Before="ZaprettCloseUi"
+                 Condition="NOT (REMOVE~=&quot;ALL&quot;)"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [ZAPRETT_CLOSE_UI]" />
+    <SetProperty Id="WixQuietExecCmdLine" Action="SetZaprettCloseUiRemoveCmd" Sequence="execute" Before="ZaprettCloseUi"
+                 Condition="REMOVE~=&quot;ALL&quot;"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [ZAPRETT_CLOSE_UI_REMOVE]" />
+    <CustomAction Id="ZaprettCloseUi" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
                   Execute="immediate" Return="ignore" />
+    <!-- command line of ZaprettRestoreUi (UserExit / FatalError pages, UI.wxs) in the setup client -->
+    <SetProperty Id="WixQuietExecCmdLine" Action="SetZaprettRestoreUiCmd" Sequence="ui" After="CostFinalize"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand [ZAPRETT_RESTORE_UI]" />
+
+    <!-- A repair or upgrade that fails after ZaprettPrepare stopped the service starts it again (rollback runs this
+         last, after the files and services are back). -->
+    <SetProperty Id="ZaprettRestartService" Sequence="execute" Before="ZaprettRestartService"
+                 Value="&quot;[System64Folder]sc.exe&quot; start zaprett" />
+    <CustomAction Id="ZaprettRestartService" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="rollback" Impersonate="no" Return="ignore" />
 
     <InstallExecuteSequence>
-      <Custom Action="ZaprettStopUi" Before="InstallValidate" />
+      <!-- only once the server runs elevated (MsiRunningElevated, set by Windows Installer): when the UAC prompt is
+           declined the execute sequence still starts without elevation and then fails (1730), and a tray closed
+           there would be lost; restore-ui.ps1 on the UserExit / FatalError page is the second line of defence -->
+      <Custom Action="ZaprettCloseUi" Before="CostInitialize"
+              Condition="(Installed OR WIX_UPGRADE_DETECTED) AND MsiRunningElevated" />
+      <Custom Action="ZaprettRestartService" After="InstallInitialize"
+              Condition="(Installed OR WIX_UPGRADE_DETECTED) AND NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettPrepare" After="ZaprettRestartService"
+              Condition="NOT (REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE)" />
+      <Custom Action="ZaprettStopUi" After="ZaprettPrepare"
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="ZaprettInstallRollback" After="InstallFiles"
               Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettInstallActions" After="ZaprettInstallRollback" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettWarmup" Before="StartServices" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
+      <Custom Action="ZaprettApplyTray" After="RemoveExistingProducts" Condition="NOT (REMOVE~=&quot;ALL&quot;)" />
       <Custom Action="ZaprettDnsOff" Before="StopServices"
               Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="ZaprettUninstallActions" After="StopServices"
@@ -195,5 +307,8 @@
     <UIRef Id="ZaprettUI" />
     <!-- License.<culture>.rtf are generated by license/make_license_rtf.py -->
     <WixVariable Id="WixUILicenseRtf" Value="$(sys.SOURCEFILEDIR)!(loc.LicenseFile)" />
+    <!-- zaprett artwork instead of the WiX default (generated by art/make_art.py) -->
+    <WixVariable Id="WixUIBannerBmp" Value="$(sys.SOURCEFILEDIR)art\Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(sys.SOURCEFILEDIR)art\Dialog.bmp" />
   </Package>
 </Wix>

@@ -29,7 +29,7 @@
                 <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Reset')}" Command="{x:Bind Vm.ResetCommand}"
                         IsEnabled="{x:Bind Vm.IsDirty, Mode=OneWay}" />
                 <Button AutomationProperties.Name="{x:Bind loc:L.T('Services.Apply')}" Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind Vm.ApplyCommand}"
-                        IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}">
+                        IsEnabled="{x:Bind ui:Conv.AndNot(Vm.CanModify, Vm.IsBusy), Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ProgressRing IsActive="{x:Bind Vm.IsBusy, Mode=OneWay}" Visibility="{x:Bind Vm.IsBusy, Mode=OneWay}" Width="16" Height="16" />
                         <TextBlock Text="{x:Bind loc:L.T('Services.Apply')}" />

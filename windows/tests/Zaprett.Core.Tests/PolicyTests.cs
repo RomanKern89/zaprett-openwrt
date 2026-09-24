@@ -72,7 +72,7 @@ public sealed class PolicyTests
         var cfg = h.D.Context.Config.Load();
         Assert.True(cfg.Debug);
         Assert.Equal(h.D.Context.Now + 1800, cfg.DebugUntil);
-        Assert.StartsWith("--debug=@", h.F.Engine.ArgsOf("main")![0]);
+        Assert.Equal("--debug=1", h.F.Engine.ArgsOf("main")![0]);
         Assert.NotNull((await h.Call("status"))["debug"]);
         h.F.Clock.Now = h.F.Clock.Now.AddMinutes(10);
         await h.Call("ensure");

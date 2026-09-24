@@ -89,18 +89,144 @@ public sealed class WmiDynamicPorts(ILog log) : IDynamicPortRanges
     }, ct);
 }
 
-/// <summary>Union of several sources; null only when none of them could say anything. Any overlap in any source
-/// counts, so a range set for one IP family only (netsh int ipv6 set dynamicport) is not missed.</summary>
-public sealed class CombinedDynamicPorts(params IDynamicPortRanges[] sources) : IDynamicPortRanges
+/// <summary>Union of several sources, asked at the same time; null only when none of them could say anything. Any
+/// overlap in any source counts, so a range set for one IP family only (netsh int ipv6 set dynamicport) is not missed.
+/// A source gets <see cref="DefaultSourceTimeout"/>: after a fresh install WMI answered in 19.4 s (the Windows 10 test machine, D13), and the
+/// engine start waits for this answer.</summary>
+public sealed class CombinedDynamicPorts : IDynamicPortRanges
 {
+    public static readonly TimeSpan DefaultSourceTimeout = TimeSpan.FromSeconds(3);
+
+    private readonly IDynamicPortRanges[] _sources;
+    private readonly TimeSpan _timeout;
+    private readonly ILog? _log;
+    private readonly TimeProvider _time;
+
+    public CombinedDynamicPorts(params IDynamicPortRanges[] sources) : this(DefaultSourceTimeout, null, sources)
+    {
+    }
+
+    public CombinedDynamicPorts(TimeSpan sourceTimeout, ILog? log, params IDynamicPortRanges[] sources)
+        : this(sourceTimeout, log, TimeProvider.System, sources)
+    {
+    }
+
+    public CombinedDynamicPorts(TimeSpan sourceTimeout, ILog? log, TimeProvider time, params IDynamicPortRanges[] sources)
+    {
+        _sources = sources;
+        _timeout = sourceTimeout;
+        _log = log;
+        _time = time;
+    }
+
     public async Task<IReadOnlyList<PortRange>?> GetTcpAsync(CancellationToken ct)
     {
-        List<PortRange>? all = null;
-        foreach (var src in sources)
+        using var limit = new CancellationTokenSource(_timeout, _time);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct, limit.Token);
+        (IReadOnlyList<PortRange>? Ranges, string? Failure)[] results;
+        try
         {
-            if (await src.GetTcpAsync(ct).ConfigureAwait(false) is { } r)
-                (all ??= []).AddRange(r);
+            results = await Task.WhenAll(_sources.Select(s => AskAsync(s, cts.Token, ct))).ConfigureAwait(false);
         }
+        finally
+        {
+            // a source left behind at its time limit (netsh still running) gets the cancellation before the source of
+            // it is disposed; the CancelAfter timer alone may not have fired yet
+            cts.Cancel();
+        }
+        List<PortRange>? all = null;
+        foreach (var r in results)
+        {
+            if (r.Ranges is not null)
+                (all ??= []).AddRange(r.Ranges);
+        }
+        if (_sources.Length > 0)
+            ReportOutcome(all is null, results.Where(r => r.Failure is not null).Select(r => r.Failure!).ToList());
         return all?.Distinct().ToList();
+    }
+
+    private async Task<(IReadOnlyList<PortRange>? Ranges, string? Failure)> AskAsync(IDynamicPortRanges source,
+        CancellationToken limited, CancellationToken ct)
+    {
+        string name = source.GetType().Name;
+        string? failure;
+        try
+        {
+            // WaitAsync: a source that ignores the cancellation (a hung WMI call) is left behind, not waited for
+            var r = await source.GetTcpAsync(limited).WaitAsync(_timeout, _time, ct).ConfigureAwait(false);
+            if (r is not null)
+                return (r, null);
+            failure = $"{name} gave no ranges";
+        }
+        catch (Exception e) when (e is TimeoutException || (e is OperationCanceledException && !ct.IsCancellationRequested))
+        {
+            failure = $"{name} did not answer within {_timeout.TotalSeconds:0.#} s";
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            // one broken source (an unexpected value, a runner failure) must not lose the other's answer
+            failure = $"{name} failed: {e.GetType().Name}: {e.Message}";
+        }
+        // one source missing while another answers is normal (a slow start after a boot): Info
+        _log?.Info("dynamic ports: " + failure);
+        return (null, failure);
+    }
+
+    /// <summary>Where the last service start noted whether no source gave data (run\dynamic-ports.json).</summary>
+    public string? HistoryFile { get; init; }
+
+    /// <summary>This start is the first since Windows started (<see cref="BootMarker"/>): the sources are slow after
+    /// every boot, so a failure then says nothing about the system.</summary>
+    public bool OsBoot { get; init; }
+
+    private const string NoneAnsweredKey = "none_answered";
+    private readonly object _historyLock = new();
+
+    // WARN only when there was nothing to use (the Windows default assumed), the same happened at the previous start,
+    // and this start is not the one after a boot (Win10: netsh misses its 3 s at every cold start, VM 2026-09-24)
+    private void ReportOutcome(bool noneAnswered, List<string> failures)
+    {
+        bool before = Remember(NoneAnsweredKey, noneAnswered);
+        if (!noneAnswered)
+            return;
+        string line = $"dynamic ports: no source answered ({string.Join("; ", failures)}), the Windows default is assumed";
+        if (before && !OsBoot)
+            _log?.Warn(line + "; also at the previous service start");
+        else
+            _log?.Info(line);
+    }
+
+    /// <summary>Stores this start's value of a key; the value of the previous start.</summary>
+    private bool Remember(string name, bool failed)
+    {
+        if (HistoryFile is null)
+            return false;
+        lock (_historyLock)
+        {
+            Dictionary<string, bool> history;
+            try
+            {
+                history = File.Exists(HistoryFile)
+                    ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, bool>>(File.ReadAllText(HistoryFile)) ?? []
+                    : [];
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                history = [];
+            }
+            bool before = history.GetValueOrDefault(name);
+            if (before == failed && File.Exists(HistoryFile))
+                return before;
+            history[name] = failed;
+            try
+            {
+                File.WriteAllText(HistoryFile, System.Text.Json.JsonSerializer.Serialize(history));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // without the history every failure stays Info
+            }
+            return before;
+        }
     }
 }

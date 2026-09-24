@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="zh-CN" Codepage="936" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ZaprettFontFace" Value="Microsoft YaHei UI" />
   <String Id="ProductLanguage" Value="2052" />
   <String Id="DefaultUiLanguage" Value="zh-CN" />
   <String Id="LicenseFile" Value="License.zh-CN.rtf" />
@@ -21,4 +22,37 @@
   <String Id="ZaprettWarningDlgDescription" Value="zaprett 的工作原理，以及杀毒软件可能提示的内容" />
   <String Id="ZaprettWarningDlgText" Value="zaprett 使用 WinDivert 驱动程序（来自 zapret 项目）拦截网络数据包并加以修改，使运营商的 DPI 无法识别被封锁的网站。不会向第三方服务器发送任何数据，也没有遥测。&#xD;&#xA;&#xD;&#xA;由于该驱动程序能够拦截流量，部分杀毒软件会将 WinDivert 和 winws.exe 标记为“黑客工具”或“潜在有害应用”。引擎文件取自 zapret 官方发行版，未经修改，其校验和已在构建时验证。如果杀毒软件删除了这些文件，请将 zaprett 的安装文件夹（默认为 C:\Program Files\zaprett）添加到排除项。&#xD;&#xA;&#xD;&#xA;请勿与 GoodbyeDPI、另一份 zapret 或其他使用 WinDivert 的程序同时运行 zaprett。" />
   <String Id="ZaprettWarningDlgTray" Value="登录时在通知区域显示 zaprett 图标" />
+  <String Id="LaunchTrayCheckbox" Value="启动 zaprett" />
+  <String Id="PtInstallFiles" Value="正在复制新文件" />
+  <String Id="PtRemoveFiles" Value="正在删除文件" />
+  <String Id="PtStopServices" Value="正在停止服务" />
+  <String Id="PtDeleteServices" Value="正在删除服务" />
+  <String Id="PtInstallServices" Value="正在安装服务" />
+  <String Id="PtStartServices" Value="正在启动服务" />
+  <String Id="PtWriteRegistry" Value="正在写入注册表值" />
+  <String Id="PtRemoveRegistry" Value="正在删除注册表值" />
+  <String Id="PtCreateShortcuts" Value="正在创建快捷方式" />
+  <String Id="PtRemoveShortcuts" Value="正在删除快捷方式" />
+  <String Id="PtCreateFolders" Value="正在创建文件夹" />
+  <String Id="PtRemoveFolders" Value="正在删除文件夹" />
+  <String Id="PtInstallValidate" Value="正在验证安装" />
+  <String Id="PtInstallFinalize" Value="正在完成安装" />
+  <String Id="PtRemoveExisting" Value="正在删除旧版本" />
+  <String Id="PtRegister" Value="正在注册产品" />
+  <String Id="PtUnregister" Value="正在取消注册产品" />
+  <String Id="PtRollback" Value="正在回滚" />
+  <String Id="PtRollbackCleanup" Value="正在删除备份文件" />
+  <String Id="PtPrepare" Value="正在停止 zaprett 服务和驱动程序" />
+  <String Id="PtInstallActions" Value="正在设置 zaprett 用户组和选项" />
+  <String Id="PtUninstallActions" Value="正在停止引擎并清理" />
+  <String Id="PtDnsOff" Value="正在恢复 DNS 设置" />
+  <String Id="PtTplFile" Value="文件：[1]，文件夹：[9]，大小：[6]" />
+  <String Id="PtTplFileNoSize" Value="文件：[1]，文件夹：[9]" />
+  <String Id="PtTplService1" Value="服务：[1]" />
+  <String Id="PtTplService2" Value="服务：[2]" />
+  <String Id="PtTplRegistry" Value="注册表项：[1]，名称：[2]，值：[3]" />
+  <String Id="PtTplRegistryNoValue" Value="注册表项：[1]，名称：[2]" />
+  <String Id="PtTplShortcut" Value="快捷方式：[1]" />
+  <String Id="PtTplFolder" Value="文件夹：[1]" />
+  <String Id="PtTplRemoveExisting" Value="程序：[1]，命令行：[2]" />
 </WixLocalization>

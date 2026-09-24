@@ -152,6 +152,8 @@ public sealed partial class ArgsGenerator
 
     public string AutohostlistDir => Path.Combine(paths.RunDir, "autohostlist");
 
+    /// <summary>Where the debug output of the main engine lands: winws gets --debug=1 (stdout) and the service writes its
+    /// stdout here. --debug=@file made winws open and close the file for every line (TLS 1.5-2 s instead of 0.2-0.4 s).</summary>
     public string DebugLog => Path.Combine(paths.RunDir, "engine-debug.log");
 
     public string LuaDir => Path.Combine(paths.Engine2Dir, "lua");
@@ -556,7 +558,7 @@ public sealed partial class ArgsGenerator
     {
         var b = new List<string>();
         if (cfg.Debug)
-            b.Add("--debug=@" + DebugLog);
+            b.Add("--debug=1");
         b.Add(cfg.Ipv6 ? "--wf-l3=ipv4,ipv6" : "--wf-l3=ipv4");
         // winws2 has no --wf-tcp/--wf-udp (zapret2 nfq2/nfqws.c): outgoing ports, incoming SYN are intercepted by itself
         var two = engine == Engines.Winws2;

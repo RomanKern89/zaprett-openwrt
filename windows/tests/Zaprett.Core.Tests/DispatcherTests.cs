@@ -32,7 +32,7 @@ public sealed class DispatcherTests
         Assert.Contains("status", h.D.ReadOnlyMethods);
         Assert.DoesNotContain("start", h.D.ReadOnlyMethods);
         // every method of ARCHITECTURE-WIN §6 is known
-        foreach (var m in new[] { "status", "start", "stop", "restart", "enable", "disable", "check", "items", "list.enable", "list.disable",
+        foreach (var m in new[] { "status", "start", "stop", "restart", "enable", "disable", "autostart", "check", "items", "list.enable", "list.disable",
                      "strategy.set", "strategy.show", "strategy.save", "strategy.delete", "user.get", "user.set", "mode", "engine", "repo.fetch",
                      "repo.list", "repo.install", "repo.remove", "repo.upgrade", "sources.list", "sources.update", "sources.save", "sources.delete",
                      "presets", "wizard.apply", "test.start", "test.status", "test.stop", "test.apply", "job.status", "job.log", "job.cancel",
@@ -347,6 +347,7 @@ public sealed class DispatcherTests
         Assert.Equal("beta", R.Str((await h.Call("update.check", A(("channel", "beta"))))["channel"]));
         Assert.Equal("bad_value", R.Error(await h.Call("update.check", A(("channel", "x")))));
         Assert.True(R.Bool((await h.Call("update.install"))["installed"]));
+        h.F.Conflicts.Items.Add(FakeConflicts.Winws());
         Assert.Equal("block", R.Str((await h.Call("conflicts"))["items"]![0]!["severity"]));
         h.F.Log.Info("line");
         Assert.Contains("I line", R.Strings((await h.Call("log", A(("tail", 5))))["lines"]));

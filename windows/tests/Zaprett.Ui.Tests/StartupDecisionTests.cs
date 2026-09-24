@@ -21,22 +21,64 @@ public sealed class WizardDecisionTests
     [InlineData("""{"enabled":false,"running":true,"lists":["zaprett-youtube"],"ipsets":[]}""", false)]
     public void Wizard_opens_until_the_bypass_has_been_turned_on(string status, bool expected)
     {
-        Assert.Equal(expected, WizardDecision.ShouldOpen(false, Make.Json(status)));
+        Assert.Equal(expected, WizardDecision.ShouldOpen(false, null, Make.Json(status)));
+    }
+
+    private const string CleanA = """{"enabled":false,"running":false,"lists":[],"ipsets":[],"install_id":"aaaa-1111"}""";
+    private const string CleanB = """{"enabled":false,"running":false,"lists":[],"ipsets":[],"install_id":"bbbb-2222"}""";
+
+    [Fact]
+    public void Clean_reinstall_with_a_new_installation_opens_the_wizard_again()
+    {
+        // D11: ui.json of the user survived REMOVEDATA; the service data is new
+        Assert.True(WizardDecision.ShouldOpen(true, "aaaa-1111", Make.Json(CleanB)));
     }
 
     [Fact]
-    public void Wizard_done_never_opens_it_again()
+    public void The_same_installation_does_not_open_it_again()
     {
-        Assert.False(WizardDecision.ShouldOpen(true, Make.Json("""{"enabled":false,"lists":[],"ipsets":[]}""")));
-        // a clean install with the wizard already passed (or skipped) goes home too
-        Assert.False(WizardDecision.ShouldOpen(true, Make.Json("""{"enabled":false,"running":false,"lists":["zaprett-youtube"],"ipsets":[]}""")));
-        Assert.False(WizardDecision.ShouldOpen(true, null));
+        Assert.False(WizardDecision.ShouldOpen(true, "aaaa-1111", Make.Json(CleanA)));
+    }
+
+    [Fact]
+    public void A_set_up_service_with_a_new_installation_goes_home()
+    {
+        Assert.False(WizardDecision.ShouldOpen(true, "aaaa-1111",
+            Make.Json("""{"enabled":true,"running":true,"lists":["zaprett-youtube"],"ipsets":[],"install_id":"bbbb-2222"}""")));
+        Assert.False(WizardDecision.ShouldOpen(false, null,
+            Make.Json("""{"enabled":false,"running":true,"install_id":"bbbb-2222"}""")));
+    }
+
+    [Fact]
+    public void Old_ui_json_without_the_installation_counts_as_not_passed_only_for_a_service_nobody_set_up()
+    {
+        Assert.True(WizardDecision.ShouldOpen(true, null, Make.Json(CleanA)));
+        Assert.False(WizardDecision.ShouldOpen(true, null, Make.Json("""{"enabled":true,"running":true,"install_id":"aaaa-1111"}""")));
+    }
+
+    [Fact]
+    public void An_older_service_without_install_id_keeps_the_flag_of_the_user()
+    {
+        const string old = """{"enabled":false,"running":false,"lists":["zaprett-youtube"],"ipsets":[]}""";
+        Assert.False(WizardDecision.ShouldOpen(true, null, Make.Json(old)));
+        Assert.True(WizardDecision.ShouldOpen(false, null, Make.Json(old)));
     }
 
     [Fact]
     public void Without_a_status_the_decision_waits()
     {
-        Assert.Null(WizardDecision.ShouldOpen(false, null));
+        Assert.Null(WizardDecision.ShouldOpen(false, null, null));
+        Assert.Null(WizardDecision.ShouldOpen(true, "aaaa-1111", null));
+    }
+
+    [Fact]
+    public void Passing_the_wizard_remembers_the_installation()
+    {
+        var prefs = UiPrefs.Load(null);
+        prefs.MarkWizardDone("bbbb-2222");
+        Assert.True(prefs.WizardDone);
+        Assert.Equal("bbbb-2222", prefs.WizardDoneFor);
+        Assert.False(WizardDecision.ShouldOpen(prefs.WizardDone, prefs.WizardDoneFor, Make.Json(CleanB)));
     }
 }
 

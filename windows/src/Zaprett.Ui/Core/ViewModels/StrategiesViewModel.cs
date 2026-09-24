@@ -65,6 +65,9 @@ public sealed partial class StrategiesViewModel(AppState state, INavigator? nav)
     [ObservableProperty] public partial bool IsTesting { get; set; }
     [ObservableProperty] public partial string ModeText { get; set; } = "";
     [ObservableProperty] public partial string BaselineText { get; set; } = "";
+
+    /// <summary>The results were taken while another program took the traffic (they may be wrong).</summary>
+    [ObservableProperty] public partial string ConflictNote { get; set; } = "";
     [ObservableProperty] public partial string ResultText { get; set; } = "";
     [ObservableProperty] public partial bool HasResults { get; set; }
     [ObservableProperty] public partial StrategyItem? Selected { get; set; }
@@ -144,6 +147,7 @@ public sealed partial class StrategiesViewModel(AppState state, INavigator? nav)
             "exclusive" => L.F("Test.Mode.Exclusive", ModeReason(test.Str("mode_reason") ?? results.Str("mode_reason"))),
             _ => "",
         };
+        ConflictNote = TestSummary.ConflictNote(null, results);
         var baseline = results.Obj("baseline");
         BaselineText = baseline == null ? "" : L.F("Test.Baseline", baseline.Long("ok"), baseline.Long("total"));
         var current = State.Status.Obj("strategy").Str("id");
@@ -184,6 +188,8 @@ public sealed partial class StrategiesViewModel(AppState state, INavigator? nav)
     [RelayCommand]
     private async Task StartTest()
     {
+        if (!await ConfirmSelectionDespiteConflictAsync())
+            return;
         var text = QuickMode ? L.T("Test.ConfirmQuick") : L.T("Test.ConfirmFull");
         if (ForceExclusive)
             text += "\n\n" + L.T("Test.ConfirmExclusive");
@@ -200,6 +206,7 @@ public sealed partial class StrategiesViewModel(AppState state, INavigator? nav)
             var test = await State.CallAsync("test.status", new JsonObject { ["brief"] = true });
             ShowTest(test);
             ResultText = TestSummary.Text(job, test.Obj("results"));
+            ConflictNote = TestSummary.ConflictNote(job, test.Obj("results"));
         }, "Test.Err.Start", busy: false);
         IsTesting = false;
         await RefreshAllAsync();

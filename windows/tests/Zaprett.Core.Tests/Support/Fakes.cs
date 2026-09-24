@@ -73,6 +73,9 @@ public sealed class FakeEngine : IEngineControl
 
     public ConcurrentQueue<string> Log { get; } = new();
 
+    /// <summary>Phase reported for running instances (winws waiting for the network of a network filter).</summary>
+    public string Phase { get; set; } = EnginePhases.Capturing;
+
     public IReadOnlyList<string>? ArgsOf(string instance) => inst.TryGetValue(instance, out var s) && s.Running ? s.Args : null;
 
     /// <summary>Behave like the service's EngineControl with isolation (S-5): starting "test" restarts a running "main"
@@ -117,7 +120,7 @@ public sealed class FakeEngine : IEngineControl
 
     public EngineState GetState(string instance) =>
         inst.TryGetValue(instance, out var s) && s.Running
-            ? new EngineState(instance, true, Interlocked.Increment(ref pid), s.At, 0)
+            ? new EngineState(instance, true, Interlocked.Increment(ref pid), s.At, 0, Phase)
             : new EngineState(instance, false, null, null, 0);
 
     /// <summary>Simulates a crash of the engine.</summary>
@@ -201,10 +204,28 @@ public sealed class FakeFirewall : IFirewallControl
 
 public sealed class FakeConflicts : IConflictScanner
 {
-    public Task<JsonArray> ScanAsync(CancellationToken ct) => Task.FromResult(new JsonArray(new JsonObject
+    public static JsonObject Winws() => new()
     {
-        ["id"] = "goodbyedpi", ["name"] = "GoodbyeDPI", ["severity"] = "block", ["detail"] = "служба запущена", ["fix"] = "остановите её",
-    }));
+        ["id"] = "zapret", ["name"] = "zapret / winws (another installation)", ["severity"] = "block", ["detail"] = "process winws.exe is running",
+        ["fix"] = "stop it", ["kind"] = "process", ["path"] = @"C:\zt\foreign\winws.exe", ["pid"] = 4242,
+    };
+
+    public static JsonObject Vpn() => new() { ["id"] = "vpn:wg", ["name"] = "VPN: wg", ["severity"] = "info", ["detail"] = "vpn", ["fix"] = "-" };
+
+    /// <summary>What the scan finds; nothing by default. Throws when <see cref="Fail"/> is set.</summary>
+    public List<JsonObject> Items { get; } = [];
+
+    public bool Fail { get; set; }
+
+    public int Scans { get; private set; }
+
+    public Task<JsonArray> ScanAsync(CancellationToken ct)
+    {
+        Scans++;
+        if (Fail)
+            throw new InvalidOperationException("scan failed");
+        return Task.FromResult(new JsonArray(Items.Select(i => (JsonNode)i.DeepClone()).ToArray()));
+    }
 }
 
 public sealed class FakeSystemInfo : ISystemInfo

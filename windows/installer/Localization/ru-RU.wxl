@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="ru-RU" Codepage="1251" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ZaprettFontFace" Value="Tahoma" />
   <String Id="ProductLanguage" Value="1049" />
   <String Id="DefaultUiLanguage" Value="ru" />
   <String Id="LicenseFile" Value="License.ru-RU.rtf" />
@@ -21,4 +22,37 @@
   <String Id="ZaprettWarningDlgDescription" Value="Как работает zaprett и что может заметить антивирус" />
   <String Id="ZaprettWarningDlgText" Value="zaprett перехватывает сетевые пакеты драйвером WinDivert (из проекта zapret) и меняет их так, чтобы система DPI провайдера не распознала заблокированный сайт. Ничего не отправляется на сторонние серверы, телеметрии нет.&#xD;&#xA;&#xD;&#xA;Некоторые антивирусы помечают WinDivert и winws.exe как «хакерский инструмент» или «потенциально опасное приложение»: драйвер умеет перехватывать трафик. Файлы движка взяты из официальных релизов zapret без изменений, их контрольные суммы сверены при сборке. Если антивирус удалит их, добавьте папку установки zaprett (по умолчанию C:\Program Files\zaprett) в исключения.&#xD;&#xA;&#xD;&#xA;Одновременно с zaprett не должны работать GoodbyeDPI, другая копия zapret и программы, которые сами используют WinDivert." />
   <String Id="ZaprettWarningDlgTray" Value="Показывать значок zaprett в области уведомлений при входе в систему" />
+  <String Id="LaunchTrayCheckbox" Value="Запустить zaprett" />
+  <String Id="PtInstallFiles" Value="Копирование новых файлов" />
+  <String Id="PtRemoveFiles" Value="Удаление файлов" />
+  <String Id="PtStopServices" Value="Остановка служб" />
+  <String Id="PtDeleteServices" Value="Удаление служб" />
+  <String Id="PtInstallServices" Value="Установка служб" />
+  <String Id="PtStartServices" Value="Запуск служб" />
+  <String Id="PtWriteRegistry" Value="Запись значений реестра" />
+  <String Id="PtRemoveRegistry" Value="Удаление значений реестра" />
+  <String Id="PtCreateShortcuts" Value="Создание ярлыков" />
+  <String Id="PtRemoveShortcuts" Value="Удаление ярлыков" />
+  <String Id="PtCreateFolders" Value="Создание папок" />
+  <String Id="PtRemoveFolders" Value="Удаление папок" />
+  <String Id="PtInstallValidate" Value="Проверка установки" />
+  <String Id="PtInstallFinalize" Value="Завершение установки" />
+  <String Id="PtRemoveExisting" Value="Удаление предыдущей версии" />
+  <String Id="PtRegister" Value="Регистрация программы" />
+  <String Id="PtUnregister" Value="Отмена регистрации программы" />
+  <String Id="PtRollback" Value="Откат изменений" />
+  <String Id="PtRollbackCleanup" Value="Удаление временных файлов отката" />
+  <String Id="PtPrepare" Value="Остановка службы и драйвера zaprett" />
+  <String Id="PtInstallActions" Value="Настройка группы и параметров zaprett" />
+  <String Id="PtUninstallActions" Value="Остановка движка и очистка" />
+  <String Id="PtDnsOff" Value="Восстановление настроек DNS" />
+  <String Id="PtTplFile" Value="Файл: [1], папка: [9], размер: [6]" />
+  <String Id="PtTplFileNoSize" Value="Файл: [1], папка: [9]" />
+  <String Id="PtTplService1" Value="Служба: [1]" />
+  <String Id="PtTplService2" Value="Служба: [2]" />
+  <String Id="PtTplRegistry" Value="Раздел: [1], имя: [2], значение: [3]" />
+  <String Id="PtTplRegistryNoValue" Value="Раздел: [1], имя: [2]" />
+  <String Id="PtTplShortcut" Value="Ярлык: [1]" />
+  <String Id="PtTplFolder" Value="Папка: [1]" />
+  <String Id="PtTplRemoveExisting" Value="Программа: [1], командная строка: [2]" />
 </WixLocalization>

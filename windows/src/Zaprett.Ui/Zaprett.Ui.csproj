@@ -32,6 +32,9 @@
     <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\presets.json" LogicalName="Zaprett.Ui.DevFakes.presets.json" />
     <EmbeddedResource Include="..\..\..\packages\zaprett\files\usr\share\zaprett\bundle\manifests\**\*.json" LogicalName="Zaprett.Ui.DevFakes.manifest.%(Filename).json" />
     <Content Include="Assets\*.ico;Assets\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Third-party projections stay IL: ReadyToRun grew them by 29 and 8.7 MB (-38 MB installed); our own
+         assemblies stay R2R (build.ps1 check-versions -RequireReadyToRun checks zaprett* / Zaprett.* only). -->
+    <PublishReadyToRunExclude Include="Microsoft.Windows.SDK.NET.dll;Microsoft.WinUI.dll" />
   </ItemGroup>
 
   <ItemGroup>

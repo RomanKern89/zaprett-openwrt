@@ -64,7 +64,7 @@ public sealed class ReviewFixTests
         L.SetLanguage("en");
         var client = new ScriptedClient((m, _) => m switch
         {
-            "enable" or "disable" => Make.Json("""{"ok":false,"error":"access_denied","message":"нет прав"}"""),
+            "autostart" or "enable" or "disable" => Make.Json("""{"ok":false,"error":"access_denied","message":"нет прав"}"""),
             "settings.get" => Make.Json("""{"ok":true,"settings":{"main":{"enabled":true}}}"""),
             _ => Make.Json("""{"ok":true}"""),
         });

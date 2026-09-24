@@ -5,32 +5,59 @@
 .DESCRIPTION
   -Action Install    create the local group "zaprett Operators" (ARCHITECTURE-WIN §6) and add the installing user
                      (its SID from the MSI property UserSID) to it; on a first install write config.json with
-                     ui.language from -Language (LANG). Idempotent: repair and upgrade run it again.
+                     ui.language from -Language (LANG); record the tray icon choice HKLM\SOFTWARE\zaprett\TrayAutostart
+                     once (see Set-TrayChoice). Idempotent: repair and upgrade run it again.
+  -Action ApplyTray  (after the old version is removed) make HKLM\...\Run\zaprett match TrayAutostart.
+  -Action Warmup     (before StartServices) run "zaprett-svc.exe --warmup" once and log how long it took: the first
+                     start of the new files (antivirus scan, loading) then happens here and not within the 30 s the
+                     service control manager gives the service. Killed after $WarmupTimeoutSeconds s; never fails.
   -Action Rollback   (rollback of a first install) delete the group again.
   -Action Uninstall  (real removal only, never on a major upgrade) stop winws.exe / winws2.exe started from our
                      folder, delete the WinDivert driver service only when its ImagePath points into our folder,
-                     remove the zaprett firewall rules, delete the group, and with -RemoveData 1 delete
+                     remove the zaprett firewall rules, delete the group and the tray autostart, and with -RemoveData 1 delete
                      C:\ProgramData\zaprett. Every step is best effort: uninstall must not fail halfway.
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Rollback', 'Uninstall')][string]$Action,
+    [Parameter(Mandatory = $true)][ValidateSet('Install', 'Rollback', 'Uninstall', 'ApplyTray', 'Warmup')][string]$Action,
     [Parameter(Mandatory = $true)][string]$InstallDir,
     [string]$UserSid = '',
     [string]$DataDir = '',
     [string]$RemoveData = '',
-    [string]$Language = ''
+    [string]$Language = '',
+    [string]$TrayAutostart = '',
+    [string]$Existing = ''
 )
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $GroupName = 'zaprett Operators'
 # New-LocalGroup allows at most 48 characters
 $GroupDescription = 'May change zaprett settings and control it'
 $FirewallRuleName = 'zaprett QUIC block'
 $FirewallGroup = 'zaprett'
 $EngineProcesses = @('winws', 'winws2')
+$SettingsKey = 'HKLM:\SOFTWARE\zaprett'
+$TrayChoiceName = 'TrayAutostart'
+$RunKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+$RunName = 'zaprett'
+$WarmupTimeoutSeconds = 90
 
-function Write-Log([string]$Text) { Write-Output "zaprett-installer: $Text" }
+# Output goes to the MSI log through WixQuietExec, which decodes it as the OEM code page and writes it back as OEM
+# bytes into a log read in the ANSI code page. So the bytes are written here in the ANSI code page: the OEM round
+# trip leaves them unchanged and non-ASCII paths stay readable. Characters outside the ANSI code page become \uXXXX.
+$script:LogOut = [Console]::OpenStandardOutput()
+$script:Ansi = [Text.Encoding]::Default
+function Write-Log([string]$Text) {
+    $sb = New-Object Text.StringBuilder
+    foreach ($ch in ("zaprett-installer: $Text").ToCharArray()) {
+        if ([int]$ch -lt 128 -or $script:Ansi.GetString($script:Ansi.GetBytes([string]$ch)) -eq [string]$ch) { [void]$sb.Append($ch) }
+        else { [void]$sb.AppendFormat('\u{0:x4}', [int]$ch) }
+    }
+    $bytes = $script:Ansi.GetBytes($sb.ToString() + "`r`n")
+    $script:LogOut.Write($bytes, 0, $bytes.Length)
+    $script:LogOut.Flush()
+}
 
 # Full path without the trailing separator; '.' appended by the MSI (to keep a trailing '\' away from the quote) is removed here.
 function Get-NormalPath([string]$Path) {
@@ -103,6 +130,86 @@ function Write-InitialConfig([string]$Dir, [string]$Lang) {
     [void](New-Item -ItemType Directory -Force -Path $Dir)
     [IO.File]::WriteAllText($config, (Get-InitialConfigText $Lang), (New-Object Text.UTF8Encoding($false)))
     Write-Log "wrote config.json with ui.language=$Lang"
+}
+
+function Get-TrayChoice {
+    $v = (Get-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -ErrorAction SilentlyContinue).$TrayChoiceName
+    if ($null -eq $v) { return $null }
+    return [int]$v
+}
+
+# Run\zaprett of THIS install: "<dir>\zaprett-ui.exe" --tray (the same text the service writes)
+function Get-RunCommand([string]$Dir) {
+    return '"' + (Join-Path $Dir 'zaprett-ui.exe') + '" --tray'
+}
+
+function Test-OurRunValue([string]$Dir) {
+    $v = (Get-ItemProperty -Path $RunKey -Name $RunName -ErrorAction SilentlyContinue).$RunName
+    if (-not $v) { return $false }
+    $exe = if ($v -match '^\s*"([^"]+)"') { $Matches[1] } else { ($v -split '\s+', 2)[0] }
+    return Test-UnderDir $exe $Dir
+}
+
+# The tray icon choice is recorded once and then belongs to the user (Settings, through the service). Runs before
+# RemoveExistingProducts, so on an upgrade from 0.1.x (no TrayAutostart yet) Run\zaprett of the old version is
+# still there and tells what the user had.
+function Set-TrayChoice([string]$Dir) {
+    $current = Get-TrayChoice
+    if ($null -ne $current) { Write-Log "tray autostart choice kept ($current)"; return }
+    if ($Existing) {
+        $choice = if (Test-OurRunValue $Dir) { 1 } else { 0 }
+        $from = 'the Run value of the installed version'
+    }
+    else {
+        $choice = if ($TrayAutostart -eq '1') { 1 } else { 0 }
+        $from = "TRAYAUTOSTART='$TrayAutostart'"
+    }
+    # never New-Item -Force on an existing registry key: it recreates the key and drops every value in it
+    if (-not (Test-Path -LiteralPath $SettingsKey)) { [void](New-Item -Path $SettingsKey) }
+    New-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -PropertyType DWord -Value $choice -Force | Out-Null
+    Write-Log "tray autostart choice recorded: $choice (from $from)"
+}
+
+function Set-TrayRunValue([string]$Dir) {
+    $choice = Get-TrayChoice
+    if ($null -eq $choice) { Write-Log 'no tray autostart choice recorded, Run value left alone'; return }
+    if ($choice -eq 1) {
+        New-ItemProperty -Path $RunKey -Name $RunName -PropertyType String -Value (Get-RunCommand $Dir) -Force | Out-Null
+        Write-Log 'tray autostart on: Run value written'
+    }
+    else {
+        Remove-TrayRunValue $Dir
+    }
+}
+
+function Remove-TrayRunValue([string]$Dir) {
+    if (Test-OurRunValue $Dir) {
+        Remove-ItemProperty -Path $RunKey -Name $RunName -ErrorAction SilentlyContinue
+        Write-Log 'tray autostart: Run value removed'
+    }
+    else {
+        Write-Log 'tray autostart: no Run value of this install'
+    }
+}
+
+function Invoke-Warmup([string]$Dir) {
+    $exe = Join-Path $Dir 'zaprett-svc.exe'
+    $psi = New-Object Diagnostics.ProcessStartInfo
+    $psi.FileName = $exe
+    $psi.Arguments = '--warmup'
+    $psi.WorkingDirectory = $Dir
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $watch = [Diagnostics.Stopwatch]::StartNew()
+    $p = [Diagnostics.Process]::Start($psi)
+    if ($p.WaitForExit($WarmupTimeoutSeconds * 1000)) {
+        Write-Log ("warmup: zaprett-svc --warmup exit code {0} in {1} s" -f $p.ExitCode,
+            $watch.Elapsed.TotalSeconds.ToString('0.0', [Globalization.CultureInfo]::InvariantCulture))
+    }
+    else {
+        try { $p.Kill() } catch { }
+        Write-Log ("WARNING: warmup: zaprett-svc --warmup still running after {0} s, stopped" -f $WarmupTimeoutSeconds)
+    }
 }
 
 function Stop-Engine([string]$Dir) {
@@ -196,12 +303,27 @@ if ($Action -eq 'Rollback') {
             }
         }
     }
+    Invoke-Step 'tray autostart' {
+        Remove-TrayRunValue $dir
+        Remove-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -ErrorAction SilentlyContinue
+    }
+    exit 0
+}
+
+if ($Action -eq 'Warmup') {
+    Invoke-Step 'warmup' { Invoke-Warmup $dir }
+    exit 0
+}
+
+if ($Action -eq 'ApplyTray') {
+    Invoke-Step 'tray autostart' { Set-TrayRunValue $dir }
     exit 0
 }
 
 if ($Action -eq 'Install') {
     try { Install-Group; Write-InitialConfig (Get-NormalPath $DataDir) $Language }
     catch { Write-Log "ERROR: $($_.Exception.Message)"; exit 1 }
+    Invoke-Step 'tray autostart choice' { Set-TrayChoice $dir }
     exit 0
 }
 
@@ -209,6 +331,10 @@ Invoke-Step 'stop engine' { Stop-Engine $dir }
 Invoke-Step 'WinDivert service' { Remove-OurWinDivert $dir }
 Invoke-Step 'firewall rules' { Remove-FirewallRules }
 Invoke-Step 'group' { Remove-Group }
+Invoke-Step 'tray autostart' {
+    Remove-TrayRunValue $dir
+    Remove-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -ErrorAction SilentlyContinue
+}
 if ($RemoveData -eq '1') {
     Invoke-Step 'data directory' { Remove-Data (Get-NormalPath $DataDir) }
 }

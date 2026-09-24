@@ -33,3 +33,4 @@ light-ru-32-wizard-5-fix.png
 light-ru-33-wizard-5-fix-part2.png
 light-ru-34-wizard-5-fixed.png
 light-ru-35-wizard-6-done.png
+light-ru-36-home-conflict.png

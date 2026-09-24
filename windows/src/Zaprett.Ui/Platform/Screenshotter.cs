@@ -65,8 +65,28 @@ public sealed partial class Screenshotter(MainWindow window, AppState state, str
     private async Task Shot(string name, bool scrollParts = true)
     {
         App.Log("screenshot: " + name);
-        await Settle(350);
         var root = window.Shell.RootElement;
+        // the same picture in every set: whether the focused control draws its focus ring depends on the input of
+        // the run (a programmatic focus inherits the keyboard look, checked on 2026-09-23), so the ring is switched
+        // off for the shot and back on after it
+        var focused = root.XamlRoot == null ? null : Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) as Control;
+        var ring = focused?.UseSystemFocusVisuals ?? false;
+        if (focused != null)
+            focused.UseSystemFocusVisuals = false;
+        try
+        {
+            await ShotParts(root, name, scrollParts);
+        }
+        finally
+        {
+            if (focused != null)
+                focused.UseSystemFocusVisuals = ring;
+        }
+    }
+
+    private async Task ShotParts(FrameworkElement root, string name, bool scrollParts)
+    {
+        await Settle(350);
         await Save(root, name);
         if (!scrollParts)
             return;

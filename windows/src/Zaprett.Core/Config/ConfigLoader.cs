@@ -29,9 +29,20 @@ public static class ConfigLoader
         var r = new Reader(bad);
 
         var engine = r.Enum(main, dMain, "engine", "", [Engines.Winws, Engines.Winws2]);
+        var enabled = r.Bool(main, dMain, "enabled", "");
+        // a configuration from before main.autostart behaved as autostart = enabled: it keeps doing so
+        var autostart = enabled;
+        if (main?["autostart"] is { } an)
+        {
+            if (Reader.AsBool(an) is { } ab)
+                autostart = ab;
+            else
+                bad.Add("autostart");
+        }
         var cfg = new ZaprettConfig
         {
-            Enabled = r.Bool(main, dMain, "enabled", ""),
+            Enabled = enabled,
+            Autostart = autostart,
             Engine = engine,
             Strategy = r.StrategyId(main, dMain, "strategy"),
             StrategyWinws2 = r.StrategyId(main, dMain, "strategy_winws2"),

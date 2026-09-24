@@ -59,6 +59,13 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
 
     public CoreContext Context => c;
 
+    /// <summary>The service's lifetime (the token of <see cref="StartupAsync(bool, CancellationToken)"/>); null before it:
+    /// no background work of the core starts before the service's startup.</summary>
+    CancellationToken? lifetime;
+
+    /// <summary>The extra monitor check started last after a conflict went away (tests wait for it); null when none.</summary>
+    public Task? LastMonitorRecheck => health.LastRecheck;
+
     public event Action<string, JsonObject>? Event;
 
     void Raise(string type, JsonObject data)
@@ -119,10 +126,17 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
         }
     }
 
+    /// <summary>The start of the service as the first one after Windows booted (see the overload).</summary>
+    public Task<JsonObject> StartupAsync(CancellationToken ct) => StartupAsync(true, ct);
+
     /// <summary>Called once when the service starts: an automatic selection the service lost is rolled back, then the
-    /// engine is started when the configuration says so and the user did not stop it.</summary>
-    public async Task<JsonObject> StartupAsync(CancellationToken ct)
+    /// engine is started when the configuration says so and the user did not stop it. osBoot: the first start of the
+    /// service since Windows booted (the service tells); only then enabled becomes autostart and a stop made before the
+    /// reboot is forgotten. A restart of the service (update, crash, sc restart) keeps enabled and the stop as they were.</summary>
+    public async Task<JsonObject> StartupAsync(bool osBoot, CancellationToken ct)
     {
+        // the service passes its stopping token: background work of the core (the extra monitor check) ends with it
+        lifetime = ct;
         var recovered = false;
         if (engine.TestActive)
         {
@@ -132,6 +146,16 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
         }
         var cfg = c.Config.Load();
         T.Use(cfg.Language);
+        // Windows started: the bypass is on exactly when it is on at startup; nothing else changes
+        if (osBoot && cfg.Enabled != cfg.Autostart)
+        {
+            if (c.Config.Set("main", new JsonObject { ["enabled"] = cfg.Autostart }))
+                cfg = c.Config.Load();
+            else
+                c.P.Log.Error(T.S("svc.save_enabled_failed"));
+        }
+        if (osBoot && c.UserStopped)
+            c.SetUserStopped(false);
         cfg = await ExpireDebugAsync(cfg, ct).ConfigureAwait(false);
         if (!cfg.Enabled || c.UserStopped || engine.Running)
             return R.Ok(new JsonObject { ["started"] = false, ["recovered_test"] = recovered });
@@ -149,6 +173,7 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
         ["restart"] = (a, ct) => RestartAsync(ct),
         ["enable"] = (a, ct) => EnableAsync(ct),
         ["disable"] = (a, ct) => DisableAsync(ct),
+        ["autostart"] = (a, ct) => AutostartAsync(a),
         ["check"] = (a, ct) => CheckAsync(ct),
         ["items"] = (a, ct) => Task.FromResult(Items(Opt(a, "type"))),
         ["list.enable"] = (a, ct) => ListToggleAsync(Req(a, "id"), true, ct),
@@ -172,7 +197,7 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
         ["sources.delete"] = (a, ct) => SourcesDeleteAsync(Req(a, "name"), ct),
         ["sources.defaults"] = (a, ct) => Task.FromResult(SourcesDefaults()),
         ["presets"] = (a, ct) => Task.FromResult(Presets()),
-        ["wizard.apply"] = (a, ct) => WizardApplyAsync(List(a, "services") ?? [], ct),
+        ["wizard.apply"] = (a, ct) => WizardApplyAsync(List(a, "services") ?? [], BoolArg(a, "autostart"), ct),
         ["test.start"] = (a, ct) => TestStart(a),
         ["test.status"] = (a, ct) => Task.FromResult(TestStatus(Flag(a, "brief"))),
         ["test.stop"] = (a, ct) => TestStopAsync(),
@@ -217,6 +242,28 @@ public sealed partial class CommandDispatcher : ICommandDispatcher
     }
 
     static string Req(JsonObject a, string key) => Opt(a, key) ?? throw new ArgsException(T.S("arg.missing", key));
+
+    /// <summary>A strict yes/no argument: JSON true/false or "1"/"0"/"true"/"false"; null when absent.</summary>
+    static bool? BoolArg(JsonObject a, string key)
+    {
+        var n = a[key];
+        if (n == null)
+            return null;
+        if (n is JsonValue v)
+        {
+            if (v.GetValueKind() is JsonValueKind.True or JsonValueKind.False)
+                return v.GetValue<bool>();
+            if (v.GetValueKind() == JsonValueKind.String)
+                switch (v.GetValue<string>())
+                {
+                    case "1" or "true":
+                        return true;
+                    case "0" or "false":
+                        return false;
+                }
+        }
+        throw new ArgsException(T.S("arg.must_be_bool", key));
+    }
 
     static bool Flag(JsonObject a, string key) => a[key] is JsonValue v && (v.GetValueKind() == JsonValueKind.True ||
         (v.GetValueKind() == JsonValueKind.String && v.GetValue<string>() is "1" or "true"));

@@ -37,7 +37,13 @@ public sealed class FakePlatform : IUiPlatform
 
     public void Notify(string title, string text) => Notifications.Add((title, text));
 
-    public Task<bool> ConfirmAsync(string title, string text, string primary) => Task.FromResult(ConfirmAnswer);
+    public List<(string Title, string Text, string Primary)> Confirms { get; } = [];
+
+    public Task<bool> ConfirmAsync(string title, string text, string primary)
+    {
+        Confirms.Add((title, text, primary));
+        return Task.FromResult(ConfirmAnswer);
+    }
 
     public void ApplyTheme(string theme)
     {

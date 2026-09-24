@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Zaprett.Ipc;
 using Zaprett.Ui.Core.Json;
 using Zaprett.Ui.Core.Loc;
+using Zaprett.Ui.Core.Text;
 
 namespace Zaprett.Ui.Core.Services;
 
@@ -48,7 +49,12 @@ public sealed partial class AppState : ObservableObject
 
     [ObservableProperty] public partial ConnectionState Connection { get; set; } = ConnectionState.Connecting;
     [ObservableProperty] public partial string? UnavailableReason { get; set; }
-    [ObservableProperty] public partial JsonObject? Status { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanModify))]
+    public partial JsonObject? Status { get; set; }
+
+    /// <summary>status.can_modify of this user (<see cref="ServiceAccess.CanModify"/>).</summary>
+    public bool CanModify => ServiceAccess.CanModify(Status);
     [ObservableProperty] public partial JsonObject? Presets { get; set; }
     [ObservableProperty] public partial JsonObject? Monitor { get; set; }
     [ObservableProperty] public partial JsonObject? Probe { get; set; }
@@ -64,6 +70,13 @@ public sealed partial class AppState : ObservableObject
     /// <summary>Calls a method; an {ok:false} answer or a transport failure becomes ZaprettCallException.</summary>
     public async Task<JsonObject> CallAsync(string method, JsonObject? args = null, CancellationToken ct = default)
     {
+        // a user without the rights never sends a change: the service would refuse it anyway, and the controls are
+        // locked already; this catches any path the controls missed
+        if (!CanModify && ServiceAccess.Modifies(method))
+        {
+            Log?.Invoke($"call {method}: not sent, this user may only read (status.can_modify=false)");
+            throw new ZaprettCallException("access_denied", null);
+        }
         // every call carries the interface language, so messages of the service come in it (ARCHITECTURE-WIN §12.2)
         var withLang = args?.Clone() ?? [];
         withLang["lang"] = L.Language;
@@ -90,6 +103,37 @@ public sealed partial class AppState : ObservableObject
             throw ZaprettCallException.From(reply);
         return reply;
     }
+
+    /// <summary>
+    /// "Turn the bypass on when Windows starts": main.autostart, separate from "on now" (status.enabled). The method
+    /// "autostart" changes only it and never starts or stops the engine. The service says it has the method with
+    /// status.autostart_separate=true; an older one (no field) gets the old enable/disable, which set both and stop the
+    /// bypass on disable. Without a status yet the method is tried, and unknown_method falls back the same way.
+    /// Returns the value now in force.
+    /// </summary>
+    public async Task<bool> SetAutostartAsync(bool enable, CancellationToken ct = default)
+    {
+        if (Status != null && !Status.Bool("autostart_separate"))
+        {
+            await CallAsync(enable ? "enable" : "disable", null, ct);
+            return enable;
+        }
+        try
+        {
+            var r = await CallAsync("autostart", new JsonObject { ["enable"] = enable }, ct);
+            return r["autostart"] is JsonValue ? r.Bool("autostart") : enable;
+        }
+        catch (ZaprettCallException e) when (e.Code == "unknown_method")
+        {
+            Log?.Invoke("autostart: the service has no method \"autostart\", using " + (enable ? "enable" : "disable"));
+            await CallAsync(enable ? "enable" : "disable", null, ct);
+            return enable;
+        }
+    }
+
+    /// <summary>status.autostart, or "enabled" of a service that does not report it.</summary>
+    public static bool AutostartOf(JsonObject? status) =>
+        status?["autostart"] is JsonValue ? status.Bool("autostart") : status.Bool("enabled");
 
     /// <summary>Remembers that the next change of the strategy is made by this interface (no "strategy replaced"
     /// notification for it).</summary>
@@ -218,7 +262,8 @@ public sealed partial class AppState : ObservableObject
         var state = monitor.Str("state");
         if (state == "degraded" && _lastMonitorState is not (null or "degraded" or "repairing") && _prefs.Notifications)
             _platform.Notify(L.T("Toast.Degraded.Title"),
-                monitor.Bool("auto_repair") ? L.T("Toast.Degraded.TextRepair") : L.T("Toast.Degraded.Text"));
+                UiText.RepairBlockedByConflict(monitor) ? L.T("Toast.Degraded.TextConflict")
+                : monitor.Bool("auto_repair") ? L.T("Toast.Degraded.TextRepair") : L.T("Toast.Degraded.Text"));
         _lastMonitorState = state;
     }
 
@@ -236,6 +281,9 @@ public sealed partial class AppState : ObservableObject
     /// connecting, the interface takes it over when it differs from the last known one.</summary>
     public async Task SyncLanguageAsync(CancellationToken ct = default)
     {
+        // a user without the rights cannot change the shared language: the one chosen for themselves stays
+        if (!CanModify && _prefs.LanguagePersonal)
+            return;
         var settings = await CallAsync("settings.get", null, ct);
         var doc = settings.Obj("settings") ?? settings.Obj("config");
         var lang = doc.Obj("ui").Str("language");

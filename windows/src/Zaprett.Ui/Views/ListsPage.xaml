@@ -19,7 +19,7 @@
                     <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="{x:Bind Details}" Style="{StaticResource Secondary}" FontSize="12" />
                 </StackPanel>
-                <ToggleSwitch Grid.Column="1" IsOn="{x:Bind IsActive, Mode=TwoWay}" IsEnabled="{x:Bind CanToggle}" OnContent="" OffContent=""
+                <ToggleSwitch Grid.Column="1" IsOn="{x:Bind IsActive, Mode=TwoWay}" IsEnabled="{x:Bind CanToggle, Mode=OneWay}" OnContent="" OffContent=""
                               MinWidth="0" AutomationProperties.Name="{x:Bind Name}" />
             </Grid>
         </DataTemplate>
@@ -35,13 +35,13 @@
             <Border Style="{StaticResource Card}">
                 <StackPanel Spacing="8">
                     <TextBlock Style="{StaticResource CardTitle}" Text="{x:Bind loc:L.T('Lists.Mode')}" />
-                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Whitelist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.WhitelistText')}" GroupName="mode" IsChecked="{x:Bind ui:Conv.Not(Vm.IsBlacklist), Mode=OneWay}" Checked="OnWhitelist">
+                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Whitelist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.WhitelistText')}" GroupName="mode" IsChecked="{x:Bind ui:Conv.Not(Vm.IsBlacklist), Mode=OneWay}" Checked="OnWhitelist" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                         <StackPanel>
                             <TextBlock Text="{x:Bind loc:L.T('Lists.Mode.Whitelist')}" />
                             <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Lists.Mode.WhitelistText')}" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Blacklist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.BlacklistText')}" GroupName="mode" IsChecked="{x:Bind Vm.IsBlacklist, Mode=OneWay}" Checked="OnBlacklist">
+                    <RadioButton AutomationProperties.Name="{x:Bind loc:L.T('Lists.Mode.Blacklist')}" AutomationProperties.HelpText="{x:Bind loc:L.T('Lists.Mode.BlacklistText')}" GroupName="mode" IsChecked="{x:Bind Vm.IsBlacklist, Mode=OneWay}" Checked="OnBlacklist" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                         <StackPanel>
                             <TextBlock Text="{x:Bind loc:L.T('Lists.Mode.Blacklist')}" />
                             <TextBlock Style="{StaticResource Secondary}" FontSize="12" Text="{x:Bind loc:L.T('Lists.Mode.BlacklistText')}" />
@@ -89,7 +89,7 @@
                              ScrollViewer.VerticalScrollBarVisibility="Auto" AutomationProperties.Name="{x:Bind loc:L.T('Lists.User.Which')}" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Common.Save')}" Command="{x:Bind Vm.SaveUserCommand}"
-                                IsEnabled="{x:Bind Vm.UserDirty, Mode=OneWay}" />
+                                IsEnabled="{x:Bind ui:Conv.And(Vm.CanModify, Vm.UserDirty), Mode=OneWay}" />
                         <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.User.Import')}" Command="{x:Bind Vm.ImportCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE8B5;" FontSize="14" />
@@ -109,7 +109,7 @@
             <StackPanel x:Name="SourcesPanel" Spacing="12" Visibility="Collapsed">
                 <Grid>
                     <TextBlock Style="{StaticResource Secondary}" Text="{x:Bind loc:L.T('Lists.Sources.Text')}" Margin="0,0,200,0" VerticalAlignment="Center" />
-                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.Sources.Update')}" HorizontalAlignment="Right" Command="{x:Bind Vm.UpdateSourcesCommand}">
+                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Lists.Sources.Update')}" HorizontalAlignment="Right" Command="{x:Bind Vm.UpdateSourcesCommand}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE72C;" FontSize="14" />
                             <TextBlock Text="{x:Bind loc:L.T('Lists.Sources.Update')}" />
@@ -153,9 +153,9 @@
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <ToggleSwitch IsOn="{x:Bind IsEnabled, Mode=TwoWay}" OnContent="" OffContent="" MinWidth="0"
-                                              AutomationProperties.Name="{x:Bind Title}" />
+                                              AutomationProperties.Name="{x:Bind Title}" IsEnabled="{x:Bind CanModify, Mode=OneWay}" />
                                 <Button VerticalAlignment="Center" Click="OnDeleteSource" Tag="{x:Bind}"
-                                        AutomationProperties.Name="{x:Bind loc:L.T('Common.Delete')}" ToolTipService.ToolTip="{x:Bind loc:L.T('Common.Delete')}">
+                                        AutomationProperties.Name="{x:Bind loc:L.T('Common.Delete')}" ToolTipService.ToolTip="{x:Bind loc:L.T('Common.Delete')}" IsEnabled="{x:Bind CanModify, Mode=OneWay}">
                                     <FontIcon Glyph="&#xE74D;" FontSize="14" />
                                 </Button>
                                 </StackPanel>
@@ -176,7 +176,7 @@
                                      PlaceholderText="https://" FontFamily="{StaticResource MonoFont}" />
                         </Grid>
                         <CheckBox Content="{x:Bind loc:L.T('Lists.Source.IsIpset')}" IsChecked="{x:Bind Vm.NewSourceIsIpset, Mode=TwoWay}" />
-                        <Button Content="{x:Bind loc:L.T('Lists.Source.AddButton')}" Command="{x:Bind Vm.AddSourceCommand}" />
+                        <Button Content="{x:Bind loc:L.T('Lists.Source.AddButton')}" Command="{x:Bind Vm.AddSourceCommand}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                     </StackPanel>
                 </Border>
             </StackPanel>

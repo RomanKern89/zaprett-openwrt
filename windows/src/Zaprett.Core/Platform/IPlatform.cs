@@ -37,8 +37,23 @@ public interface IProcessRunner
     Task<ProcessResult> RunAsync(string fileName, IReadOnlyList<string> args, TimeSpan timeout, CancellationToken ct);
 }
 
-/// <summary>State of one engine instance ("main" or "test").</summary>
-public sealed record EngineState(string Instance, bool Running, int? Pid, DateTimeOffset? StartedAt, int RestartsInWindow);
+/// <summary>State of one engine instance ("main" or "test"). <see cref="Phase"/> (one of <see cref="EnginePhases"/>) matters
+/// only while Running: with a network filter the engine runs but waits for the selected network before it opens WinDivert.</summary>
+public sealed record EngineState(string Instance, bool Running, int? Pid, DateTimeOffset? StartedAt, int RestartsInWindow,
+    string Phase = EnginePhases.Capturing);
+
+/// <summary>Phases of a running engine.</summary>
+public static class EnginePhases
+{
+    /// <summary>WinDivert is open, traffic is processed.</summary>
+    public const string Capturing = "capturing";
+
+    /// <summary>"logical network is not present. waiting it to appear." — nothing is processed until the network appears.</summary>
+    public const string WaitingNetwork = "waiting_network";
+
+    /// <summary>Started, WinDivert is not initialized yet.</summary>
+    public const string Starting = "starting";
+}
 
 /// <summary>Engine lifecycle, implemented by the service (Job Object, restart policy).</summary>
 public interface IEngineControl

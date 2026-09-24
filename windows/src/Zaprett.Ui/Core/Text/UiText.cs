@@ -29,7 +29,19 @@ public static class UiText
 {
     /// <summary>Warnings that only inform (router contract §14.4, §15.5): nothing is broken.</summary>
     public static readonly IReadOnlySet<string> InfoWarnings =
-        new HashSet<string>(StringComparer.Ordinal) { "empty_profile_removed", "strategy_option_ignored", "test_running", "dns_plain" };
+        new HashSet<string>(StringComparer.Ordinal) { "empty_profile_removed", "strategy_option_ignored", "test_running", "dns_plain", "waiting_network" };
+
+    /// <summary>
+    /// The engine runs with a network filter (Wi-Fi names / "not in a corporate network") and waits for such a network:
+    /// the bypass is on and will work by itself, so it is shown as waiting (yellow), not as working or broken.
+    /// </summary>
+    /// <summary>monitor.run found the sites failing but did not start the repair: another program takes the traffic.</summary>
+    /// <remarks>monitor.repair_blocked of the monitor object (monitor.status, the "monitor" event, status.monitor):
+    /// "conflict_blocking" or null; kept until the next real check (wincore, 2026-09-23).</remarks>
+    public static bool RepairBlockedByConflict(JsonNode? monitor) => monitor.Str("repair_blocked") == "conflict_blocking";
+
+    public static bool IsWaitingNetwork(JsonNode? status) =>
+        status.Strings("warnings").Contains("waiting_network") || status.Obj("engine_stats").Str("phase") == "waiting_network";
 
     private static readonly HashSet<string> KnownErrors = new(StringComparer.Ordinal)
     {
@@ -102,8 +114,8 @@ public static class UiText
     {
         "no_active_lists" or "list_missing" or "source_not_downloaded" or "low_memory" or "game_filter_no_ipsets" => "lists",
         "no_strategy" or "strategy_missing" or "profile_unfiltered" or "wide_port_range" or "test_running" or "monitor_degraded" => "strategies",
-        "bad_config" or "ipv6_wan_unhandled" or "dns_plain" => "settings",
-        "generate_failed" or "config_was_invalid" or "conflicts_found" or "windivert_foreign" => "diagnostics",
+        "bad_config" or "ipv6_wan_unhandled" or "dns_plain" or "waiting_network" => "settings",
+        "generate_failed" or "config_was_invalid" or "conflicts_found" or "windivert_foreign" or "conflict_blocking" => "diagnostics",
         "not_running" => "restart",
         _ => null,
     };

@@ -305,7 +305,7 @@ public sealed partial class CommandDispatcher
     /// <summary>refs: "&lt;service&gt;" or "&lt;service&gt;:&lt;variant&gt;" (router contract v1.7 §16.4). The chosen set of every
     /// selected service is switched on; every other set of every preset service is switched off, except items a chosen
     /// set uses too; user-* lists are never touched.</summary>
-    async Task<JsonObject> WizardApplyAsync(List<string> refs, CancellationToken ct)
+    async Task<JsonObject> WizardApplyAsync(List<string> refs, bool? autostart, CancellationToken ct)
     {
         var p = c.LoadPresets();
         if (p == null)
@@ -430,6 +430,8 @@ public sealed partial class CommandDispatcher
                 new JsonObject { ["missing"] = R.Arr(missing) });
 
         var change = new JsonObject { ["list_mode"] = "whitelist" };
+        if (autostart != null)
+            change["autostart"] = autostart.Value;
         foreach (var (k, v) in opts)
             change[k] = R.Arr(v);
         var sopt = Engines.StrategyOption(cfg.Engine);

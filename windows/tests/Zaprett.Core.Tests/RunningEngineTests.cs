@@ -68,7 +68,7 @@ public sealed class RunningEngineTests
         Assert.True(R.Bool(r["reloaded"]), r.ToJsonString());
         Assert.NotEqual(before, h.F.Engine.ArgsOf("main"));
         if (key == "debug")
-            Assert.StartsWith("--debug=@" + Path.Combine(h.F.Paths.RunDir, "engine-debug.log"), h.F.Engine.ArgsOf("main")![0]);
+            Assert.Equal("--debug=1", h.F.Engine.ArgsOf("main")![0]);
     }
 
     [Fact]

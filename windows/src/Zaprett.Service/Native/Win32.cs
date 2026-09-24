@@ -138,4 +138,28 @@ internal static unsafe partial class Win32
 
     [LibraryImport("kernel32.dll")]
     public static partial uint GetOEMCP();
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SERVICE_STATUS_PROCESS
+    {
+        public uint dwServiceType, dwCurrentState, dwControlsAccepted, dwWin32ExitCode, dwServiceSpecificExitCode,
+            dwCheckPoint, dwWaitHint, dwProcessId, dwServiceFlags;
+    }
+
+    [LibraryImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool QueryServiceStatusEx(nint service, int infoLevel, ref SERVICE_STATUS_PROCESS buffer, int size, out int needed);
+
+    public const uint SC_MANAGER_CONNECT = 0x0001;
+    public const uint SERVICE_QUERY_STATUS = 0x0004;
+
+    [LibraryImport("advapi32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint OpenSCManagerW(string? machine, string? database, uint access);
+
+    [LibraryImport("advapi32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    public static partial nint OpenServiceW(nint scm, string name, uint access);
+
+    [LibraryImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool CloseServiceHandle(nint handle);
 }

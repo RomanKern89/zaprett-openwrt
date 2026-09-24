@@ -97,7 +97,9 @@ public class HttpProbeTests
 {
     private static readonly HttpProbe Probe = new();
 
-    private static Task<ProbeResult> Run(string url, long min = 0, int timeoutMs = 3000, int? from = null, int? to = null) =>
+    // generous by default: under a full parallel test run (engines being started, certificates made) 3 s was not
+    // always enough for a local TLS handshake; only SilentServer_IsTimeout tests the timeout itself (500 ms)
+    private static Task<ProbeResult> Run(string url, long min = 0, int timeoutMs = 10000, int? from = null, int? to = null) =>
         Probe.ProbeAsync(new ProbeRequest(url, min, TimeSpan.FromMilliseconds(timeoutMs), from, to), default);
 
     [Fact]
@@ -197,10 +199,11 @@ public class HttpProbeTests
     [Fact]
     public async Task ClosedPort_IsConnectFailed()
     {
-        var l = new TcpListener(IPAddress.Loopback, 0);
-        l.Start();
-        int port = ((IPEndPoint)l.LocalEndpoint).Port;
-        l.Stop();
+        // bound but not listening: the port stays ours (a listener of a parallel test cannot take it, which a
+        // stopped TcpListener allowed) and a connection to it is refused
+        using var s = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        s.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        int port = ((IPEndPoint)s.LocalEndPoint!).Port;
         var r = await Run($"http://127.0.0.1:{port}/");
         Assert.Equal("connect_failed", r.Error);
     }
@@ -236,23 +239,11 @@ public class HttpProbeTests
     public async Task ExhaustedRange_IsLocalError()
     {
         await using var srv = new ScriptedServer(ScriptedServer.Respond(200, 10));
-        var held = new List<Socket>();
-        try
-        {
-            for (int p = 40200; p <= 40202; p++)
-            {
-                var s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { ExclusiveAddressUse = true };
-                s.Bind(new IPEndPoint(IPAddress.Any, p));
-                held.Add(s);
-            }
-            var r = await Run($"http://127.0.0.1:{srv.Port}/", from: 40200, to: 40202);
-            Assert.Equal("local_error", r.Error);
-            Assert.Empty(srv.ClientPorts);
-        }
-        finally
-        {
-            held.ForEach(s => s.Dispose());
-        }
+        // the whole range held by this test (not fixed numbers: another test run on the machine may hold those)
+        using var block = PortBlock.Take(3);
+        var r = await Run($"http://127.0.0.1:{srv.Port}/", from: block.First, to: block.Last);
+        Assert.Equal("local_error", r.Error);
+        Assert.Empty(srv.ClientPorts);
     }
 
     [Fact]

@@ -220,6 +220,10 @@ public sealed class Tester
         if (targets.Count == 0)
             return R.Fail("no_targets", T.S("test.no_targets"));
 
+        // allowed, but another bypass program spoils every measurement: the results say so
+        var blocking = await Conflicts.BlockingAsync(c.P, ctx.Token).ConfigureAwait(false);
+        if (blocking.Count > 0)
+            c.P.Log.Warn(T.S("test.log_conflict", string.Join(", ", blocking.Select(b => R.Str(b?["name"])))));
         var running = engine.Running;
         var original = cfg.CurrentStrategy(eng);
         var reason = Refusal(cfg, running, c.UserStopped, c.Options.IsolationSupported, o);
@@ -234,7 +238,7 @@ public sealed class Tester
         {
             ["started"] = c.Now, ["finished"] = 0, ["state"] = "running", ["engine"] = eng, ["mode"] = state["mode"]!.DeepClone(),
             ["mode_reason"] = reason, ["original_strategy"] = original, ["targets"] = R.Arr(targets.Select(t => t.Url)),
-            ["baseline"] = null, ["results"] = new JsonArray(),
+            ["baseline"] = null, ["results"] = new JsonArray(), ["conflicts_blocking"] = blocking.DeepClone(),
         };
         Files.WriteJson(ResultsPath, results);
         c.P.Log.Info(reason != null ? T.S("test.log_start_reason", ids.Count, targets.Count, R.Str(state["mode"]), reason)
@@ -334,6 +338,7 @@ public sealed class Tester
         {
             ["tested"] = list.Count, ["best"] = best?["id"]?.DeepClone(), ["baseline_ok"] = results["baseline"]?["ok"]?.DeepClone(),
             ["applied"] = applied, ["mode"] = state["mode"]!.DeepClone(), ["mode_reason"] = state["mode_reason"]?.DeepClone(), ["message"] = msg,
+            ["conflict_blocking"] = blocking.Count > 0, ["conflicts_blocking"] = blocking,
         });
     }
 

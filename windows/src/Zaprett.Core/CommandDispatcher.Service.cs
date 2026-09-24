@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Zaprett.Core.Config;
 using Zaprett.Core.Engine;
+using Zaprett.Core.Platform;
 using Zaprett.Core.Presets;
 using Zaprett.Core.Store;
 using Zaprett.Core.Util;
@@ -65,6 +66,14 @@ public sealed partial class CommandDispatcher
                     Add("list_missing");
         if (cfg.Enabled && !main.Running)
             Add("not_running");
+        if (main is { Running: true, Phase: EnginePhases.WaitingNetwork })
+            Add("waiting_network");
+        var scanned = await Checks.Conflicts.TryBlockingAsync(c.P, ct).ConfigureAwait(false);
+        var blocking = scanned ?? [];
+        if (blocking.Count > 0)
+            Add(Checks.Conflicts.Warning);
+        if (scanned != null)
+            health.NoteConflict(blocking.Count > 0, RecheckAsync, lifetime);
         if (engine.TestActive)
             Add("test_running");
         var monitor = health.MonitorBrief(cfg);
@@ -83,7 +92,9 @@ public sealed partial class CommandDispatcher
         return R.Ok(new JsonObject
         {
             ["enabled"] = cfg.Enabled,
-            ["autostart"] = cfg.Enabled,
+            ["autostart"] = cfg.Autostart,
+            // this core has the method "autostart" (separate from enabled); an older service does not send the field
+            ["autostart_separate"] = true,
             ["running"] = main.Running,
             ["pid"] = main.Pid,
             ["engine"] = cfg.Engine,
@@ -108,6 +119,7 @@ public sealed partial class CommandDispatcher
                     ["pid"] = main.Pid,
                     ["uptime_s"] = main.StartedAt is { } s ? (long?)Math.Max(0, (long)(c.P.Clock.Now - s).TotalSeconds) : null,
                     ["restarts"] = main.RestartsInWindow,
+                    ["phase"] = main.Phase,
                 }
                 : null,
             ["platform"] = await c.P.System.GetPlatformAsync(ct).ConfigureAwait(false),
@@ -119,10 +131,14 @@ public sealed partial class CommandDispatcher
                 ["progress"] = job["progress"]?.DeepClone(),
             },
             ["monitor"] = monitor,
+            ["conflicts_blocking"] = blocking,
             ["warnings"] = R.Arr(warnings),
             ["details"] = details,
             ["debug"] = cfg.Debug ? new JsonObject { ["until"] = cfg.DebugUntil > 0 ? cfg.DebugUntil : null } : null,
             ["version"] = c.Options.Version,
+            ["install_id"] = c.InstallId,
+            // of the caller of this answer (not of the service): the app greys out what this user cannot change
+            ["can_modify"] = Caller.CanModify,
         });
     }
 
@@ -203,21 +219,32 @@ public sealed partial class CommandDispatcher
         return r;
     }
 
+    /// <summary>"enable" (kept for the CLI and the installer): on now (the watchdog starts the engine) and at Windows start.</summary>
     Task<JsonObject> EnableAsync(CancellationToken ct)
     {
-        if (!c.Config.Set("main", new JsonObject { ["enabled"] = true }))
+        if (!c.Config.Set("main", new JsonObject { ["enabled"] = true, ["autostart"] = true }))
             return Task.FromResult(R.Fail("write_failed", T.S("svc.save_enabled_failed")));
         return Task.FromResult(R.Ok(new JsonObject { ["enabled"] = true, ["autostart"] = true }));
     }
 
+    /// <summary>"disable": off now and at Windows start.</summary>
     async Task<JsonObject> DisableAsync(CancellationToken ct)
     {
-        if (!c.Config.Set("main", new JsonObject { ["enabled"] = false }))
+        if (!c.Config.Set("main", new JsonObject { ["enabled"] = false, ["autostart"] = false }))
             return R.Fail("write_failed", T.S("svc.save_enabled_failed"));
         if (!engine.TestActive)
             await engine.StopMainAsync(ct).ConfigureAwait(false);
         RaiseStatus();
         return R.Ok(new JsonObject { ["enabled"] = false, ["autostart"] = false });
+    }
+
+    /// <summary>"autostart {enable}": only whether the bypass is switched on when Windows starts; the engine is left as it is.</summary>
+    Task<JsonObject> AutostartAsync(JsonObject a)
+    {
+        var on = BoolArg(a, "enable") ?? throw new ArgsException(T.S("arg.missing", "enable"));
+        if (!c.Config.Set("main", new JsonObject { ["autostart"] = on }))
+            return Task.FromResult(R.Fail("write_failed", T.S("svc.save_settings_failed")));
+        return Task.FromResult(R.Ok(new JsonObject { ["autostart"] = on, ["enabled"] = c.Config.Load().Enabled }));
     }
 
     /// <summary>"check": the current configuration is generated and checked by the engine without starting it.</summary>
@@ -241,16 +268,22 @@ public sealed partial class CommandDispatcher
     {
         var cfg = await ExpireDebugAsync(c.Config.Load(), ct).ConfigureAwait(false);
         var r = await health.EnsureAsync(cfg, ct).ConfigureAwait(false);
+        // the watchdog runs every 5 minutes also when no window asks for status: a conflict that is gone is noticed
+        if (await Checks.Conflicts.TryBlockingAsync(c.P, ct).ConfigureAwait(false) is { } scanned)
+            health.NoteConflict(scanned.Count > 0, RecheckAsync, lifetime);
         if (R.Str(r["action"]) == "started")
             RaiseStatus();
         return r;
     }
 
-    async Task<JsonObject> MonitorRunAsync(CancellationToken ct)
+    /// <summary>The extra monitor check after a conflict is gone (in the background, not bound to the caller).</summary>
+    Task<JsonObject> RecheckAsync(CancellationToken ct) => MonitorRunAsync(ct, true);
+
+    async Task<JsonObject> MonitorRunAsync(CancellationToken ct, bool extra = false)
     {
         var cfg = c.Config.Load();
         var r = await health.MonitorRunAsync(cfg, () => c.Jobs.Start("test",
-            ctx => tester.RunAsync(c.Config.Load(), new Checks.TestOptions(Quick: true, ApplyIfBetter: true), ctx)), ct).ConfigureAwait(false);
+            ctx => tester.RunAsync(c.Config.Load(), new Checks.TestOptions(Quick: true, ApplyIfBetter: true), ctx)), ct, extra).ConfigureAwait(false);
         if (r["skipped"] == null)
             Raise("monitor", (JsonObject)health.MonitorStatus(cfg)["monitor"]!);
         return r;

@@ -45,6 +45,8 @@ public class CliParserTests
     [InlineData("job log --tail 5", "job.log")]
     [InlineData("dns setup", "dns.setup")]
     [InlineData("dns off", "dns.setup")]
+    [InlineData("autostart on", "autostart")]
+    [InlineData("autostart off", "autostart")]
     [InlineData("repo fetch", "repo.fetch")]
     [InlineData("sources defaults", "sources.defaults")]
     [InlineData("conflicts", "conflicts")]
@@ -71,6 +73,8 @@ public class CliParserTests
         Assert.True(Ok("status", "--json").Json);
         Assert.True(Ok("dns", "setup").Args["enable"]!.GetValue<bool>());
         Assert.False(Ok("dns", "off").Args["enable"]!.GetValue<bool>());
+        Assert.True(Ok("autostart", "on").Args["enable"]!.GetValue<bool>());
+        Assert.False(Ok("autostart", "off").Args["enable"]!.GetValue<bool>());
         Assert.Equal("zh-CN", CliParser.Parse(["status", "--lang", "ZH-cn"]).Lang);
     }
 
@@ -78,6 +82,9 @@ public class CliParserTests
     public void BadArguments_AreRejected()
     {
         Bad("list", "enable");
+        Bad("autostart");
+        Bad("autostart", "yes");
+        Bad("autostart", "on", "now");
         Bad("list", "enable", "../x");
         Bad("list", "enable", ".hidden");
         Bad("status", "extra");
@@ -92,6 +99,30 @@ public class CliParserTests
         Bad("gen-args");
         Bad("page", "nope");
         Bad("nonsense");
+    }
+
+    [Theory]
+    [InlineData("--help")]
+    [InlineData("-h")]
+    [InlineData("/?")]
+    [InlineData("-?")]
+    [InlineData("help")]
+    public void HelpSynonyms_AreHelp(string flag)
+    {
+        Assert.True(CliParser.Parse([flag]).Help);
+        Assert.Null(CliParser.Parse([flag]).Error);
+        Assert.True(CliParser.Parse(["status", flag]).Help || flag == "help");
+        Assert.True(CliParser.IsHelpRequest([flag]));
+    }
+
+    [Fact]
+    public void Help_WithLanguage()
+    {
+        var r = CliParser.Parse(["--help", "--lang", "zh-CN"]);
+        Assert.True(r.Help);
+        Assert.Equal("zh-CN", r.Lang);
+        Assert.False(CliParser.IsHelpRequest([]));
+        Assert.False(CliParser.IsHelpRequest(["status"]));
     }
 
     [Fact]
@@ -170,6 +201,18 @@ public class CliAppTests
         Assert.Equal("ru", CliText.Load("xx").Language);
     }
 
+    // main.autostart apart from main.enabled: every language tells autostart, enable/disable and start/stop apart
+    [Theory]
+    [InlineData("ru", "при старте Windows")]
+    [InlineData("en", "at Windows start")]
+    [InlineData("zh-CN", "Windows 启动时")]
+    public void Usage_ExplainsAutostart(string lang, string atWindowsStart)
+    {
+        var lines = CliText.Load(lang).Usage.Split('\n');
+        Assert.Contains(lines, l => l.TrimStart().StartsWith("autostart on|off", StringComparison.Ordinal) && l.Contains(atWindowsStart));
+        Assert.Contains(lines, l => l.TrimStart().StartsWith("enable | disable", StringComparison.Ordinal) && l.Contains(atWindowsStart));
+    }
+
     [Fact]
     public async Task UsageErrors_AreLocalized()
     {
@@ -211,6 +254,13 @@ public class CliAppTests
         Assert.Empty(client.Calls);
         Assert.Equal(2, (await Run([])).Rc);
         Assert.Equal(0, (await Run(["help"])).Rc);
+        foreach (var f in new[] { "--help", "-h", "/?" })
+        {
+            var (hrc, hout, herr) = await Run([f]);
+            Assert.Equal(0, hrc);
+            Assert.StartsWith("Usage: zaprett", hout);
+            Assert.Empty(herr);
+        }
     }
 
     [Fact]

@@ -44,7 +44,8 @@ public sealed class GeneratorTests
         };
         var g = Text(p, "--filter-tcp=443 ${hostlists} --dpi-desync=fake", main, nlm: ["Home net", "{guid}"]);
         Assert.True(g.Ok, g.Message);
-        Assert.Equal("--debug=@" + Path.Combine(p.RunDir, "engine-debug.log"), g.Args[0]);
+        Assert.Equal("--debug=1", g.Args[0]);
+        Assert.DoesNotContain(g.Args, a => a.StartsWith("--debug=@", StringComparison.Ordinal));
         Assert.Equal("--wf-l3=ipv4,ipv6", g.Args[1]);
         Assert.Equal("--wf-tcp=443", g.Args[2]);
         Assert.DoesNotContain(g.Args, a => a.StartsWith("--wf-udp", StringComparison.Ordinal));
@@ -153,7 +154,7 @@ public sealed class GeneratorTests
     {
         using var fp = new FakePlatform();
         var gen = new ArgsGenerator(fp.Paths, new ItemStore(fp.Paths));
-        var r = await gen.DryRunAsync(fp.Processes, "winws", ["--debug=@x", "--wf-tcp=443"], CancellationToken.None);
+        var r = await gen.DryRunAsync(fp.Processes, "winws", ["--debug=1", "--wf-tcp=443"], CancellationToken.None);
         Assert.Equal(0, r.Rc);
         Assert.True(fp.Processes.Calls.TryDequeue(out var call));
         Assert.EndsWith("winws.exe", call.File);

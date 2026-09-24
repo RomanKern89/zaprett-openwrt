@@ -382,8 +382,58 @@ public sealed class PipeServerTests : IAsyncLifetime
         Start();
         await using (var c = Client())
             await c.CallAsync("status");
-        using var other = new PipeServer(new FakeDispatcher(), _ => User, _log, new PipeServerOptions { PipeName = _pipe });
+        using var other = new PipeServer(new FakeDispatcher(), _ => User, _log,
+            new PipeServerOptions { PipeName = _pipe, FirstInstanceRetries = 3, FirstInstanceRetryDelay = TimeSpan.FromMilliseconds(100) });
         await Assert.ThrowsAsync<InvalidOperationException>(() => other.RunAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5)));
+        // the owner keeps it for good: every retry was refused, then the failure
+        Assert.Equal(3, _log.Lines.Count(l => l.Contains($"ipc: pipe {_pipe} is taken")));
+    }
+
+    // the previous process still holds the pipe for a moment (STOPPED is sent 1.5 s before it exits): the new server
+    // waits for it instead of failing at once
+    [Fact]
+    public async Task PipeFreedDuringTheRetries_ServerComesUp()
+    {
+        var owner = new PipeServer(new FakeDispatcher(), _ => User, _log, new PipeServerOptions { PipeName = _pipe });
+        using var ownerCts = new CancellationTokenSource();
+        var ownerRun = owner.RunAsync(ownerCts.Token);
+        await using (var c = Client())
+            await c.CallAsync("status");
+        // retries with room to spare (a loaded machine delays the owner's exit); the pipe is handed over once the new
+        // server has really found it taken, not after a fixed pause
+        using var next = new PipeServer(new FakeDispatcher(), _ => User, _log,
+            new PipeServerOptions { PipeName = _pipe, FirstInstanceRetries = 50, FirstInstanceRetryDelay = TimeSpan.FromMilliseconds(100) });
+        using var nextCts = new CancellationTokenSource();
+        var nextRun = next.RunAsync(nextCts.Token);
+        Assert.True(await Wait.UntilAsync(() => _log.Lines.Any(l => l.Contains($"ipc: pipe {_pipe} is taken")), TimeSpan.FromSeconds(20)),
+            "the new server never found the pipe taken");
+        await ownerCts.CancelAsync();
+        try
+        {
+            await ownerRun;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        owner.Dispose();
+        await using (var c = Client())
+            Assert.NotNull(await c.CallAsync("status").WaitAsync(TimeSpan.FromSeconds(10)));
+        Assert.False(nextRun.IsFaulted, nextRun.Exception?.ToString());
+        Assert.Contains(_log.Lines, l => l.Contains($"ipc: pipe {_pipe} is taken"));
+        await nextCts.CancelAsync();
+    }
+
+    // negative control: without retries the same situation fails at once (what a start during the 1.5 s window got)
+    [Fact]
+    public async Task PipeTaken_NoRetries_FailsAtOnce()
+    {
+        Start();
+        await using (var c = Client())
+            await c.CallAsync("status");
+        using var other = new PipeServer(new FakeDispatcher(), _ => User, _log, new PipeServerOptions { PipeName = _pipe, FirstInstanceRetries = 0 });
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => other.RunAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(2));
     }
 
     [Fact]

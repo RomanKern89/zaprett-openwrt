@@ -52,14 +52,24 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Tag="wizard" Content="{x:Bind loc:L.T('Nav.Wizard')}" SelectsOnInvoked="False">
+                <NavigationViewItem Tag="wizard" Content="{x:Bind loc:L.T('Nav.Wizard')}" SelectsOnInvoked="False" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE82D;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="settings" Content="{x:Bind loc:L.T('Nav.Settings')}">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
-            <Frame x:Name="ContentFrame" />
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!-- a user without the rights: every change is locked, the reason is said once for all pages -->
+                <InfoBar IsOpen="{x:Bind Vm.IsReadOnly, Mode=OneWay}" Visibility="{x:Bind Vm.IsReadOnly, Mode=OneWay}" IsClosable="False" Severity="Informational"
+                         Title="{x:Bind loc:L.T('Access.ReadOnly.Title')}" Message="{x:Bind loc:L.T('Access.ReadOnly.Text')}"
+                         MaxWidth="{StaticResource PageMaxWidth}" Margin="40,16,40,0" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" />
+            </Grid>
         </NavigationView>
 
         <!-- first-run wizard covers the navigation -->

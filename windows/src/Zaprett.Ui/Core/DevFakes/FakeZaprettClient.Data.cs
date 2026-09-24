@@ -349,23 +349,18 @@ public sealed partial class FakeZaprettClient
         {
             items.Add(new JsonObject
             {
-                ["id"] = "goodbyedpi", ["name"] = "GoodbyeDPI", ["severity"] = "block",
-                ["detail"] = M("Служба GoodbyeDPI запущена и использует свой WinDivert: два перехватчика мешают друг другу.",
-                    "The GoodbyeDPI service is running with its own WinDivert: two interceptors interfere with each other.",
-                    "GoodbyeDPI 服务正在运行并使用自己的 WinDivert：两个拦截程序会互相干扰。"),
-                ["fix"] = M("Остановите и удалите службу GoodbyeDPI (или запустите её remove_service.cmd), затем перезагрузите компьютер.",
-                    "Stop and remove the GoodbyeDPI service (or run its remove_service.cmd), then restart the PC.",
-                    "停止并删除 GoodbyeDPI 服务（或运行其 remove_service.cmd），然后重启电脑。"),
+                ["id"] = "goodbyedpi", ["name"] = "GoodbyeDPI", ["severity"] = "block", ["kind"] = "service", ["service"] = "GoodbyeDPI",
+                ["path"] = @"C:\Tools\goodbyedpi\x86_64\goodbyedpi.exe", ["pid"] = 3120,
+                // as the service sends them: English, the interface uses its own texts for this finding
+                ["detail"] = "Service \"GoodbyeDPI\" (GoodbyeDPI) is running: two DPI bypass programs on one PC break each other",
+                ["fix"] = "Stop and disable the service \"GoodbyeDPI\" (services.msc).",
             });
             items.Add(new JsonObject
             {
-                ["id"] = "adguard", ["name"] = "AdGuard", ["severity"] = "warn",
-                ["detail"] = M("AdGuard фильтрует трафик на этом компьютере и может сбивать обход.",
-                    "AdGuard filters the traffic of this PC and may disturb the bypass.",
-                    "AdGuard 正在过滤此电脑的流量，可能干扰绕过。"),
-                ["fix"] = M("Выключите в AdGuard «Фильтрацию HTTPS» для нужных сайтов или добавьте их в исключения.",
-                    "Turn off \"HTTPS filtering\" in AdGuard for the needed sites or add them to its exclusions.",
-                    "在 AdGuard 中为所需网站关闭“HTTPS 过滤”，或将其加入排除项。"),
+                ["id"] = "adguard", ["name"] = "AdGuard", ["severity"] = "warn", ["kind"] = "service", ["service"] = "AdGuard Service",
+                ["path"] = @"C:\Program Files\AdGuard\AdguardSvc.exe", ["pid"] = 2244,
+                ["detail"] = "Service \"AdGuard Service\" (AdGuard Service) is running: AdGuard filters traffic with its own driver",
+                ["fix"] = "Stop and disable the service \"AdGuard Service\" (services.msc).",
             });
         }
         items.Add(new JsonObject

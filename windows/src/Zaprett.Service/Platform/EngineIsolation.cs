@@ -10,8 +10,13 @@ namespace Zaprett.Service.Platform;
 /// instance everything else. WinDivert refuses a negated group <c>!(…)</c>, so only De Morgan forms are used.
 /// </summary>
 public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog log, int portFrom = EngineIsolation.DefaultPortFrom,
-    int portTo = EngineIsolation.DefaultPortTo, IDynamicPortRanges? dynamicPorts = null)
+    int portTo = EngineIsolation.DefaultPortTo, IDynamicPortRanges? dynamicPorts = null, TimeSpan? portsTimeout = null)
 {
+    /// <summary>The engine's first start waits for this decision: whatever the ranges source does, not longer than
+    /// this (then the Windows default is assumed, as for unreadable ranges).</summary>
+    public static readonly TimeSpan DefaultPortsTimeout = TimeSpan.FromSeconds(5);
+    private readonly TimeSpan _portsTimeout = portsTimeout ?? DefaultPortsTimeout;
+
     private readonly object _decisionLock = new();
     private Task<bool>? _decision;
 
@@ -41,16 +46,23 @@ public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog lo
     {
         // decided once for the service run, not tied to the first caller's cancellation
         var ct = CancellationToken.None;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         IReadOnlyList<PortRange>? ranges = null;
         if (dynamicPorts is not null)
         {
             try
             {
-                ranges = await dynamicPorts.GetTcpAsync(ct).ConfigureAwait(false);
+                ranges = await dynamicPorts.GetTcpAsync(ct).WaitAsync(_portsTimeout).ConfigureAwait(false);
             }
-            catch (Exception e) when (e is IOException or System.ComponentModel.Win32Exception or InvalidOperationException)
+            catch (TimeoutException)
             {
-                log.Warn("engine isolation: cannot read the dynamic port ranges: " + e.Message);
+                log.Warn($"engine isolation: the dynamic port ranges were not read within {_portsTimeout.TotalSeconds:0.#} s");
+            }
+            catch (Exception e)
+            {
+                // the decision is cached for the whole run: a failed task here would fail every later start of main
+                // and test, so any failure means "unknown" (the Windows default)
+                log.Warn($"engine isolation: cannot read the dynamic port ranges: {e.GetType().Name}: {e.Message}");
             }
         }
         bool permanent;
@@ -58,7 +70,8 @@ public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog lo
         {
             // the Windows default dynamic range 49152-65535 does not overlap
             permanent = true;
-            log.Warn($"engine isolation: dynamic TCP port ranges unknown, assuming the Windows default 49152-65535; " +
+            // the safe default, the normal way when the sources are slow after a boot (they warn themselves when it repeats)
+            log.Info($"engine isolation: dynamic TCP port ranges unknown, assuming the Windows default 49152-65535; " +
                      $"main always excludes local TCP ports {portFrom}-{portTo}");
         }
         else if (ranges.FirstOrDefault(r => r.Overlaps(portFrom, portTo)) is { } overlap)
@@ -73,6 +86,7 @@ public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog lo
             log.Info($"engine isolation: main always excludes local TCP ports {portFrom}-{portTo} " +
                      $"(dynamic TCP ports: {string.Join(", ", ranges)})");
         }
+        log.Info($"engine isolation: dynamic TCP port ranges read in {sw.Elapsed.TotalSeconds:0.0} s");
         return permanent;
     }
 
@@ -100,7 +114,9 @@ public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog lo
         var dry = args.Where(a => !a.StartsWith("--wf-save", StringComparison.Ordinal)).ToList();
         dry.Add("--wf-save=" + saveFile);
         dry.Add("--dry-run");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var r = await runner.RunAsync(executable, dry, DryRunTimeout, ct).ConfigureAwait(false);
+        var took = sw.Elapsed;
         if (r.TimedOut || r.ExitCode != 0 || !File.Exists(saveFile))
             throw new InvalidOperationException($"--wf-save --dry-run failed ({r.ExitCode}): {(r.StdOut + r.StdErr).Trim()}");
         string saved = (await File.ReadAllTextAsync(saveFile, ct).ConfigureAwait(false)).Trim();
@@ -110,7 +126,7 @@ public sealed class EngineIsolation(IProcessRunner runner, IPaths paths, ILog lo
         if (filter.Length > MaxFilterChars)
             throw new InvalidOperationException($"isolation filter is {filter.Length} characters, WinDivert allows {MaxFilterChars}");
         await File.WriteAllTextAsync(filterFile, filter, ct).ConfigureAwait(false);
-        log.Info($"engine {instance}: isolation filter {filterFile} ({filter.Length} chars, {(candidate ? "only" : "without")} local TCP ports {portFrom}-{portTo})");
+        log.Info($"engine {instance}: isolation filter {filterFile} ({filter.Length} chars, {(candidate ? "only" : "without")} local TCP ports {portFrom}-{portTo}; --wf-save {took.TotalSeconds:0.0} s)");
         var result = WithoutFilterOptions(args);
         result.Add("--wf-raw=@" + filterFile);
         return result;

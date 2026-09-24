@@ -10,8 +10,14 @@ public sealed class UiPrefs
     /// <summary>Last known language (ru, en, zh-CN): used before the service answers; the service keeps the
     /// authoritative ui.language in config.json.</summary>
     [JsonPropertyName("language")] public string Language { get; set; } = "ru";
+    /// <summary>The language was chosen by a user without the rights to change the shared one: it is kept for this
+    /// user instead of the ui.language of the service.</summary>
+    [JsonPropertyName("language_personal")] public bool LanguagePersonal { get; set; }
     [JsonPropertyName("theme")] public string Theme { get; set; } = "system";
     [JsonPropertyName("wizard_done")] public bool WizardDone { get; set; }
+
+    /// <summary>install_id of the service data the wizard was passed (or skipped) for; see <see cref="WizardDecision"/>.</summary>
+    [JsonPropertyName("wizard_done_for")] public string? WizardDoneFor { get; set; }
     [JsonPropertyName("notifications")] public bool Notifications { get; set; } = true;
     [JsonPropertyName("close_to_tray")] public bool CloseToTray { get; set; } = true;
 
@@ -45,6 +51,16 @@ public sealed class UiPrefs
         if (prefs.Theme is not ("system" or "light" or "dark"))
             prefs.Theme = "system";
         return prefs;
+    }
+
+    /// <summary>The wizard is passed for this installation of the service data (installId null: an older core).</summary>
+    public void MarkWizardDone(string? installId)
+    {
+        if (WizardDone && WizardDoneFor == installId)
+            return;
+        WizardDone = true;
+        WizardDoneFor = installId ?? WizardDoneFor;
+        Save();
     }
 
     /// <summary>Atomic write (tmp + move); a failure is ignored: preferences are a convenience.</summary>

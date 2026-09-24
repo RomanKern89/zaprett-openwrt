@@ -87,16 +87,18 @@ public class ProcessTests
         var log = new MemoryLog();
         await using var engine = new EngineControl(log, new SystemClock(),
             new EngineRestartPolicy(TimeSpan.FromMilliseconds(100), TimeSpan.FromMinutes(10), 5, TimeSpan.FromSeconds(30), TimeSpan.FromMilliseconds(300)));
-        string marker = "-n 43";
-        var state = await engine.StartAsync("main", Cmd, ["/c", $"ping {marker} 127.0.0.1"], default);
+        // unique per run: the same test in another dotnet test on this machine (parallel sessions) starts the same ping
+        string marker = $"-w {Random.Shared.Next(1000, 60000)}";
+        var state = await engine.StartAsync("main", Cmd, ["/c", $"ping -n 43 {marker} 127.0.0.1"], default);
         Assert.True(state.Running);
         Assert.NotNull(state.Pid);
-        Assert.True(await Wait.UntilAsync(() => engine.GetJobProcessIds("main").Count >= 2, TimeSpan.FromSeconds(10)));
+        // cmd + its conhost make two processes before ping exists: wait for the ping itself to be in the job (the count
+        // alone let the snapshot be taken before ping started — "Not found: 42240" under a loaded full test run)
+        Assert.True(await Wait.UntilAsync(() => PingsWith(marker).Any(p => engine.GetJobProcessIds("main").Contains(p)),
+            TimeSpan.FromSeconds(20)), "the ping of the engine never showed up in its job");
         var pids = engine.GetJobProcessIds("main");
         Assert.Contains(state.Pid!.Value, pids);
-        var pings = PingsWith(marker);
-        Assert.Single(pings);
-        Assert.Contains(pings[0], pids);
+        Assert.Contains(PingsWith(marker), p => pids.Contains(p));
 
         await engine.StopAsync("main", default);
         Assert.False(engine.GetState("main").Running);

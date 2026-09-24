@@ -16,9 +16,10 @@ public sealed partial class ListItem : ObservableObject
     private readonly Func<ListItem, bool, Task> _toggle;
     private bool _silent;
 
-    public ListItem(JsonObject item, Func<ListItem, bool, Task> toggle)
+    public ListItem(JsonObject item, Func<ListItem, bool, Task> toggle, bool canModify = true)
     {
         _toggle = toggle;
+        CanModify = canModify;
         Id = item.Str("id") ?? "";
         Name = L.Pick(item, "name") ?? Id;
         Type = item.Str("type") ?? "";
@@ -39,7 +40,12 @@ public sealed partial class ListItem : ObservableObject
     public string Details { get; }
     public bool IsUser => Source == "user";
     public bool IsSubscription => Source == "url";
-    public bool CanToggle => !IsSubscription;
+    /// <summary>Follows status.can_modify: the list may be built before the first status arrives.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanToggle))]
+    public partial bool CanModify { get; set; }
+
+    public bool CanToggle => !IsSubscription && CanModify;
 
     [ObservableProperty] public partial bool IsActive { get; set; }
 
@@ -64,9 +70,10 @@ public sealed partial class SourceItem : ObservableObject
     private readonly Func<SourceItem, bool, Task>? _toggle;
     private bool _silent;
 
-    public SourceItem(JsonObject s, Func<SourceItem, bool, Task>? toggle = null)
+    public SourceItem(JsonObject s, Func<SourceItem, bool, Task>? toggle = null, bool canModify = true)
     {
         _toggle = toggle;
+        CanModify = canModify;
         Raw = s;
         var status = s.Str("status") ?? "never";
         (StatusLabel, Kind) = status switch
@@ -86,6 +93,9 @@ public sealed partial class SourceItem : ObservableObject
         IsEnabled = s.Bool("enabled");
         _silent = false;
     }
+
+    /// <summary>The switch and the delete button: false for a user who may only read (follows status.can_modify).</summary>
+    [ObservableProperty] public partial bool CanModify { get; set; }
 
     /// <summary>The answer object of the subscription (to save it back with another "enabled").</summary>
     public JsonObject Raw { get; }
@@ -148,6 +158,15 @@ public sealed partial class ListsViewModel(AppState state, INavigator? nav) : Pa
 
     private bool _loadingText;
 
+    /// <summary>The rights may arrive (or change) after the lists were built.</summary>
+    protected override void OnStateChanged()
+    {
+        foreach (var item in Domains.Concat(Networks).Concat(Exclusions))
+            item.CanModify = CanModify;
+        foreach (var source in Sources)
+            source.CanModify = CanModify;
+    }
+
     public override async Task LoadAsync()
     {
         await Try(async () =>
@@ -163,7 +182,7 @@ public sealed partial class ListsViewModel(AppState state, INavigator? nav) : Pa
 
     public void Fill(JsonObject items, JsonObject? sources)
     {
-        var all = items.Objs("items").Where(i => i.Str("source") != "url").Select(i => new ListItem(i, ToggleAsync)).ToList();
+        var all = items.Objs("items").Where(i => i.Str("source") != "url").Select(i => new ListItem(i, ToggleAsync, CanModify)).ToList();
         Replace(Domains, all.Where(i => i.Type == "list").OrderByDescending(i => i.IsActive).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase));
         Replace(Networks, all.Where(i => i.Type == "ipset").OrderByDescending(i => i.IsActive).ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase));
         Replace(Exclusions, all.Where(i => i.Type is "list_exclude" or "ipset_exclude").OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase));
@@ -172,7 +191,7 @@ public sealed partial class ListsViewModel(AppState state, INavigator? nav) : Pa
 
     private void FillSources(JsonObject? sources)
     {
-        Replace(Sources, sources.Objs("sources").Select(s => new SourceItem(s, SetSourceEnabledAsync)));
+        Replace(Sources, sources.Objs("sources").Select(s => new SourceItem(s, SetSourceEnabledAsync, CanModify)));
         HasSources = Sources.Count > 0;
     }
 

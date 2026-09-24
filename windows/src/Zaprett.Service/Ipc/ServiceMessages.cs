@@ -22,6 +22,18 @@ public static class ServiceMessages
             ["en"] = "Too many event subscriptions for this user",
             ["zh-CN"] = "该用户的事件订阅过多",
         },
+        ["invalid_argument"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ru"] = "Неверные параметры запроса",
+            ["en"] = "Invalid request parameters",
+            ["zh-CN"] = "请求参数无效",
+        },
+        ["tray_autostart_failed"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ru"] = "Не удалось изменить запуск значка при входе в Windows",
+            ["en"] = "Could not change the icon start at Windows sign-in",
+            ["zh-CN"] = "无法更改登录 Windows 时显示图标的设置",
+        },
     };
 
     public static IEnumerable<string> Codes => Texts.Keys;

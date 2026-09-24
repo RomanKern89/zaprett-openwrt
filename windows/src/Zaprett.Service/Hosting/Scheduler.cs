@@ -71,13 +71,28 @@ public sealed class Schedule
 }
 
 /// <summary>Runs <see cref="Schedule"/> every 30 seconds against config.json and calls the dispatcher as SYSTEM.</summary>
-public sealed class SchedulerService(ICommandDispatcher dispatcher, PlatformServices platform) : BackgroundService
+public sealed class SchedulerService(ICommandDispatcher dispatcher, PlatformServices platform, StartupGate gate) : BackgroundService
 {
     private static readonly TimeSpan Tick = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan StartupWaitLimit = TimeSpan.FromMinutes(10);
     private readonly Schedule _schedule = new();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // no watchdog while the core is still starting the engine (StartupGate)
+        try
+        {
+            await gate.Done.WaitAsync(StartupWaitLimit, stoppingToken).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            // a start that hangs must not switch the watchdog off for good
+            platform.Log.Warn($"scheduler: the core start takes longer than {StartupWaitLimit.TotalMinutes:0} min, starting the watchdog anyway");
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
         while (!stoppingToken.IsCancellationRequested)
         {
             foreach (var call in _schedule.Due(platform.Clock.Now, ReadConfig()))

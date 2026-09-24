@@ -44,7 +44,9 @@ public sealed class Health
         var (action, reason) = MonitorLogic.EnsureDecision(cfg, c.UserStopped, TestBusy(), running, fwOk);
         if (action == "started")
         {
-            var r = await engine.StartMainAsync(cfg, ct).ConfigureAwait(false);
+            var r = await engine.EnsureMainAsync(ct).ConfigureAwait(false);
+            if (R.IsOk(r) && !R.Bool(r["started"]))
+                return R.Ok(new JsonObject { ["action"] = "none" });
             if (!R.IsOk(r))
             {
                 c.P.Log.Error(T.S("health.log_ensure_failed", R.Message(r)));
@@ -132,20 +134,141 @@ public sealed class Health
         return new JsonObject
         {
             ["state"] = m["state"]?.DeepClone(), ["consecutive_failures"] = m["consecutive_failures"]?.DeepClone(),
-            ["checked_at"] = m["checked_at"]?.DeepClone(),
+            ["checked_at"] = m["checked_at"]?.DeepClone(), ["repair_blocked"] = m["repair_blocked"]?.DeepClone(),
         };
     }
 
-    string? Skip(ZaprettConfig cfg) =>
-        MonitorLogic.SkipReason(cfg, c.UserStopped, engine.Running, c.Jobs.IsBusy || TestBusy());
+    /* ---------- recheck after a conflict is gone ---------- */
 
-    /// <summary>One monitor check (the service calls it every monitor.interval minutes). startRepair starts job "test"
-    /// with --quick --apply-if-better and returns its answer.</summary>
-    public async Task<JsonObject> MonitorRunAsync(ZaprettConfig cfg, Func<JsonObject> startRepair, CancellationToken ct)
+    /// <summary>At most one extra check in this many seconds, however often a conflict comes and goes.</summary>
+    public const long RecheckInterval = 120;
+
+    /// <summary>Pause before the extra check: the engine may be restarting after the other program went away.</summary>
+    public static readonly TimeSpan RecheckDelay = TimeSpan.FromSeconds(5);
+
+    /// <summary>An extra check that could not run (engine not up yet, network awaited, a job) is tried again after this
+    /// many seconds instead of waiting for the whole <see cref="RecheckInterval"/>.</summary>
+    public const long RecheckRetry = 30;
+
+    /// <summary>Skip reasons that pass by themselves: the extra check stays due.</summary>
+    static readonly HashSet<string> TransientSkips = ["not_running", "waiting_network", "job_busy"];
+
+    /// <summary>With the conflict scan failing, a repair is put off for at most this many checks in a row, and only when the
+    /// last scan that worked saw a conflict; then the monitor repairs as before (a scanner broken for good must not switch
+    /// the automatic selection off).</summary>
+    public const int UnknownRepairLimit = 3;
+
+    /// <summary>repair_blocked while a repair is put off because the conflict scan failed.</summary>
+    public const string ConflictUnknown = "conflict_unknown";
+
+    enum RecheckOutcome
+    {
+        Done,
+        Transient,
+        Failed,
+    }
+
+    readonly SemaphoreSlim runGate = new(1, 1);
+    readonly Lock conflictGate = new();
+    bool? lastConflict;
+    bool recheckPending;
+    bool recheckRunning;
+    long lastRecheck = long.MinValue / 2;
+    int unknownStreak;
+
+    /// <summary>The extra check started last (tests wait for it); null when none was started.</summary>
+    public Task? LastRecheck { get; private set; }
+
+    /// <summary>What status, the watchdog and the monitor see of blocking conflicts. When a conflict that was there is gone,
+    /// the monitor state may still say "sites stopped" because of it: one extra check runs soon (runCheck = the monitor
+    /// check of the dispatcher, its answer), not more often than <see cref="RecheckInterval"/>; a change within that time
+    /// waits. A check skipped for a passing reason is tried again after <see cref="RecheckRetry"/>, a failed one after the
+    /// whole interval. lifetime: the service's (null before its startup: the change is only remembered); the extra check
+    /// is not bound to the call that noticed the change.</summary>
+    public void NoteConflict(bool blocking, Func<CancellationToken, Task<JsonObject>> runCheck, CancellationToken? lifetime)
+    {
+        lock (conflictGate)
+        {
+            var was = lastConflict ?? R.Bool(Files.ReadJson(MonitorPath, 262144)?["conflict_blocking"]);
+            lastConflict = blocking;
+            if (blocking)
+                recheckPending = false;
+            else if (was)
+                recheckPending = true;
+            if (lifetime is not { } life || !recheckPending || recheckRunning || life.IsCancellationRequested ||
+                c.Now - lastRecheck < RecheckInterval)
+                return;
+            recheckPending = false;
+            recheckRunning = true;
+            lastRecheck = c.Now;
+            // the task's own finally must always run: it is not given the lifetime token (a cancelled one would skip it)
+            LastRecheck = Task.Run(() => RecheckAsync(runCheck, life), CancellationToken.None);
+        }
+    }
+
+    async Task RecheckAsync(Func<CancellationToken, Task<JsonObject>> runCheck, CancellationToken lifetime)
+    {
+        var outcome = RecheckOutcome.Failed;
+        try
+        {
+            // the language of the service, not of the window whose status call noticed the change
+            T.Use(c.Config.Load().Language);
+            await c.P.Clock.Delay(RecheckDelay, lifetime).ConfigureAwait(false);
+            var r = await runCheck(lifetime).ConfigureAwait(false);
+            var skipped = R.Str(r["skipped"]);
+            outcome = !R.IsOk(r) ? RecheckOutcome.Failed
+                : skipped != null && TransientSkips.Contains(skipped) ? RecheckOutcome.Transient : RecheckOutcome.Done;
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        {
+            outcome = RecheckOutcome.Done;
+        }
+        catch (Exception e)
+        {
+            c.P.Log.Warn(T.S("health.log_recheck_failed", e.Message));
+        }
+        finally
+        {
+            lock (conflictGate)
+            {
+                recheckRunning = false;
+                if (outcome != RecheckOutcome.Done && lastConflict != true)
+                {
+                    recheckPending = true;
+                    // a skip that passes by itself is retried soon; a failure waits the whole interval (no storm of probes)
+                    lastRecheck = outcome == RecheckOutcome.Transient ? c.Now - RecheckInterval + RecheckRetry : c.Now;
+                }
+            }
+        }
+    }
+
+    string? Skip(ZaprettConfig cfg) =>
+        MonitorLogic.SkipReason(cfg, c.UserStopped, engine.Running, c.Jobs.IsBusy || TestBusy(), engine.WaitingNetwork);
+
+    /// <summary>One monitor check (the service calls it every monitor.interval minutes; an extra one runs after a conflict
+    /// is gone). Checks never overlap. startRepair starts job "test" with --quick --apply-if-better and returns its answer.</summary>
+    public async Task<JsonObject> MonitorRunAsync(ZaprettConfig cfg, Func<JsonObject> startRepair, CancellationToken ct, bool extra = false)
+    {
+        await runGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            return await MonitorRunUnlockedAsync(cfg, startRepair, extra, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            runGate.Release();
+        }
+    }
+
+    async Task<JsonObject> MonitorRunUnlockedAsync(ZaprettConfig cfg, Func<JsonObject> startRepair, bool extra, CancellationToken ct)
     {
         var skip = Skip(cfg);
         if (skip != null)
             return R.Ok(new JsonObject { ["skipped"] = skip });
+        if (extra)
+            c.P.Log.Info(T.S("health.log_recheck"));
+        // scanned before and after the probes: a program closed while they ran still spoiled them
+        var before = await Conflicts.TryBlockingAsync(c.P, ct).ConfigureAwait(false);
         var (services, _) = PresetLogic.PresetServices(c.LoadPresets(), cfg, null);
         var targets = ProbeRunner.UniqueTargets(services!, cfg.Monitor.MaxTargets);
         var pr = targets.Count > 0
@@ -155,12 +278,45 @@ public sealed class Health
         skip = Skip(cfg);
         if (skip != null)
             return R.Ok(new JsonObject { ["skipped"] = skip });
+        // another bypass program breaks the traffic whatever the strategy: its failures are not the strategy's
+        var after = await Conflicts.TryBlockingAsync(c.P, ct).ConfigureAwait(false);
+        var blocking = after is { Count: > 0 } ? after : before ?? [];
+        var conflict = blocking.Count > 0;
+        // a failed scan: whether another program interferes is unknown
+        var unknown = !conflict && (before == null || after == null);
         var now = c.Now;
         var prev = Files.ReadJson(MonitorPath, 262144);
-        var (st, repair) = MonitorLogic.Step(prev, pr.Ok, pr.Total, now, cfg.Monitor);
+        bool seenConflict;
+        int streak;
+        lock (conflictGate)
+        {
+            seenConflict = lastConflict ?? R.Bool(prev?["conflict_blocking"]);
+            unknownStreak = unknown ? unknownStreak + 1 : 0;
+            streak = unknownStreak;
+            if (after != null)
+            {
+                lastConflict = after.Count > 0;
+                // gone during the probes: they were spoiled, one more check is due
+                recheckPending = conflict && after.Count == 0;
+            }
+        }
+        var (st, repair) = MonitorLogic.Step(prev, pr.Ok, pr.Total, now, cfg.Monitor, conflict);
+        st["conflict_blocking"] = after != null ? after.Count > 0 : conflict || (unknown && seenConflict);
+        // unknown, but the last scan that worked saw a conflict: the repair waits a few checks, not for ever
+        var postponed = repair && unknown && seenConflict && streak <= UnknownRepairLimit;
+        if (postponed)
+        {
+            repair = false;
+            c.P.Log.Warn(T.S("health.log_repair_unknown"));
+        }
         var prevState = R.Str(prev?["state"]);
         if (R.Str(st["state"]) == "degraded" && prevState != "degraded" && prevState != "repairing")
             c.P.Log.Warn(T.S("health.log_degraded", pr.Ok, pr.Total, st["consecutive_failures"]?.ToJsonString()));
+        // kept in the state until the next check: a failed check while another program blocks the traffic
+        var blocked = conflict && pr.Total > 0 && pr.Ok * 2 < pr.Total;
+        st["repair_blocked"] = blocked ? Conflicts.Warning : postponed ? ConflictUnknown : null;
+        if (blocked)
+            c.P.Log.Warn(T.S("health.log_repair_conflict", string.Join(", ", blocking.Select(b => R.Str(b?["name"])))));
         if (repair)
         {
             var j = startRepair();
@@ -181,6 +337,8 @@ public sealed class Health
         {
             ["state"] = st["state"]?.DeepClone(), ["reachable"] = pr.Ok, ["total"] = pr.Total,
             ["consecutive_failures"] = st["consecutive_failures"]?.DeepClone(), ["repair_started"] = R.Str(st["state"]) == "repairing",
+            ["repair_blocked"] = blocked ? Conflicts.Warning : postponed ? ConflictUnknown : null,
+            ["conflicts_blocking"] = conflict ? blocking : null,
         });
     }
 }

@@ -25,7 +25,19 @@ public sealed partial class FakeZaprettClient : IZaprettClient
         public const string Error = "error";
         public const string Conflicts = "conflicts";
 
-        public static readonly string[] All = [Running, Stopped, FirstRun, Unavailable, Degraded, Testing, Error, Conflicts];
+        /// <summary>Bypass "running" while a foreign winws.exe works through the loaded WinDivert driver (status
+        /// conflict_blocking, the case of the acceptance test).</summary>
+        public const string Blocked = "blocked";
+
+        /// <summary>Bypass "running", seen by a user who is neither an administrator nor in "zaprett Operators"
+        /// (status.can_modify=false, every change answered with access_denied).</summary>
+        public const string ReadOnly = "readonly";
+
+        /// <summary>"running", but the first answers with the status come only after <see cref="SlowStartDelay"/>
+        /// (a service still starting): pages open before the shared state has a status.</summary>
+        public const string SlowStart = "slowstart";
+
+        public static readonly string[] All = [Running, Stopped, FirstRun, Unavailable, Degraded, Testing, Error, Conflicts, Blocked, ReadOnly, SlowStart];
     }
 
     private readonly object _gate = new();
@@ -75,6 +87,28 @@ public sealed partial class FakeZaprettClient : IZaprettClient
 
     public string StrategyId { get; private set; } = "strategy-general";
 
+    /// <summary>How long the status waits in the scenario SlowStart.</summary>
+    public TimeSpan SlowStartDelay { get; set; } = TimeSpan.FromSeconds(4);
+
+    private DateTimeOffset _statusFrom = DateTimeOffset.MinValue;
+
+    /// <summary>status.can_modify: the rights of the caller; false answers every change with access_denied.</summary>
+    public bool CanModify { get; set; } = true;
+
+    /// <summary>The HKLM Run value of the interface (status.tray_autostart, method tray.autostart).</summary>
+    public bool TrayAutostart { get; set; } = true;
+
+    private JsonObject SetTrayAutostart(JsonObject a)
+    {
+        if (a.Get("enable") is not JsonValue v || v.GetValueKind() is not (System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False))
+            return Fail("invalid_argument", M("Нужен аргумент enable: true или false", "Argument enable must be true or false", "参数 enable 必须为 true 或 false"));
+        TrayAutostart = a.Bool("enable");
+        return Ok(new() { ["tray_autostart"] = TrayAutostart });
+    }
+
+    /// <summary>status.install_id: tests set a new one to simulate a clean reinstall (REMOVEDATA).</summary>
+    public string InstallId { get; set; } = "7c1e2d9a-0f3b-4d61-9a55-fake00000001";
+
     public List<string> Calls { get; } = [];
 
     public static long Now() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -95,6 +129,8 @@ public sealed partial class FakeZaprettClient : IZaprettClient
             Enabled = Scenario is not (Scenarios.Stopped or Scenarios.FirstRun);
             Running = Enabled && Scenario != Scenarios.Error;
             _degraded = Scenario == Scenarios.Degraded;
+            CanModify = Scenario != Scenarios.ReadOnly;
+            _statusFrom = Scenario == Scenarios.SlowStart ? DateTimeOffset.UtcNow + SlowStartDelay : DateTimeOffset.MinValue;
             StrategyId = "strategy-general";
             _startedAt = now - 2 * 3600 - 14 * 60;
             _job = null;
@@ -108,6 +144,8 @@ public sealed partial class FakeZaprettClient : IZaprettClient
             _userStrategies["user-my-youtube"] = "# my strategy\n--filter-tcp=443 ${hostlists} --dpi-desync=fake,multidisorder --dpi-desync-split-pos=midsld --dpi-desync-repeats=8 --dpi-desync-fooling=md5sig,badseq\n";
             _config = DefaultConfig();
             _config["main"]!["enabled"] = Enabled;
+            Autostart = Enabled;
+            _config["main"]!["autostart"] = Autostart;
             InitSources(now);
             _monitor = BuildMonitor(now);
             _probe = Scenario == Scenarios.FirstRun ? null : BuildProbe(now - 300);
@@ -176,6 +214,10 @@ public sealed partial class FakeZaprettClient : IZaprettClient
         }
         if (!Available)
             throw new ZaprettUnavailableException("Служба zaprett не запущена (поддельный режим)");
+        if (method is "status" or "page" && _statusFrom - DateTimeOffset.UtcNow is { Ticks: > 0 } wait)
+            await Task.Delay(wait, ct);
+        if (!CanModify && Services.ServiceAccess.Modifies(method))
+            return Fail("access_denied", M("Недостаточно прав", "Access denied", "权限不足"));
         lock (_gate)
             return Dispatch(method, args ?? []);
     }
@@ -189,8 +231,10 @@ public sealed partial class FakeZaprettClient : IZaprettClient
         "start" => Service(true, true),
         "stop" => Service(false, Enabled),
         "restart" => Enabled ? Service(true, true) : Fail("disabled", M("Обход выключен. Нажмите «Включить».", "The bypass is off. Press 'Turn on'.", "绕过已关闭，请点击“开启”。")),
-        "enable" => Service(Running, true),
-        "disable" => Service(false, false),
+        "tray.autostart" => SetTrayAutostart(a),
+        "autostart" => SetAutostart(a),
+        "enable" => SetAutostartAnd(Service(Running, true), true),
+        "disable" => SetAutostartAnd(Service(false, false), false),
         "check" => BuildCheck(),
         "items" => BuildItems(a.Str("type")),
         "list.enable" or "list.disable" => ToggleItem(a.Str("id"), method == "list.enable"),
@@ -452,9 +496,22 @@ public sealed partial class FakeZaprettClient : IZaprettClient
             warnings.Add("monitor_degraded");
         if (_enabledItems.Contains("zaprett-rutracker") && !BuildDns().Bool("encrypted"))
             warnings.Add("dns_plain");
+        var blocking = new JsonArray();
+        if (Scenario == Scenarios.Blocked)
+        {
+            warnings.Insert(0, "conflict_blocking");
+            blocking.Add(new JsonObject
+            {
+                ["id"] = "foreign_windivert_user", ["name"] = "winws (WinDivert)", ["kind"] = "process", ["service"] = null,
+                ["path"] = @"C:\Users\user\Downloads\zapret-discord-youtube\bin\winws.exe", ["pid"] = 4312,
+                ["detail"] = @"Process winws (pid 4312) is running from C:\Users\user\Downloads\zapret-discord-youtube\bin\winws.exe: uses WinDivert — it intercepts the same traffic as zaprett",
+            });
+        }
         return Ok(new()
         {
             ["enabled"] = Enabled,
+            ["autostart"] = Autostart,
+            ["autostart_separate"] = true,
             ["running"] = Running,
             ["pid"] = Running ? 7412 : null,
             ["engine"] = main.Str("engine"),
@@ -466,6 +523,10 @@ public sealed partial class FakeZaprettClient : IZaprettClient
             ["ipsets"] = ActiveIncludes().Where(i => i.Contains("ipset", StringComparison.Ordinal) || i.EndsWith("voice", StringComparison.Ordinal)).ToJsonArray(),
             ["exclude_ipsets"] = _enabledItems.Where(i => i.EndsWith("ipset-exclude", StringComparison.Ordinal) || i == "zaprett-exclude-ipset").ToJsonArray(),
             ["warnings"] = warnings.ToJsonArray(),
+            ["conflicts_blocking"] = blocking,
+            ["install_id"] = InstallId,
+            ["tray_autostart"] = TrayAutostart,
+            ["can_modify"] = CanModify,
             ["version"] = "0.1.0",
             ["job"] = _job == null ? null : new JsonObject
             {
@@ -502,6 +563,28 @@ public sealed partial class FakeZaprettClient : IZaprettClient
         ["provider"] = _config.Obj("dns").Str("mode") == "doh" ? "windows-doh" : null,
     };
 
+    /// <summary>main.autostart: the bypass is turned on at the next start of Windows (separate from Enabled, "on now").</summary>
+    public bool Autostart { get; private set; }
+
+    /// <summary>Like the core: only main.autostart changes, the engine is not touched.</summary>
+    private JsonObject SetAutostart(JsonObject a)
+    {
+        var v = a.Get("enable")?.ToString();
+        if (v is not ("true" or "false" or "1" or "0"))
+            return Fail("bad_args", M("Нужен аргумент enable: true или false", "Argument enable must be true or false", "参数 enable 必须为 true 或 false"));
+        Autostart = v is "true" or "1";
+        _config["main"]!["autostart"] = Autostart;
+        return Ok(new() { ["autostart"] = Autostart, ["enabled"] = Enabled });
+    }
+
+    /// <summary>The old enable/disable set both values at once.</summary>
+    private JsonObject SetAutostartAnd(JsonObject reply, bool autostart)
+    {
+        Autostart = autostart;
+        _config["main"]!["autostart"] = autostart;
+        return reply;
+    }
+
     private JsonObject Service(bool running, bool enabled)
     {
         Enabled = enabled;
@@ -518,9 +601,12 @@ public sealed partial class FakeZaprettClient : IZaprettClient
 
     private JsonObject BuildPage(string name)
     {
+        // like the service: tray_autostart is added only to the answer of "status", not to the status part of "page"
+        var status = BuildStatus();
+        status.Remove("tray_autostart");
         var page = Ok(new()
         {
-            ["status"] = BuildStatus(),
+            ["status"] = status,
             ["job"] = Ok(new() { ["job"] = _job?.Clone() }),
         });
         switch (name)

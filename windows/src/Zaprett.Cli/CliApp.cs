@@ -45,7 +45,7 @@ public static class CliApp
                 await stdout.WriteLineAsync(new JsonObject { ["ok"] = true, ["usage"] = text.Usage }.ToJsonString(Pretty)).ConfigureAwait(false);
             else
                 await stdout.WriteAsync(text.Usage).ConfigureAwait(false);
-            return argv.Count > 0 && argv.Any(a => a == "help") ? ExitOk : ExitUsage;
+            return CliParser.IsHelpRequest(argv) ? ExitOk : ExitUsage;
         }
         if (parsed.Command is not { } cmd)
         {

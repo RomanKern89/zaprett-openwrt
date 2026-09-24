@@ -28,14 +28,14 @@
                             <Ellipse ui:StateColor.Fill="{x:Bind ui:Conv.Tint(Vm.HeroKind), Mode=OneWay}" />
                             <Button Width="112" Height="112" CornerRadius="56" HorizontalAlignment="Center" VerticalAlignment="Center"
                                     Style="{StaticResource AccentButtonStyle}" Visibility="{x:Bind Vm.IsOn, Mode=OneWay}"
-                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}"
+                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.AndNot(Vm.CanModify, Vm.IsBusy), Mode=OneWay}"
                                     AutomationProperties.Name="{x:Bind Vm.ToggleLabel, Mode=OneWay}"
                                     ToolTipService.ToolTip="{x:Bind Vm.ToggleLabel, Mode=OneWay}">
                                 <FontIcon Glyph="&#xE7E8;" FontSize="42" />
                             </Button>
                             <Button Width="112" Height="112" CornerRadius="56" HorizontalAlignment="Center" VerticalAlignment="Center"
                                     Visibility="{x:Bind ui:Conv.Hide(Vm.IsOn), Mode=OneWay}"
-                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsBusy), Mode=OneWay}"
+                                    Command="{x:Bind Vm.ToggleCommand}" IsEnabled="{x:Bind ui:Conv.AndNot(Vm.CanModify, Vm.IsBusy), Mode=OneWay}"
                                     AutomationProperties.Name="{x:Bind Vm.ToggleLabel, Mode=OneWay}"
                                     ToolTipService.ToolTip="{x:Bind Vm.ToggleLabel, Mode=OneWay}">
                                 <FontIcon Glyph="&#xE7E8;" FontSize="42" />
@@ -57,6 +57,12 @@
                         </Grid>
                         <TextBlock Text="{x:Bind Vm.HeroText, Mode=OneWay}" Style="{StaticResource Body}" FontSize="15" MaxWidth="620" HorizontalAlignment="Left"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <!-- another program takes the same traffic: which one, where, and the way to the details -->
+                        <StackPanel Spacing="6" Visibility="{x:Bind Vm.HasBlockingConflict, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Vm.ConflictWhere, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" FontSize="13" TextWrapping="Wrap"
+                                       IsTextSelectionEnabled="True" Visibility="{x:Bind ui:Conv.ShowText(Vm.ConflictWhere), Mode=OneWay}" />
+                            <Button Content="{x:Bind loc:L.T('Home.Conflict.More')}" Command="{x:Bind Vm.OpenConflictsCommand}" />
+                        </StackPanel>
                         <!-- fixed chips: two rows, the second only while the engine runs -->
                         <StackPanel Spacing="8" Margin="0,6,0,0">
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -120,7 +126,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <ProgressBar Width="120" Value="{x:Bind Vm.ProbePercent, Mode=OneWay}" Visibility="{x:Bind Vm.IsProbing, Mode=OneWay}" VerticalAlignment="Center" />
-                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Home.CheckNow')}" Command="{x:Bind Vm.CheckNowCommand}" IsEnabled="{x:Bind ui:Conv.Not(Vm.IsProbing), Mode=OneWay}">
+                    <Button AutomationProperties.Name="{x:Bind loc:L.T('Home.CheckNow')}" Command="{x:Bind Vm.CheckNowCommand}" IsEnabled="{x:Bind ui:Conv.AndNot(Vm.CanModify, Vm.IsProbing), Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE72C;" FontSize="14" />
                             <TextBlock Text="{x:Bind loc:L.T('Home.CheckNow')}" />

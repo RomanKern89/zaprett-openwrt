@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-US" Codepage="1252" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="ZaprettFontFace" Value="Tahoma" />
   <String Id="ProductLanguage" Value="1033" />
   <String Id="DefaultUiLanguage" Value="en" />
   <String Id="LicenseFile" Value="License.en-US.rtf" />
@@ -21,4 +22,37 @@
   <String Id="ZaprettWarningDlgDescription" Value="How zaprett works and what an antivirus may notice" />
   <String Id="ZaprettWarningDlgText" Value="zaprett intercepts network packets with the WinDivert driver (from the zapret project) and alters them so that the provider's DPI does not recognise a blocked site. Nothing is sent to third-party servers and there is no telemetry.&#xD;&#xA;&#xD;&#xA;Some antivirus products flag WinDivert and winws.exe as a hacking tool or a potentially unwanted application because the driver can intercept traffic. The engine files come unchanged from the official zapret releases and their checksums are verified at build time. If your antivirus removes them, add the zaprett install folder (C:\Program Files\zaprett by default) to its exclusions.&#xD;&#xA;&#xD;&#xA;GoodbyeDPI, another copy of zapret and other programs that use WinDivert must not run at the same time as zaprett." />
   <String Id="ZaprettWarningDlgTray" Value="Show the zaprett icon in the notification area at sign-in" />
+  <String Id="LaunchTrayCheckbox" Value="Start zaprett" />
+  <String Id="PtInstallFiles" Value="Copying new files" />
+  <String Id="PtRemoveFiles" Value="Removing files" />
+  <String Id="PtStopServices" Value="Stopping services" />
+  <String Id="PtDeleteServices" Value="Deleting services" />
+  <String Id="PtInstallServices" Value="Installing services" />
+  <String Id="PtStartServices" Value="Starting services" />
+  <String Id="PtWriteRegistry" Value="Writing registry values" />
+  <String Id="PtRemoveRegistry" Value="Removing registry values" />
+  <String Id="PtCreateShortcuts" Value="Creating shortcuts" />
+  <String Id="PtRemoveShortcuts" Value="Removing shortcuts" />
+  <String Id="PtCreateFolders" Value="Creating folders" />
+  <String Id="PtRemoveFolders" Value="Removing folders" />
+  <String Id="PtInstallValidate" Value="Validating install" />
+  <String Id="PtInstallFinalize" Value="Finishing the installation" />
+  <String Id="PtRemoveExisting" Value="Removing the previous version" />
+  <String Id="PtRegister" Value="Registering the product" />
+  <String Id="PtUnregister" Value="Unregistering the product" />
+  <String Id="PtRollback" Value="Rolling back" />
+  <String Id="PtRollbackCleanup" Value="Removing the backup files" />
+  <String Id="PtPrepare" Value="Stopping the zaprett service and driver" />
+  <String Id="PtInstallActions" Value="Setting up the zaprett group and options" />
+  <String Id="PtUninstallActions" Value="Stopping the engine and cleaning up" />
+  <String Id="PtDnsOff" Value="Restoring the DNS settings" />
+  <String Id="PtTplFile" Value="File: [1], folder: [9], size: [6]" />
+  <String Id="PtTplFileNoSize" Value="File: [1], folder: [9]" />
+  <String Id="PtTplService1" Value="Service: [1]" />
+  <String Id="PtTplService2" Value="Service: [2]" />
+  <String Id="PtTplRegistry" Value="Key: [1], name: [2], value: [3]" />
+  <String Id="PtTplRegistryNoValue" Value="Key: [1], name: [2]" />
+  <String Id="PtTplShortcut" Value="Shortcut: [1]" />
+  <String Id="PtTplFolder" Value="Folder: [1]" />
+  <String Id="PtTplRemoveExisting" Value="Application: [1], command line: [2]" />
 </WixLocalization>

@@ -20,59 +20,64 @@
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Bypass')}" AutomationProperties.HeadingLevel="Level2" />
                 <ui:SettingCard Glyph="&#xE7E8;" Header="{x:Bind loc:L.T('Settings.Autostart')}" Description="{x:Bind loc:L.T('Settings.AutostartText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Autostart, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Autostart, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
+                </ui:SettingCard>
+                <ui:SettingCard Glyph="&#xE7C4;" Header="{x:Bind loc:L.T('Settings.TrayAutostart')}" Description="{x:Bind Vm.TrayAutostartHint, Mode=OneWay}"
+                                Visibility="{x:Bind Vm.TrayAutostartSupported, Mode=OneWay}">
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.TrayAutostart, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind Vm.CanChangeTrayAutostart, Mode=OneWay}" MinWidth="0" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE945;" Header="{x:Bind loc:L.T('Settings.Engine')}" Description="{x:Bind loc:L.T('Settings.EngineText')}">
-                    <ComboBox ItemsSource="{x:Bind Vm.Engines}" SelectedItem="{x:Bind Vm.Engine, Mode=TwoWay}" MinWidth="220" />
+                    <ComboBox ItemsSource="{x:Bind Vm.Engines}" SelectedItem="{x:Bind Vm.Engine, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE81D;" Header="{x:Bind loc:L.T('Settings.Watchdog')}" Description="{x:Bind loc:L.T('Settings.WatchdogText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Watchdog, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Watchdog, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE909;" Header="{x:Bind loc:L.T('Settings.Ipv6')}" Description="{x:Bind loc:L.T('Settings.Ipv6Text')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Ipv6, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.Ipv6, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Traffic')}" AutomationProperties.HeadingLevel="Level2" />
                 <ui:SettingCard Glyph="&#xE72E;" Header="{x:Bind loc:L.T('Settings.Dns')}" Description="{x:Bind Vm.DnsState, Mode=OneWay}">
-                    <ComboBox ItemsSource="{x:Bind Vm.DnsModes}" SelectedItem="{x:Bind Vm.DnsMode, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.DnsSupported, Mode=OneWay}" />
+                    <ComboBox ItemsSource="{x:Bind Vm.DnsModes}" SelectedItem="{x:Bind Vm.DnsMode, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind ui:Conv.And(Vm.CanModify, Vm.DnsSupported), Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE8CE;" Header="{x:Bind loc:L.T('Settings.Quic')}" Description="{x:Bind loc:L.T('Settings.QuicText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.QuicBlock, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.QuicBlock, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE7FC;" Header="{x:Bind loc:L.T('Settings.Game')}" Description="{x:Bind loc:L.T('Settings.GameText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.GameFilter, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.GameFilter, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <Grid ColumnSpacing="12" Padding="58,4,18,8" Visibility="{x:Bind Vm.GameFilter, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBox Header="{x:Bind loc:L.T('Settings.GameTcp')}" Text="{x:Bind Vm.GamePortsTcp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" />
-                    <TextBox Grid.Column="1" Header="{x:Bind loc:L.T('Settings.GameUdp')}" Text="{x:Bind Vm.GamePortsUdp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" />
+                    <TextBox Header="{x:Bind loc:L.T('Settings.GameTcp')}" Text="{x:Bind Vm.GamePortsTcp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
+                    <TextBox Grid.Column="1" Header="{x:Bind loc:L.T('Settings.GameUdp')}" Text="{x:Bind Vm.GamePortsUdp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource MonoFont}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </Grid>
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Networks')}" AutomationProperties.HeadingLevel="Level2" />
                 <ui:SettingCard Glyph="&#xE701;" Header="{x:Bind loc:L.T('Settings.Net')}" Description="{x:Bind loc:L.T('Settings.NetText')}">
-                    <ComboBox ItemsSource="{x:Bind Vm.NetworkModes}" SelectedItem="{x:Bind Vm.NetworkMode, Mode=TwoWay}" MinWidth="220" />
+                    <ComboBox ItemsSource="{x:Bind Vm.NetworkModes}" SelectedItem="{x:Bind Vm.NetworkMode, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <TextBox Header="{x:Bind loc:L.T('Settings.Ssids')}" Text="{x:Bind Vm.Ssids, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
-                         MinHeight="72" Margin="58,4,18,8" Visibility="{x:Bind Vm.IsSsidMode, Mode=OneWay}" PlaceholderText="{x:Bind loc:L.T('Settings.SsidsHint')}" />
+                         MinHeight="72" Margin="58,4,18,8" Visibility="{x:Bind Vm.IsSsidMode, Mode=OneWay}" PlaceholderText="{x:Bind loc:L.T('Settings.SsidsHint')}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 <ui:SettingCard Glyph="&#xE821;" Header="{x:Bind loc:L.T('Settings.Corporate')}" Description="{x:Bind loc:L.T('Settings.CorporateText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.SkipCorporate, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.SkipCorporate, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Monitor.Title')}" AutomationProperties.HeadingLevel="Level2" />
                 <ui:SettingCard Glyph="&#xE9D9;" Header="{x:Bind loc:L.T('Settings.Monitor')}" Description="{x:Bind loc:L.T('Settings.MonitorText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.MonitorEnabled, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.MonitorEnabled, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE823;" Header="{x:Bind loc:L.T('Settings.Interval')}" Description="{x:Bind loc:L.T('Settings.IntervalText')}">
-                    <ComboBox ItemsSource="{x:Bind Vm.IntervalChoices}" SelectedItem="{x:Bind Vm.MonitorInterval, Mode=TwoWay}" MinWidth="220" />
+                    <ComboBox ItemsSource="{x:Bind Vm.IntervalChoices}" SelectedItem="{x:Bind Vm.MonitorInterval, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE7BA;" Header="{x:Bind loc:L.T('Settings.Threshold')}" Description="{x:Bind loc:L.T('Settings.ThresholdText')}">
-                    <NumberBox Value="{x:Bind Vm.MonitorThreshold, Mode=TwoWay}" Minimum="1" Maximum="20" SpinButtonPlacementMode="Inline" MinWidth="140" />
+                    <NumberBox Value="{x:Bind Vm.MonitorThreshold, Mode=TwoWay}" Minimum="1" Maximum="20" SpinButtonPlacementMode="Inline" MinWidth="140" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE90F;" Header="{x:Bind loc:L.T('Settings.AutoRepair')}" Description="{x:Bind loc:L.T('Settings.AutoRepairText')}">
-                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.AutoRepair, Mode=TwoWay}" MinWidth="0" />
+                    <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.AutoRepair, Mode=TwoWay}" MinWidth="0" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
 
                 <TextBlock Style="{StaticResource SettingsGroupTitle}" Text="{x:Bind loc:L.T('Settings.Group.Updates')}" AutomationProperties.HeadingLevel="Level2" />
@@ -85,14 +90,14 @@
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE895;" Header="{x:Bind loc:L.T('Settings.Channel')}" Description="{x:Bind loc:L.T('Settings.ChannelText')}"
                                 Visibility="{x:Bind Vm.ShowUpdateControls, Mode=OneWay}">
-                    <ComboBox ItemsSource="{x:Bind Vm.Channels}" SelectedItem="{x:Bind Vm.Channel, Mode=TwoWay}" MinWidth="220" />
+                    <ComboBox ItemsSource="{x:Bind Vm.Channels}" SelectedItem="{x:Bind Vm.Channel, Mode=TwoWay}" MinWidth="220" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE896;" Header="{x:Bind loc:L.T('Settings.CheckUpdates')}" Description="{x:Bind Vm.UpdateText, Mode=OneWay}"
                                 Visibility="{x:Bind Vm.ShowUpdateControls, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Content="{x:Bind loc:L.T('Settings.Update.Install')}" Command="{x:Bind Vm.InstallUpdateCommand}" Visibility="{x:Bind Vm.UpdateAvailable, Mode=OneWay}" />
+                        <Button Content="{x:Bind loc:L.T('Settings.Update.Install')}" Command="{x:Bind Vm.InstallUpdateCommand}" Visibility="{x:Bind Vm.UpdateAvailable, Mode=OneWay}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                         <Button Content="{x:Bind loc:L.T('Settings.Update.CheckNow')}" Command="{x:Bind Vm.CheckForUpdatesCommand}" />
-                        <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.CheckUpdates, Mode=TwoWay}" MinWidth="0" AutomationProperties.Name="{x:Bind loc:L.T('Settings.CheckUpdates')}" />
+                        <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.CheckUpdates, Mode=TwoWay}" MinWidth="0" AutomationProperties.Name="{x:Bind loc:L.T('Settings.CheckUpdates')}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                     </StackPanel>
                 </ui:SettingCard>
 
@@ -110,7 +115,7 @@
                     <ToggleSwitch OnContent="{x:Bind loc:L.T('Common.On')}" OffContent="{x:Bind loc:L.T('Common.Off')}" IsOn="{x:Bind Vm.CloseToTray, Mode=TwoWay}" MinWidth="0" />
                 </ui:SettingCard>
                 <ui:SettingCard Glyph="&#xE82D;" Header="{x:Bind loc:L.T('Nav.Wizard')}" Description="{x:Bind loc:L.T('Settings.WizardText')}">
-                    <Button Content="{x:Bind loc:L.T('Settings.WizardRun')}" Command="{x:Bind Vm.RunWizardCommand}" />
+                    <Button Content="{x:Bind loc:L.T('Settings.WizardRun')}" Command="{x:Bind Vm.RunWizardCommand}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
                 </ui:SettingCard>
                 <TextBlock Style="{StaticResource Secondary}" FontSize="12" Margin="2,14,0,0" Text="{x:Bind Vm.VersionText, Mode=OneWay}" IsTextSelectionEnabled="True" />
             </StackPanel>
@@ -126,7 +131,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock VerticalAlignment="Center" Style="{StaticResource Body}" Text="{x:Bind loc:L.T('Settings.Unsaved')}" />
             <Button Grid.Column="1" Content="{x:Bind loc:L.T('Common.Revert')}" Command="{x:Bind Vm.RevertCommand}" />
-            <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Common.Save')}" Command="{x:Bind Vm.SaveCommand}" />
+            <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Content="{x:Bind loc:L.T('Common.Save')}" Command="{x:Bind Vm.SaveCommand}" IsEnabled="{x:Bind Vm.CanModify, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Page>

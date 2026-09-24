@@ -56,7 +56,7 @@ MSI ставит в `C:\Program Files\zaprett` без выбора катало�
 удаление пустых профилей, извлечение портов. Отличия только в базовых опциях и перехвате:
 
 - базовые опции winws: `--wf-l3=ipv4[,ipv6]` (по `ipv6`), `--wf-tcp=<порты TCP>`, `--wf-udp=<порты UDP>` (порты — из
-  шага 6 алгоритма), при `debug` — `--debug=@<run>\engine-debug.log`; НЕТ `--qnum`, `--user`, `--dpi-desync-fwmark`;
+  шага 6 алгоритма), при `debug` — `--debug=1`: stdout движка служба пишет буферизованно в `<run>\engine-debug.log` (у test — `engine-debug-test.log`); НЕТ `--qnum`, `--user`, `--dpi-desync-fwmark`;
 - winws2: опций `--wf-tcp`/`--wf-udp` у него НЕТ (только `--wf-tcp-in/-out`, `--wf-udp-in/-out`, `--wf-tcp-empty`) —
   генератор пишет `--wf-tcp-out`/`--wf-udp-out` (находка wincore по `nfq2/nfqws.c`; живым winws2 не проверено), плюс
   `--lua-init=@<engine2>\lua\zapret-lib.lua`, `zapret-antidpi.lua`, `zapret-auto.lua`;
@@ -75,7 +75,7 @@ MSI ставит в `C:\Program Files\zaprett` без выбора катало�
 ```json
 {
   "schema": 1,
-  "main": { "enabled": false, "engine": "winws", "strategy": "strategy-general", "strategy_winws2": "",
+  "main": { "enabled": false, "autostart": false, "engine": "winws", "strategy": "strategy-general", "strategy_winws2": "",
             "list_mode": "whitelist", "lists": ["zaprett-youtube","zaprett-discord","user-hosts"],
             "exclude_lists": ["zaprett-exclude","user-hosts-exclude"], "ipsets": [],
             "exclude_ipsets": ["zaprett-exclude-ipset","user-ipset-exclude"], "ipv6": false, "debug": false,
@@ -98,6 +98,19 @@ MSI ставит в `C:\Program Files\zaprett` без выбора катало�
 `doh` (Windows 11 — штатный DoH на активных адаптерах; Windows 10 — локальный DoH-прокси, если установлен компонент).
 Запись конфигурации — только службой, атомарно (tmp + `File.Replace`), с резервной копией `config.json.bak`.
 
+`main.enabled` — обход включён сейчас: по нему работают сторож и монитор. `main.autostart` — включать обход при старте
+Windows: при первом запуске службы после загрузки ОС (`StartupAsync(osBoot: true)`) `enabled` приводится к `autostart`
+и снимается пометка `stop`, всё остальное не трогается; при перезапуске только службы (обновление, сбой) `enabled` и
+пометка остаются как были. Загрузку ОС определяет служба (волатильный ключ реестра). В старом
+config.json без поля `autostart` оно равно `enabled` (поведение прежнее). Методы:
+- `autostart {enable}` меняет только `autostart`, движок не трогает;
+- `start` включает сейчас (`enabled=true`), `stop` останавливает сейчас; `autostart` оба не меняют;
+- `enable` / `disable` (CLI, установщик `AUTOSTART=1`) — прежний смысл: `enabled` и `autostart` вместе, `disable` ещё и
+  останавливает движок;
+- `wizard.apply {autostart}` — ставит `autostart`, если аргумент передан.
+
+`status.autostart` = `main.autostart`.
+
 ## 6. IPC
 
 - Канал `\\.\pipe\zaprett`, DACL: `SYSTEM` и `Administrators` — полный доступ; `Interactive Users` (S-1-5-4) — чтение
@@ -107,7 +120,7 @@ MSI ставит в `C:\Program Files\zaprett` без выбора катало�
 - Протокол — JSON-RPC 2.0, одно сообщение = UTF-8 JSON с префиксом длины (uint32 LE), максимум 4 МиБ.
 - **Методы = команды CLI роутерного контракта** (§6.2, §14.3, §15.3–15.4, §16.4, §17) с теми же JSON-ответами
   (`{ok, …}` / `{ok:false, error, message}`), кроме роутерных (`fw *`, `offload`, `cron`, `gen-args`). Имя метода —
-  команда через точку: `status`, `start`, `stop`, `restart`, `enable`, `disable`, `check`, `items`, `list.enable`,
+  команда через точку: `status`, `start`, `stop`, `restart`, `enable`, `disable`, `autostart` (новый, §5), `check`, `items`, `list.enable`,
   `list.disable`, `strategy.set`, `strategy.show`, `strategy.save`, `strategy.delete`, `user.get`, `user.set`, `mode`,
   `engine`, `repo.fetch`, `repo.list`, `repo.install`, `repo.remove`, `repo.upgrade`, `sources.list`, `sources.update`,
   `sources.save`, `sources.delete`, `presets`, `wizard.apply`, `test.start`, `test.status`, `test.stop`, `test.apply`,
@@ -165,9 +178,9 @@ DohProxy (Windows 10). Свойства: `AUTOSTART`, `SERVICES` (через з�
 |---|---|---|
 | S-1 | Проверка аргументов стратегии — `winws --dry-run` (rc 0/1, ошибки в stdout). `--dry-run` НЕ компилирует фильтр WinDivert: служба строит `--wf-raw` только из шаблонов S-5 и после старта ждёт в stdout `windivert initialized` (0,1–0,85 с), иначе — ошибка запуска. | §1, §2, §5 |
 | S-2 | Пути: пробелы и не-ASCII в пути установки/данных допустимы (winws v72.13 читает списки, фейки, `--debug=@`, грузит драйвер из `…\тест папка\`, `Program Files`). Ограничение §3 «без выбора каталога из-за cygwin» снимается; аргументы — только массивом (`ArgumentList`). | §3 |
-| S-3 | `debug` движка — только временно (N минут): с `--debug=@file` загрузка страницы 0,5 с → 7–12 с. Журнал читать с `FileShare.ReadWrite`. | §2 |
+| S-3 | `debug` движка — только временно (N минут). `--debug=@file` НЕ используем: winws открывает и закрывает файл на каждую строку — TLS-рукопожатие 1,5–2 с против 0,2–0,4 с без отладки и 0,4–0,5 с с `--debug=1` (замер 2026-09-23, Win10 19044; исключение Defender почти не влияет), первый пакет может не уложиться в очередь WinDivert. Отладка — `--debug=1` в stdout, файл пишет служба. Журнал читать с `FileShare.ReadWrite`. | §2 |
 | S-4 | Движок под службой LocalSystem в Job Object `KILL_ON_JOB_CLOSE` подтверждён: остановка и аварийное завершение службы гасят winws, перезапуск по выходу работает. Назначение в job — до первого выполнения (`CREATE_SUSPENDED`/`PROC_THREAD_ATTRIBUTE_JOB_LIST`). | §4 |
-| S-5 | Автоподбор `isolated` (TCP): проверки с портов `40000–40100` (вне динамического диапазона), при `AddressAlreadyInUse` на connect — следующий порт; ОБА экземпляра с `--wf-raw=@file` = `(<--wf-save --dry-run стратегии>) and <условие>`: основной — `(!tcp or (outbound and (tcp.SrcPort < LO or tcp.SrcPort > HI)) or (inbound and (tcp.DstPort < LO or tcp.DstPort > HI)))`, кандидат — `tcp and ((outbound and tcp.SrcPort >= LO and tcp.SrcPort <= HI) or (inbound and tcp.DstPort >= LO and tcp.DstPort <= HI))`. `--wf-raw-part` не годится (OR), `!(…)` в фильтре запрещён (WinDivert: «The parameter is incorrect»). UDP/QUIC-проверки не изолируются → для них `exclusive` или пропуск. | §5 |
+| S-5 | Автоподбор `isolated` (TCP): основной экземпляр ВСЕГДА запускается с исключением портов проверки (автоподбор его не перезапускает); если динамический диапазон TCP Windows (WMI MSFT_NetTCPSetting + netsh) пересекается с `40000–40100` — исключение только на время теста. Проверки с портов `40000–40100` (вне динамического диапазона), при `AddressAlreadyInUse` на connect — следующий порт; ОБА экземпляра с `--wf-raw=@file` = `(<--wf-save --dry-run стратегии>) and <условие>`: основной — `(!tcp or (outbound and (tcp.SrcPort < LO or tcp.SrcPort > HI)) or (inbound and (tcp.DstPort < LO or tcp.DstPort > HI)))`, кандидат — `tcp and ((outbound and tcp.SrcPort >= LO and tcp.SrcPort <= HI) or (inbound and tcp.DstPort >= LO and tcp.DstPort <= HI))`. `--wf-raw-part` не годится (OR), `!(…)` в фильтре запрещён (WinDivert: «The parameter is incorrect»). UDP/QUIC-проверки не изолируются → для них `exclusive` или пропуск. | §5 |
 | S-6 | `dns.setup` (Windows 11): серверы с известным шаблоном на адаптер + `…\Dnscache\InterfaceSpecificParameters\{guid}\DohInterfaceSettings\Doh\<ip>` `DohFlags`=1 (QWORD), без UDP-фолбэка; признак работы — 0 пакетов на 53 и TCP :443 службы Dnscache к резолверу. Перед изменением сохранять серверы адаптера (DHCP/статика), записи `DohWellKnownServers` (включая наличие значения `Flags`), подключи `Doh`; откат — ровно к сохранённому. | §6 |
 | S-7 | W-3 подтверждено: WinUI 3, Windows App SDK **2.5.1**, unpackaged, self-contained, сборка `dotnet publish` без Visual Studio. Обязательно `EnableMsixTooling=true` (иначе в publish нет `<app>.pri`/`*.xbf` и падение 0xc000027b). Ссылаться на `Microsoft.WindowsAppSDK.WinUI` (+`DWrite`), не на метапакет: 173 МБ вместо 230 МБ. Интерфейс не запускается в сеансе 0 (0xc0000602) — только в сеансе пользователя. | §7 |
 | S-8 | WiX v7: сборка с `-p:AcceptEula=wix7` (значение проверяется). `ServiceConfig DelayedAutoStart` + `util:ServiceConfig` применяются. Удаление: отложенный CA после `StopServices` (`Impersonate=no`, `Return=ignore`): если `ImagePath` службы `WinDivert` — наш `engine\WinDivert64.sys`, то `sc stop WinDivert` — драйвер выгружается и служба исчезает **без перезагрузки** (после завершения всех winws); чужой драйвер не трогать. | §8 |
@@ -212,7 +225,8 @@ MSI (WixUI ru-RU/en-US/zh-CN, выбор языка по языку систем
 
 ### 13.1. API ядра (зафиксировано wincore, 2026-09-23)
 
-- `new CommandDispatcher(PlatformServices, CoreOptions?)`; после старта службы — `StartupAsync(ct)`.
+- `new CommandDispatcher(PlatformServices, CoreOptions?)`; после старта службы — `StartupAsync(osBoot, ct)` (`StartupAsync(ct)` = `osBoot: true`). `ct` — токен остановки службы: им
+  завершается фоновая работа ядра (внеочередная проверка монитора после исчезновения конфликта).
 - Внутренние методы для таймеров службы (с `CallerInfo.System`): `ensure` (5 мин), `monitor.run` (`monitor.interval`),
   `autoupdate` (раз в сутки, `repo.autoupdate_hour`).
 - `CoreOptions { NetworkList, Updates, IsolationSupported=false, TestLocalPortFrom=41000, TestLocalPortTo=41999, Version }`;
@@ -221,5 +235,5 @@ MSI (WixUI ru-RU/en-US/zh-CN, выбор языка по языку систем
   (test — только диапазон, main — без него) навешивает служба.
 - Аргументы методов — объект: `{id}`, `{text}`, `{ids}`/`{all}`, `{names}`, `{services}` (`id` или `id:variant`),
   `test.start {strategies, quick, apply_if_better, exclusive}`, `{brief}`, `{tail}`, `{full}`, `page {name}`,
-  `update {channel}`, `dns.setup {enable}`, у задачных — `{foreground}`; `settings.set` — частичный config.json (null удаляет).
+  `update {channel}`, `dns.setup {enable}`, `autostart {enable}`, `wizard.apply {services, autostart?}`, у задачных — `{foreground}`; `settings.set` — частичный config.json (null удаляет).
 - События: `status`, `job`, `probe`, `monitor`.

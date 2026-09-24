@@ -27,6 +27,10 @@ public sealed partial class HomeViewModel : PageViewModel
     [ObservableProperty] public partial string HeroTitle { get; set; } = "";
     [ObservableProperty] public partial string HeroText { get; set; } = "";
     [ObservableProperty] public partial string HeroGlyph { get; set; } = "";
+
+    /// <summary>Another program that takes the same traffic (red hero, "More" opens Diagnostics).</summary>
+    [ObservableProperty] public partial bool HasBlockingConflict { get; set; }
+    [ObservableProperty] public partial string ConflictWhere { get; set; } = "";
     [ObservableProperty] public partial bool IsOn { get; set; }
     [ObservableProperty] public partial string ToggleLabel { get; set; } = "";
     [ObservableProperty] public partial string StrategyText { get; set; } = "";
@@ -68,7 +72,10 @@ public sealed partial class HomeViewModel : PageViewModel
         var testing = job.Str("name") == "test" && job.Str("state") == "running";
         IsTesting = testing;
 
-        (HeroKind, HeroTitle, HeroText, HeroGlyph) = Hero(st, enabled, running, monitorState, testing);
+        var conflict = BlockingConflict.FromStatus(st);
+        HasBlockingConflict = conflict != null;
+        ConflictWhere = conflict?.Where ?? "";
+        (HeroKind, HeroTitle, HeroText, HeroGlyph) = Hero(st, enabled, running, monitorState, testing, UiText.IsWaitingNetwork(st), conflict);
         IsOn = running;
         ToggleLabel = running ? L.T("Home.TurnOff") : L.T("Home.TurnOn");
 
@@ -90,12 +97,17 @@ public sealed partial class HomeViewModel : PageViewModel
             Job.Update(job?.Str("state") == "running" && job.Str("name") != "probe" ? job : null);
     }
 
-    public static (string Kind, string Title, string Text, string Glyph) Hero(JsonObject? st, bool enabled, bool running, string? monitorState, bool testing)
+    public static (string Kind, string Title, string Text, string Glyph) Hero(JsonObject? st, bool enabled, bool running, string? monitorState, bool testing,
+        bool waitingNetwork = false, BlockingConflict? conflict = null)
     {
         if (st == null)
             return (K.None, L.T("Home.Hero.Loading"), "", "");
+        if (conflict != null)
+            return (K.Fail, L.F("Home.Hero.Conflict", conflict.Name), L.F("Home.Hero.ConflictText", conflict.Name, conflict.Advice), "");
         if (testing)
             return (K.Info, L.T("Home.Hero.Testing"), L.T("Home.Hero.TestingText"), "");
+        if (running && waitingNetwork)
+            return (K.Warn, L.T("Home.Hero.Waiting"), L.T("Home.Hero.WaitingText"), "");
         if (running && monitorState == "repairing")
             return (K.Info, L.T("Home.Hero.Repairing"), L.T("Home.Hero.RepairingText"), "");
         if (running && monitorState == "degraded")
@@ -138,7 +150,8 @@ public sealed partial class HomeViewModel : PageViewModel
         (MonitorKind, MonitorTitle, MonitorText) = state switch
         {
             "ok" => (K.Ok, L.T("Monitor.Ok"), L.T("Monitor.OkText")),
-            "degraded" => (K.Fail, L.T("Monitor.Degraded"), L.T("Monitor.DegradedText")),
+            "degraded" => (K.Fail, L.T("Monitor.Degraded"),
+                UiText.RepairBlockedByConflict(m) ? L.T("Monitor.RepairBlockedConflict") : L.T("Monitor.DegradedText")),
             "repairing" => (K.Info, L.T("Monitor.Repairing"), L.T("Monitor.RepairingText")),
             _ => (K.None, L.T("Monitor.Unknown"), L.T("Monitor.UnknownText")),
         };
@@ -161,7 +174,9 @@ public sealed partial class HomeViewModel : PageViewModel
 
     private void BuildWarnings(JsonObject? st)
     {
+        // the hero already names the interfering program and leads to the details: no second, yellow copy of it
         var items = st.Strings("warnings")
+            .Where(code => code != "conflict_blocking")
             .Select(code => UiText.Warning(code, st))
             .OrderBy(w => w.IsInfo)
             .Select(w => new WarningItem(w, DoWarningAction))
@@ -197,6 +212,10 @@ public sealed partial class HomeViewModel : PageViewModel
             // the shell shows an unavailable service
         }
     }
+
+    /// <summary>"More" of a blocking conflict: the conflicts are listed on the Diagnostics page.</summary>
+    [RelayCommand]
+    private void OpenConflicts() => Open("diagnostics");
 
     /// <summary>The big switch: start when off, stop when on (autostart stays as it is, see Settings).</summary>
     [RelayCommand]

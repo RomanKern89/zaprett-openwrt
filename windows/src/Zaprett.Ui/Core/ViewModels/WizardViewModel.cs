@@ -46,13 +46,15 @@ public sealed partial class RailStep(int number, string title) : ObservableObjec
 }
 
 /// <summary>A conflicting program found by "conflicts" (ARCHITECTURE-WIN §8).</summary>
-public sealed record ConflictItem(string Name, string SeverityLabel, string Kind, string Detail, string Fix)
+public sealed record ConflictItem(string Name, string SeverityLabel, string Kind, string Detail, string Fix, string Where = "")
 {
     public static ConflictItem From(JsonObject o) => new(
         o.Str("name") ?? o.Str("id") ?? "", UiText.Severity(o.Str("severity")), UiText.SeverityKind(o.Str("severity")),
-        o.Str("detail") ?? "", o.Str("fix") ?? "");
+        ConflictText.Detail(o), ConflictText.Fix(o), ConflictText.Where(o));
 
     public bool HasFix => Fix.Length > 0;
+
+    public bool HasWhere => Where.Length > 0;
 }
 
 /// <summary>One checked site of "diagnose" (§15.4).</summary>
@@ -472,6 +474,8 @@ public sealed partial class WizardViewModel : PageViewModel
     [RelayCommand]
     private async Task AutoSelect()
     {
+        if (!await ConfirmSelectionDespiteConflictAsync())
+            return;
         HasTestResult = false;
         await Try(async () =>
         {
@@ -479,7 +483,8 @@ public sealed partial class WizardViewModel : PageViewModel
             var (_, job) = await State.RunJobAsync("test.start", new JsonObject { ["quick"] = true, ["apply_if_better"] = true }, Job.Update);
             Job.Update(null);
             var test = await State.CallAsync("test.status", new JsonObject { ["brief"] = true });
-            TestResultText = TestSummary.Text(job, test.Obj("results"));
+            var note = TestSummary.ConflictNote(job, test.Obj("results"));
+            TestResultText = note.Length > 0 ? TestSummary.Text(job, test.Obj("results")) + "\n\n" + note : TestSummary.Text(job, test.Obj("results"));
             HasTestResult = true;
             await RecheckAsync();
         }, "Wizard.Err.Test");
@@ -515,7 +520,7 @@ public sealed partial class WizardViewModel : PageViewModel
     [RelayCommand]
     private async Task Finish()
     {
-        var ok = await Try(() => State.CallAsync(IsAutostart ? "enable" : "disable"), "Wizard.Err.Autostart");
+        var ok = await Try(() => State.SetAutostartAsync(IsAutostart), "Wizard.Err.Autostart");
         if (!ok)
             return;
         Complete();
@@ -524,8 +529,7 @@ public sealed partial class WizardViewModel : PageViewModel
 
     private void Complete()
     {
-        State.Prefs.WizardDone = true;
-        State.Prefs.Save();
+        State.Prefs.MarkWizardDone(WizardDecision.InstallId(State.Status));
         Finished?.Invoke(this, EventArgs.Empty);
     }
 
@@ -584,5 +588,19 @@ public static class TestSummary
         if (best == null || best.Long("ok") == 0)
             return L.T("Test.NoneHelped");
         return L.F("Test.NoBetter", L.Pick(best, "name") ?? best.Str("id"), best.Long("ok"), best.Long("total"));
+    }
+
+    /// <summary>
+    /// "Selected while X interfered": the job result (conflict_blocking, conflicts_blocking — a snapshot at the start)
+    /// or the saved results (results.conflicts_blocking); empty when nothing interfered.
+    /// </summary>
+    public static string ConflictNote(JsonObject? job, JsonObject? results)
+    {
+        var result = job.Obj("result");
+        var names = BlockingConflict.All(result, "conflicts_blocking").Concat(BlockingConflict.All(results, "conflicts_blocking"))
+            .Select(c => c.Name).Distinct(StringComparer.Ordinal).ToList();
+        if (names.Count == 0 && result.Bool("conflict_blocking"))
+            names.Add(L.T("Conflict.UnknownProgram"));
+        return names.Count == 0 ? "" : L.F("Test.ConflictNote", L.List(names));
     }
 }

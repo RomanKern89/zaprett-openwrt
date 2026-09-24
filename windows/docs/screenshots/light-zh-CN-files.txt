@@ -33,3 +33,4 @@ light-zh-CN-32-wizard-5-fix.png
 light-zh-CN-33-wizard-5-fix-part2.png
 light-zh-CN-34-wizard-5-fixed.png
 light-zh-CN-35-wizard-6-done.png
+light-zh-CN-36-home-conflict.png

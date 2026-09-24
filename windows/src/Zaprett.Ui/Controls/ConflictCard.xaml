@@ -23,6 +23,8 @@
                 </Grid>
             </StackPanel>
             <TextBlock Text="{x:Bind Item.Detail, Mode=OneWay}" Style="{StaticResource Body}" FontSize="13" />
+            <TextBlock Text="{x:Bind Item.Where, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap"
+                       IsTextSelectionEnabled="True" Visibility="{x:Bind Item.HasWhere, Mode=OneWay}" />
             <TextBlock FontSize="13" TextWrapping="Wrap" Visibility="{x:Bind Item.HasFix, Mode=OneWay}" IsTextSelectionEnabled="True">
                 <Run Text="{x:Bind loc:L.T('Conflict.Fix')}" FontWeight="SemiBold" /><Run Text="{x:Bind loc:L.T('Fmt.Gap')}" /><Run Text="{x:Bind Item.Fix, Mode=OneWay}" />
             </TextBlock>

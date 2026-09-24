@@ -15,6 +15,7 @@ public static class ConfigDefaults
     public static JsonObject Main() => new()
     {
         ["enabled"] = false,
+        ["autostart"] = false,
         ["engine"] = Engines.Winws,
         ["strategy"] = "strategy-general",
         ["strategy_winws2"] = "",

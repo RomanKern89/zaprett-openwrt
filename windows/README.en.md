@@ -9,7 +9,7 @@ interface is available in Russian, English and Simplified Chinese.
 
 ![zaprett for Windows: home page](docs/screenshots/light-en-01-home.png)
 
-> **Version 0.1.0 is a beta.** The installer (MSI) is not signed with a code-signing certificate, so Windows shows a
+> **Version 0.1.1 is a beta.** The installer (MSI) is not signed with a code-signing certificate, so Windows shows a
 > SmartScreen warning when you run it — see below for how to verify the file and what to click.
 >
 > The screenshots in this guide were taken in the interface's demo mode (the "DEMO" badge next to the name): the numbers
@@ -77,34 +77,35 @@ provider's equipment cannot recognise the name while the site itself still can. 
 
 ## 3. Download and verify
 
-1. Open [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases) and find **zaprett for Windows 0.1.0**
-   (tag `win-v0.1.0`). Router releases have different tags (`v1.1.0-r1` and so on).
-2. Download `zaprett-0.1.0-x64.msi` and `SHA256SUMS`.
+1. Open [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases) and find **zaprett for Windows 0.1.1**
+   (tag `win-v0.1.1`). Router releases have different tags (`v1.1.0-r1` and so on).
+2. Download `zaprett-0.1.1-x64.msi` and `SHA256SUMS`.
 3. Check that the file is neither damaged nor replaced. Open PowerShell in the downloads folder and run:
 
    ```powershell
-   Get-FileHash .\zaprett-0.1.0-x64.msi -Algorithm SHA256
+   Get-FileHash .\zaprett-0.1.1-x64.msi -Algorithm SHA256
    ```
 
-   The `Hash` value must equal the line for `zaprett-0.1.0-x64.msi` in `SHA256SUMS` (letter case does not matter).
-   In the classic command prompt: `certutil -hashfile zaprett-0.1.0-x64.msi SHA256`.
+   The `Hash` value must equal the line for `zaprett-0.1.1-x64.msi` in `SHA256SUMS` (letter case does not matter).
+   In the classic command prompt: `certutil -hashfile zaprett-0.1.1-x64.msi SHA256`.
 
 If the checksums differ, do not run the file — download it again.
 
 ## 4. Install
 
-1. **Double-click** `zaprett-0.1.0-x64.msi`.
+1. **Double-click** `zaprett-0.1.1-x64.msi`.
 2. **If a blue "Windows protected your PC" window appears** (SmartScreen), click **More info**, then **Run anyway**.
-   Windows does this for any installer that has no code-signing certificate and few downloads yet. zaprett 0.1.0 has no
+   Windows does this for any installer that has no code-signing certificate and few downloads yet. zaprett 0.1.1 has no
    such signature: the certificate costs money and the project is non-commercial. You have verified the file with its
    SHA256 checksum in the previous step.
-3. **The installer is in Russian by default**, and the app also opens in Russian; change the app language later in
-   Settings → Language. For an English or Chinese installer (and the same app language right away), run it from the
-   command line:
+3. **The installer language follows the Windows regional format** (Settings → Time & language → Region →
+   Regional format): an English format gives the English installer, a Chinese one the Chinese installer, any other
+   the Russian one. The app opens in the same language; change it later in Settings → Language. To pick the
+   language explicitly, run it from the command line:
 
    ```powershell
-   msiexec /i zaprett-0.1.0-x64.msi TRANSFORMS=:1033 LANG=en       # English
-   msiexec /i zaprett-0.1.0-x64.msi TRANSFORMS=:2052 LANG=zh-CN    # Chinese
+   msiexec /i zaprett-0.1.1-x64.msi TRANSFORMS=:1033 LANG=en       # English
+   msiexec /i zaprett-0.1.1-x64.msi TRANSFORMS=:2052 LANG=zh-CN    # Chinese
    ```
 4. Go through the installer pages:
    - **welcome** and **license** (MIT);
@@ -172,8 +173,9 @@ Providers block in different ways, and the default strategy may not suit yours.
 
 ### Step 6 of 6. Done
 
-The **Turn the bypass on when Windows starts** switch (recommended) decides whether the bypass is on after a restart.
-Click **Finish**.
+The **Turn the bypass on when Windows starts** switch (recommended) decides whether the bypass is on after a restart:
+when it is on, the bypass turns itself on with the current settings. It does not turn off the bypass that runs now —
+that is the button on the home page. Click **Finish**.
 
 ![Step 6: done](docs/screenshots/light-en-35-wizard-6-done.png)
 
@@ -255,11 +257,13 @@ import and export to a file); **Subscriptions** — external lists by https link
 
 | Group | What is there |
 |---|---|
-| **Bypass** | Turn the bypass on when Windows starts; Engine (zapret (winws) or zapret2 (winws2)); Watchdog (restarts the engine if it stops unexpectedly); Process IPv6 |
+| **Bypass** | Turn the bypass on when Windows starts (only what happens after a restart; the button on the home page turns the bypass on or off right now); Engine (zapret (winws) or zapret2 (winws2)); Watchdog (restarts the engine if it stops unexpectedly); Process IPv6 |
 | **DNS, QUIC and games** | Encrypted DNS (DNS over HTTPS — **Windows 11 only**; not available on Windows 10 in this version); Block QUIC (helps when YouTube works in one browser but not in another); Game filter with TCP/UDP ports |
 | **Networks** | Where the bypass works: in all networks or only in chosen Wi-Fi networks; Do not work in a corporate network; the monitor — Check the sites on schedule, How often, Failed checks before a warning, Repair automatically (quick selection when the sites stop opening, at most once in 6 hours) |
-| **Updates** | in 0.1.0 — a note that automatic updates will come in later versions and a button that opens the releases page; how to update — section 8 |
+| **Updates** | in 0.1.1 — a note that automatic updates will come in later versions and a button that opens the releases page; how to update — section 8 |
 | **Interface** | Language (Russian, English, Chinese — the service and the command line use the same language), Theme (light, dark, as in Windows), Notifications, Keep in the notification area when closed, Setup wizard |
+
+> **Windows Fast Startup.** "Turn the bypass on when Windows starts" is applied when Windows boots. With Fast Startup on (the default in Windows 10 and 11), Shut down is not a full boot: after you power the PC on, the bypass keeps the state it had before the shutdown, and the setting applies at the next **Restart**. A restart of the service (an update, a repair) does not change the state of the bypass either.
 
 ![Settings: bypass](docs/screenshots/light-en-18-settings.png)
 
@@ -283,7 +287,7 @@ installation.
 
 ## 8. Update and uninstall
 
-**Update.** 0.1.0 has no automatic updates — they will come in later versions. To update, download the new MSI from
+**Update.** 0.1.1 has no automatic updates — they will come in later versions. To update, download the new MSI from
 [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases) (the button in Settings → Updates opens that page)
 and run it: the old version is
 replaced, your settings, own lists and strategies are kept. Installing an older version over a newer one is refused.
@@ -297,7 +301,7 @@ A normal uninstall **keeps** settings and lists in `C:\ProgramData\zaprett` in c
 too:
 
 ```powershell
-msiexec /x zaprett-0.1.0-x64.msi REMOVEDATA=1
+msiexec /x zaprett-0.1.1-x64.msi REMOVEDATA=1
 ```
 
 ## 9. For administrators: silent install
@@ -306,16 +310,16 @@ Run these from an elevated command prompt.
 
 ```powershell
 # silent install: enable YouTube and Discord and turn the bypass on, installer log to a file
-msiexec /i zaprett-0.1.0-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
+msiexec /i zaprett-0.1.1-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
 
 # no notification area icon at user sign-in
-msiexec /i zaprett-0.1.0-x64.msi /qn TRAYAUTOSTART=0
+msiexec /i zaprett-0.1.1-x64.msi /qn TRAYAUTOSTART=0
 
 # English installer and English app (Chinese: TRANSFORMS=:2052 LANG=zh-CN)
-msiexec /i zaprett-0.1.0-x64.msi TRANSFORMS=:1033 LANG=en
+msiexec /i zaprett-0.1.1-x64.msi TRANSFORMS=:1033 LANG=en
 
 # silent uninstall including settings and lists
-msiexec /x zaprett-0.1.0-x64.msi /qn REMOVEDATA=1
+msiexec /x zaprett-0.1.1-x64.msi /qn REMOVEDATA=1
 ```
 
 | Property | Value |
@@ -350,8 +354,9 @@ Main commands (full reference: `zaprett.exe help`):
 
 ```text
 status                          state
-start | stop | restart          engine control
-enable | disable                turn on/off (autostart)
+start | stop | restart          the bypass now (autostart unchanged)
+enable | disable                turn on/off now and after Windows starts
+autostart on|off                turn the bypass on after Windows starts or not (now unchanged)
 check                           check the settings without starting
 wizard apply youtube discord    enable services, as in the wizard
 list enable|disable <id>        turn a list on/off
@@ -436,7 +441,7 @@ at `C:\ProgramData\zaprett\logs\zaprett.log`.
 single MSI with no extra components, the setup wizard, the bypass itself, isolated automatic selection (the main bypass
 is not restarted), uninstallation.
 
-**Limitations of 0.1.0 (beta):**
+**Limitations of 0.1.1 (beta):**
 
 - the MSI is not signed with a code-signing certificate — SmartScreen shows a warning (section 4);
 - no automatic updates yet — install a new version with a new MSI (section 8);

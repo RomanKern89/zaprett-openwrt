@@ -23,7 +23,12 @@ public sealed record SourceConfig(
 /// listed in <see cref="BadOptions"/> (warning bad_config, like config.uc).</summary>
 public sealed record ZaprettConfig
 {
+    /// <summary>The bypass works now (the watchdog and the monitor follow it).</summary>
     public bool Enabled { get; init; }
+
+    /// <summary>The bypass is switched on when Windows starts (the service sets enabled from it at startup).</summary>
+    public bool Autostart { get; init; }
+
     public string Engine { get; init; } = Engines.Winws;
     public string Strategy { get; init; } = "";
     public string StrategyWinws2 { get; init; } = "";
