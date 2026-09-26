@@ -14,7 +14,8 @@
   -Action StartService (upgrade, after the old version is removed) start the zaprett service again when its start
                      type is Automatic and it is not running (the removal of 0.1.1 stops it), wait for Running.
   -Action Rollback   (rollback of a first install) delete the group again.
-  -Action Uninstall  (real removal only, never on a major upgrade) stop winws.exe / winws2.exe started from our
+  -Action Uninstall  (real removal only, never on a major upgrade) delete the package cache of zaprett-setup.exe
+                     (%CommonProgramFiles%\zaprett\Installer), stop winws.exe / winws2.exe started from our
                      folder, delete the WinDivert driver service only when its ImagePath points into our folder,
                      remove the zaprett firewall rules, delete the group and the tray autostart, and with -RemoveData 1 delete
                      C:\ProgramData\zaprett. Every step is best effort: uninstall must not fail halfway.
@@ -303,6 +304,22 @@ function Remove-Data([string]$Dir) {
     }
 }
 
+# zaprett-setup.exe keeps the installed package in %CommonProgramFiles%\zaprett\Installer\<version>\ (the source a
+# repair takes the files from; only administrators may write there). A real removal deletes that cache.
+function Remove-PackageCache {
+    $common = Get-NormalPath $env:CommonProgramFiles
+    $root = Join-Path $common 'zaprett'
+    $cache = Join-Path $root 'Installer'
+    if (Test-Path -LiteralPath $cache) {
+        Remove-Item -LiteralPath $cache -Recurse -Force
+        Write-Log "deleted $cache"
+    }
+    if ((Test-Path -LiteralPath $root) -and -not (Get-ChildItem -LiteralPath $root -Force)) {
+        Remove-Item -LiteralPath $root -Force
+        Write-Log "deleted $root"
+    }
+}
+
 $dir = Get-NormalPath $InstallDir
 # the install folder may be chosen freely (ARCHITECTURE-WIN §12.1), so it is recognised by our service binary
 if (-not (Test-Path -LiteralPath (Join-Path $dir 'zaprett-svc.exe'))) {
@@ -362,6 +379,7 @@ Invoke-Step 'tray autostart' {
     Remove-TrayRunValue $dir
     Remove-ItemProperty -Path $SettingsKey -Name $TrayChoiceName -ErrorAction SilentlyContinue
 }
+Invoke-Step 'package cache' { Remove-PackageCache }
 if ($RemoveData -eq '1') {
     Invoke-Step 'data directory' { Remove-Data (Get-NormalPath $DataDir) }
 }

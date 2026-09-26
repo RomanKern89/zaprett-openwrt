@@ -54,6 +54,21 @@
                  Sequence="both" Condition="NOT AUTOSTART" />
     <SetProperty Id="SERVICES" Action="SetServicesFromSaved" Value="[ZAPRETT_SAVED_SERVICES]" After="AppSearch"
                  Sequence="both" Condition="NOT SERVICES AND ZAPRETT_SAVED_SERVICES" />
+    <!-- DESKTOPSHORTCUT = 1 | 0: the zaprett shortcut on the desktop of all users (checkbox on ZaprettWarningDlg, on by
+         default). Remembered like AUTOSTART (HKLM\SOFTWARE\zaprett DesktopShortcut), so a repair, a silent upgrade or
+         the checkbox of the next upgrade starts from the user's choice; an upgrade from 0.1.0-0.1.2 (nothing saved)
+         gets the default 1. The checkbox itself works on ZAPRETT_DESKTOP_CHK (a check box leaves its property EMPTY
+         when cleared, which the default below would turn back into 1); Next of the dialog writes 1 or 0 from it. -->
+    <Property Id="DESKTOPSHORTCUT" Secure="yes" />
+    <Property Id="ZAPRETT_SAVED_DESKTOPSHORTCUT">
+      <RegistrySearch Id="SavedDesktopShortcut" Root="HKLM" Key="SOFTWARE\zaprett" Name="DesktopShortcut" Type="raw" Bitness="always64" />
+    </Property>
+    <SetProperty Id="DESKTOPSHORTCUT" Action="SetDesktopShortcutFromSaved" Value="[ZAPRETT_SAVED_DESKTOPSHORTCUT]"
+                 After="AppSearch" Sequence="both" Condition="NOT DESKTOPSHORTCUT AND ZAPRETT_SAVED_DESKTOPSHORTCUT" />
+    <SetProperty Id="DESKTOPSHORTCUT" Action="SetDesktopShortcutDefault" Value="1" After="SetDesktopShortcutFromSaved"
+                 Sequence="both" Condition="NOT DESKTOPSHORTCUT" />
+    <SetProperty Id="ZAPRETT_DESKTOP_CHK" Action="SetDesktopCheckbox" Value="1" After="SetDesktopShortcutDefault"
+                 Sequence="ui" Condition="DESKTOPSHORTCUT = &quot;1&quot;" />
     <Property Id="REMOVEDATA" Secure="yes" />
     <Property Id="TRAYAUTOSTART" Value="1" Secure="yes" />
     <!-- LANG = ru | en | zh-CN: ui.language of a NEW config.json (an existing one is never touched). Defaults to the
@@ -98,6 +113,8 @@
       <Directory Id="DATAFOLDER" Name="zaprett" />
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
+    <!-- per-machine package: DesktopFolder is the Public (all users) desktop -->
+    <StandardDirectory Id="DesktopFolder" />
 
     <Feature Id="Core" Title="!(loc.FeatureCoreTitle)" Description="!(loc.FeatureCoreDescription)"
              Level="1" AllowAbsent="no" Display="expand">
@@ -169,6 +186,18 @@
       </Component>
       <Component Id="InstallOptionServices" Directory="INSTALLFOLDER" Condition="SERVICES">
         <RegistryValue Root="HKLM" Key="SOFTWARE\zaprett" Name="Services" Type="string" Value="[SERVICES]" KeyPath="yes" />
+      </Component>
+      <!-- the desktop choice, 1 or 0, always written (a separate component: the ones of 0.1.x keep their contents) -->
+      <Component Id="InstallOptionDesktopShortcut" Directory="INSTALLFOLDER">
+        <RegistryValue Root="HKLM" Key="SOFTWARE\zaprett" Name="DesktopShortcut" Type="string" Value="[DESKTOPSHORTCUT]" KeyPath="yes" />
+      </Component>
+      <!-- the desktop shortcut itself, only when chosen. Its key path is an HKLM value, not the .lnk (ICE43/ICE57 are
+           suppressed in the .wixproj for the per-machine shortcut folders). An upgrade with the box cleared does not
+           install this component, and the removal of the old version then takes its shortcut away. -->
+      <Component Id="UiDesktopShortcut" Directory="DesktopFolder" Condition="DESKTOPSHORTCUT = &quot;1&quot;">
+        <Shortcut Id="UiDesktopShortcut" Name="zaprett" Target="[#UiExe]" Description="!(loc.ShortcutDescription)"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\zaprett" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
       </Component>
 
       <!-- Tray icon at every user logon: NOT a component any more. The user's choice lives in

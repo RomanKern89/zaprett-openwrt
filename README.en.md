@@ -20,9 +20,9 @@ This is a port of the Android manager [zaprett](https://github.com/CherretGit/za
 
 | | OpenWrt router | Windows PC |
 |---|---|---|
-| **Version** | 1.1.0-r1 | 0.1.2 |
+| **Version** | 1.1.0-r1 | 0.1.3 |
 | **For** | every device at home: phones, TVs, set-top boxes, consoles | one Windows 10/11 PC |
-| **Install** | a `.tar.gz` bundle and `sh install.sh` | an MSI installer |
+| **Install** | a `.tar.gz` bundle and `sh install.sh` | `zaprett-0.1.3-x64-setup.exe` (or the MSI for administrators) |
 | **Interface** | LuCI → Services → zaprett | an app with a tray icon |
 | **Guide** | [docs/GUIDE.en.md](docs/GUIDE.en.md) · [install](docs/INSTALL.en.md) | [windows/README.en.md](windows/README.en.md) |
 
@@ -215,10 +215,12 @@ are validated by the engine first. The full list: [user guide, §11](docs/GUIDE.
 
 ## zaprett for Windows
 
-No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.2** does the same on a
+No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.3** does the same on a
 Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC: a first-run wizard, site checks, automatic
-strategy selection that does not stop the bypass, a monitor, diagnostics, own lists and subscriptions. One MSI
-installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines); the interface is in
+strategy selection that does not stop the bypass, a monitor, diagnostics, own lists and subscriptions. One
+installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines) — download
+`zaprett-0.1.3-x64-setup.exe`: it asks for administrator rights right away and runs the MSI; the `.msi` itself is for
+administrators and silent installs; the interface is in
 English, Russian and Chinese.
 
 | | |
@@ -231,7 +233,7 @@ Installation, SHA256 verification and all features: **[zaprett for Windows guide
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Windows releases are signed once the SignPath Foundation application is approved; until then the MSI is not Authenticode-signed. Team roles, what is signed and the privacy policy: [docs/CODE_SIGNING.md](docs/CODE_SIGNING.md).
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Windows releases are signed once the SignPath Foundation application is approved; until then the MSI and `setup.exe` are not Authenticode-signed. Team roles, what is signed and the privacy policy: [docs/CODE_SIGNING.md](docs/CODE_SIGNING.md).
 
 ---
 

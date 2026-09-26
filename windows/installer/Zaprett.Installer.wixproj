@@ -27,12 +27,13 @@
     <ZaprettArpSizeKb Condition="'$(ZaprettArpSizeKb)' == ''">MISSING</ZaprettArpSizeKb>
     <DefineConstants>ProductVersion=$(ProductVersion);ProductCode=$(ProductCode);StageDir=$(StageDir);ZaprettArpSizeKb=$(ZaprettArpSizeKb)</DefineConstants>
     <SuppressValidation Condition="'$(SuppressValidation)' == ''">false</SuppressValidation>
-    <!-- ICE43/ICE57: the Start menu shortcut of a per-machine package (ALLUSERS=1) lives in the all-users
-         ProgramMenuFolder; these ICEs assume a per-user folder. -->
+    <!-- ICE38/ICE43/ICE57: the Start menu and desktop shortcuts of a per-machine package (ALLUSERS=1) live in the
+         all-users ProgramMenuFolder / DesktopFolder (Public desktop) with an HKLM key path; these ICEs assume per-user
+         folders and would want an HKCU key path. -->
     <!-- ICE03: Microsoft.ui.xaml.dll / Microsoft.UI.Xaml.Phone.dll (Windows App SDK) and their .mui carry language ids
          1152 (ug-CN), 1153 (mi-NZ), 1169 (ckb) that the ICE03 table does not know ("Invalid Language Id"). The files
          are Microsoft's, unmodified; Windows Installer installs them fine. -->
-    <SuppressIces>ICE03;ICE43;ICE57</SuppressIces>
+    <SuppressIces>ICE03;ICE38;ICE43;ICE57</SuppressIces>
   </PropertyGroup>
 
   <ItemGroup>

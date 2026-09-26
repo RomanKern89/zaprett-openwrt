@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    zaprett-setup.exe: a small bootstrapper around the MSI (Program.cs). .NET Framework 4.8 is part of every supported
+    Windows (10 2004+, 11), so the exe needs no runtime of its own. build\build-setup.ps1 builds it with
+    -p:ZaprettMsi=<path to the MSI>; the MSI goes in as the resource "zaprett.msi" together with its SHA-256 and file
+    name (assembly metadata), which the exe checks after unpacking. Without ZaprettMsi (dotnet build / test of the
+    solution) the exe builds without a package and only reports that when started.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>zaprett-setup</AssemblyName>
+    <RootNamespace>Zaprett.Setup</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\src\Zaprett.Ui\Assets\zaprett.ico</ApplicationIcon>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AssemblyTitle>zaprett Setup</AssemblyTitle>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ZaprettMsi)' != ''">
+    <EmbeddedResource Include="$(ZaprettMsi)" LogicalName="zaprett.msi" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ZaprettMsiSha256</_Parameter1>
+      <_Parameter2>$(ZaprettMsiSha256)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ZaprettMsiName</_Parameter1>
+      <_Parameter2>$([System.IO.Path]::GetFileName('$(ZaprettMsi)'))</_Parameter2>
+    </AssemblyAttribute>
+    <!-- the folder of the package cache (%CommonProgramFiles%\zaprett\Installer\<version>) -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ZaprettMsiVersion</_Parameter1>
+      <_Parameter2>$(Version)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ZaprettProductCode</_Parameter1>
+      <_Parameter2>$(ZaprettProductCode)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <Target Name="ZaprettRequireMsiHash" BeforeTargets="CoreCompile" Condition="'$(ZaprettMsi)' != ''">
+    <Error Condition="!Exists('$(ZaprettMsi)')" Text="ZaprettMsi does not exist: $(ZaprettMsi)" />
+    <Error Condition="'$(ZaprettMsiSha256)' == ''" Text="ZaprettMsiSha256 must be given together with ZaprettMsi" />
+    <Error Condition="'$(ZaprettProductCode)' == ''" Text="ZaprettProductCode must be given together with ZaprettMsi" />
+  </Target>
+</Project>

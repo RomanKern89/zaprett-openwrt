@@ -61,7 +61,10 @@
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="ZaprettWarningDlg" Condition="LicenseAccepted = &quot;1&quot;" />
 
       <Publish Dialog="ZaprettWarningDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" />
-      <Publish Dialog="ZaprettWarningDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" />
+      <!-- the desktop checkbox works on ZAPRETT_DESKTOP_CHK (empty when cleared); DESKTOPSHORTCUT gets 1 or 0 -->
+      <Publish Dialog="ZaprettWarningDlg" Control="Next" Property="DESKTOPSHORTCUT" Value="1" Order="1" Condition="ZAPRETT_DESKTOP_CHK" />
+      <Publish Dialog="ZaprettWarningDlg" Control="Next" Property="DESKTOPSHORTCUT" Value="0" Order="2" Condition="NOT ZAPRETT_DESKTOP_CHK" />
+      <Publish Dialog="ZaprettWarningDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="3" />
 
       <!-- install folder (default C:\Program Files\zaprett), as in WixUI_InstallDir -->
       <DialogRef Id="BrowseDlg" />
@@ -95,7 +98,9 @@
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgTitle)" />
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgDescription)" />
-        <Control Id="Text" Type="Text" X="20" Y="54" Width="330" Height="146" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgText)" />
+        <Control Id="Text" Type="Text" X="20" Y="54" Width="330" Height="134" NoPrefix="yes" Text="!(loc.ZaprettWarningDlgText)" />
+        <!-- shown on an upgrade too: it starts from the saved choice (DESKTOPSHORTCUT, Package.wxs) -->
+        <Control Id="DesktopCheckBox" Type="CheckBox" X="20" Y="190" Width="330" Height="17" Property="ZAPRETT_DESKTOP_CHK" CheckBoxValue="1" Text="!(loc.ZaprettWarningDlgDesktop)" />
         <Control Id="TrayCheckBox" Type="CheckBox" X="20" Y="208" Width="330" Height="17" Property="TRAYAUTOSTART" CheckBoxValue="1" Text="!(loc.ZaprettWarningDlgTray)"
                  HideCondition="WIX_UPGRADE_DETECTED" />
         <!-- an upgrade keeps the choice made at the first install or later in Settings, so no checkbox then -->

@@ -22,4 +22,9 @@
     <ProjectReference Include="..\..\src\Zaprett.Core\Zaprett.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- pure logic of zaprett-setup.exe (windows/setup, net48); the exe itself is built by build-setup.ps1 -->
+    <Compile Include="..\..\setup\SetupLogic.cs" Link="Setup\SetupLogic.cs" />
+  </ItemGroup>
+
 </Project>

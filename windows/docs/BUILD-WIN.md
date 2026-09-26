@@ -10,7 +10,7 @@
 | Windows 10/11 x64 | — | сборка MSI (WiX и Windows Installer COM есть только в Windows) |
 | .NET SDK | по `windows/global.json` (10.0.401, `rollForward: latestFeature`) | решение, publish, WiX SDK |
 | Windows PowerShell 5.1 или PowerShell 7 | — | `windows/build/*.ps1` |
-| Интернет при первой сборке | — | NuGet (WiX 7.0.0, пакеты .NET) и архивы движка |
+| Интернет при первой сборке | — | NuGet (WiX 7.0.0, пакеты .NET, `Microsoft.NETFramework.ReferenceAssemblies` для `setup.exe`) и архивы движка |
 
 Visual Studio не нужна: WiX v7 подключается как MSBuild SDK (`WixToolset.Sdk/7.0.0`) и скачивается NuGet'ом.
 Если `dotnet` лежит не в `PATH`, путь к нему — в переменной `DOTNET_EXE`.
@@ -38,7 +38,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows/build/build.ps1
    английский, обратно ru-RU → русский; Win10 с интерфейсом en-US и форматом ru-RU → русский. Для уже установленного
    продукта msiexec берёт язык из кэша прошлой установки. Явно — `TRANSFORMS=:1033` / `TRANSFORMS=:2052`
    (двоеточие = встроенное преобразование);
-7. результат — `windows/artifacts/dist/zaprett-<версия>-x64.msi` и `SHA256SUMS`.
+7. `build-setup.ps1 -Msi <msi>` — `zaprett-<версия>-x64-setup.exe`: тот же MSI внутри загрузчика, который просит
+   права администратора сразу при запуске (раздел 4.1).
+
+Результат — `windows/artifacts/dist/zaprett-<версия>-x64.msi`, `zaprett-<версия>-x64-setup.exe` и `SHA256SUMS`
+с обоими файлами.
 
 Параметры: `-Version X.Y.Z` (по умолчанию `<Version>` из `windows/Directory.Build.props`), `-Offline` (движок
 только из кэша), `-SkipTests`, `-StubUi` (заглушка вместо интерфейса — только для проверки установщика; такой MSI
@@ -96,8 +100,10 @@ CI прогоняет их при каждой сборке.
   или `INSTALLFOLDER=...` (пробелы и не-ASCII допустимы, ARCHITECTURE-WIN §12.1); обновление остаётся в каталоге
   установленной версии (`HKLM\SOFTWARE\zaprett\InstallDir`). Windows 10 2004 (сборка 19041)+ x64, включая LTSC 2021 — иначе установка
   не начнётся. Размер MSI с настоящим интерфейсом WinUI — около 55 МБ (цель ≤ 100 МБ).
-- Интерфейс установщика: приветствие → лицензия MIT → предупреждение о WinDivert и антивирусах (флажок значка в
-  трее) → каталог → установка. Языки: русский (основной), английский, китайский упрощённый. Страницы лицензии —
+- Интерфейс установщика: приветствие → лицензия MIT → предупреждение о WinDivert и антивирусах (флажки значка в
+  трее и ярлыка на рабочем столе) → каталог → установка. Страница «Готово к установке» подсказывает нажать «Да» в
+  запросе Windows (или мигающий значок щита на панели задач), страница `UserExit` («прервано») — вероятную причину
+  (запрос прав не подтверждён) и `zaprett-setup.exe` как выход. Языки: русский (основной), английский, китайский упрощённый. Страницы лицензии —
   `installer/License.<культура>.rtf`, генерируются `installer/license/make_license_rtf.py` (текст MIT — английский
   оригинал, пояснение и сторонние компоненты — на языке страницы).
 - `LANG` (`ru` | `en` | `zh-CN`, по умолчанию — язык установщика: `ru`, а при `TRANSFORMS=:1033` / `:2052` — `en` / `zh-CN`) записывается как `ui.language` в
@@ -128,7 +134,14 @@ CI прогоняет их при каждой сборке.
   значения `Run\zaprett`; исправление и обновление выбор не меняют (флажок при обновлении скрыт, `TRAYAUTOSTART`
   игнорируется). После удаления старой версии `ZaprettApplyTray` приводит `Run\zaprett` к выбору, служба делает
   то же при каждом старте. Удаление стирает и значение `Run`, и выбор.
-- Параметры для службы: `HKLM\SOFTWARE\zaprett` — `InstallDir`, `Version`, `AutoStart`, `Services`, `TrayAutostart`.
+- Ярлык на рабочем столе всех пользователей (Public desktop): `DESKTOPSHORTCUT` = `1` (по умолчанию) | `0`, флажок
+  на странице предупреждения. Выбор хранится в `HKLM\SOFTWARE\zaprett\DesktopShortcut` и запоминается как `AUTOSTART`
+  (`SetDesktopShortcutFromSaved` после `AppSearch`, явное значение важнее); обновление с 0.1.0–0.1.2 (выбора нет)
+  получает `1`. Флажок показывается и при обновлении и начинается с сохранённого выбора; снятый — компонент
+  `UiDesktopShortcut` не ставится, и удаление старой версии уносит её ярлык. Флажок работает через
+  `ZAPRETT_DESKTOP_CHK` (снятый флажок оставляет свойство пустым), «Далее» записывает в `DESKTOPSHORTCUT` 1 или 0.
+- Параметры для службы: `HKLM\SOFTWARE\zaprett` — `InstallDir`, `Version`, `AutoStart`, `Services`, `TrayAutostart`
+  (и `DesktopShortcut` — только для установщика).
   `AUTOSTART` и `SERVICES` запоминаются: исправление и обновление без них в командной строке берут значения
   установленной версии (`RegistrySearch` → `SetAutoStartFromSaved` / `SetServicesFromSaved` после `AppSearch`, в
   обеих последовательностях); явно заданное значение важнее; без того и другого `AUTOSTART=0`. Служба применяет их
@@ -195,8 +208,52 @@ CI прогоняет их при каждой сборке.
 ```
 msiexec /i zaprett-1.0.0-x64.msi /qn AUTOSTART=1 SERVICES=youtube,discord /l*v install.log
 msiexec /i zaprett-1.0.0-x64.msi TRANSFORMS=:2052 LANG=zh-CN          (китайский установщик и интерфейс)
+msiexec /i zaprett-1.0.0-x64.msi /qn DESKTOPSHORTCUT=0                 (без ярлыка на рабочем столе)
 msiexec /x zaprett-1.0.0-x64.msi /qn REMOVEDATA=1
+zaprett-1.0.0-x64-setup.exe /qn SERVICES=youtube,discord AUTOSTART=1 /l*v install.log   (то же через setup.exe)
 ```
+
+### 4.1. `zaprett-<версия>-x64-setup.exe`
+
+Зачем: обычный MSI просит права администратора только после кнопки «Установить», в конце страниц. Запрос UAC
+иногда открывается позади других окон (мигающий щит на панели задач); без ответа он закрывается сам примерно через
+2 минуты, и установка заканчивается страницей «прервано» — ничего не поставлено, в «Приложениях» пусто.
+`setup.exe` спрашивает права сразу после двойного щелчка, до страниц установщика, и затем запускает тот же MSI
+с полным интерфейсом.
+
+- Проект — `windows/setup/Zaprett.Setup.csproj` (в `Zaprett.slnx`): net48, WinExe, `AssemblyName` `zaprett-setup`,
+  манифест `asInvoker`; повышение — сам себя через ShellExecute `runas`. Нужен только .NET Framework 4.8 (есть в
+  Windows 10 2004+ и Windows 11); для сборки — NuGet-пакет `Microsoft.NETFramework.ReferenceAssemblies`
+  (восстанавливается автоматически).
+- `build/build-setup.ps1 -Msi <msi> [-OutDir <каталог>] [-Configuration Release]` собирает проект с
+  `-p:ZaprettMsi=<msi> -p:ZaprettMsiSha256=<sha>`: MSI встраивается ресурсом `zaprett.msi`, в метаданных сборки —
+  `ZaprettMsiSha256` и `ZaprettMsiName`. Версия берётся из ProductVersion MSI. После сборки скрипт проверяет у exe
+  FileVersion = `<версия>.0` и что SHA-256 встроенного ресурса, прочитанного из готового exe, равен SHA-256 MSI.
+  Имя результата — `<имя MSI без расширения>-setup.exe`.
+- При запуске: отказ или закрытие запроса UAC — сообщение с объяснением и кнопками Windows «Повтор» / «Отмена»
+  (`MessageBoxW` с `MB_SETFOREGROUND | MB_TOPMOST`: после отказа передний план у другого окна, обычное окно открывалось
+  неактивным; при `/qn` и т. п. — без сообщения, код 1602). Язык сообщения — язык интерфейса Windows
+  (`CurrentUICulture`): текст цитирует окно UAC и называет кнопки, а их Windows рисует на языке интерфейса; страницы
+  MSI при этом идут на языке регионального формата (так выбирает преобразование Windows Installer). Если процесс уже
+  повышен (запуск от администратора, повышенная консоль), второго запроса нет; если повышенная копия всё же
+  оказалась без прав — понятное сообщение и 1603. Затем MSI кладётся в **кэш пакета**
+  `%CommonProgramFiles%\zaprett\Installer\<версия>\` (писать под Common Files могут только SYSTEM и администраторы —
+  пакет нельзя подменить между проверкой и запуском msiexec). Этот каталог Windows Installer записывает источником
+  продукта, и «Исправить» берёт файлы оттуда: копия в `%WINDIR%\Installer` без файлов внутри (EmbedCab), а источник во
+  временном каталоге после его удаления давал при восстановлении 1603. На время работы msiexec файл открыт **только на
+  чтение** с `FileShare.Read` (дескриптор с правом записи давал 1619, ZERR-060); SHA-256 сверяется через этот же
+  дескриптор, запускается `%SystemRoot%\System32\msiexec.exe /i "<msi>" <аргументы пользователя>`. После успешной
+  установки (0, 3010, 1641) пакеты других версий удаляются; при неудаче первой установки (продукт не установлен —
+  `MsiQueryProductState`) удаляется и свой. Настоящее удаление zaprett удаляет весь кэш
+  (`installer-actions.ps1 -Action Uninstall`). Обновление обычным `.msi` поверх установленного через `setup.exe`
+  оставляет пакет прежней версии до удаления программы. Аргументы командной строки передаются msiexec без
+  изменений, код возврата — код msiexec; непредвиденная ошибка — 1603, а не аварийное окно.
+- Подмена DLL рядом с exe: повышенная копия запускается из той же папки, что и exe (обычно «Загрузки»), а
+  `mscoree.dll` не входит в KnownDLLs. Пока exe не подписан, это не расширяет риск: тот, кто может положить DLL в эту
+  папку, может подменить и сам exe. **С появлением подписи** (UAC покажет проверенного издателя) это нужно закрыть —
+  например, нативной заглушкой с `SetDefaultDllDirectories`.
+- Тесты: `tests/Zaprett.Core.Tests/SetupLogicTests.cs` (`setup/SetupLogic.cs` подключён в тестовый проект ссылкой)
+  и `InstallerSourceTests.cs`.
 
 ## 5. WiX v7 и OSMF EULA
 
@@ -219,6 +276,12 @@ WiX Toolset v7 распространяется по OSMF EULA v1.1 и треб�
    (sha256 и размер MSI, ссылка на него в релизе), подпись ключом из секрета, проверка подписи ВСТРОЕННЫМ в
    приложение открытым ключом, `gh release create` с файлами `zaprett-<версия>-x64.msi`, `SHA256SUMS`,
    `update.json`, `update.json.sig`.
+
+**`setup.exe` и подпись.** `build.ps1` собирает `zaprett-<версия>-x64-setup.exe` вокруг ещё не подписанного MSI.
+Конвейер, который подписывает MSI, должен идти в таком порядке: подписать MSI → вызвать `build-setup.ps1` с
+**подписанным** MSI (exe несёт ровно публикуемый пакет, SHA-256 сверяется) → подписать exe → пересчитать
+`SHA256SUMS`. `windows.yml` под `setup.exe` пока **не обновлён**: список файлов задания `release`
+выше — прежний, без exe, и подписи exe в нём нет.
 
 ### Размер в «Приложениях» (ARPSIZE)
 
@@ -304,11 +367,12 @@ dotnet run --project windows/tools/update-sign/Zaprett.UpdateSign -- verify --ma
 
 ## 8. Как пользователю проверить скачанный MSI
 
-Authenticode-подписи пока нет (ARCHITECTURE-WIN W-7), поэтому SmartScreen покажет «неизвестный издатель».
-Проверка файла:
+Authenticode-подписи пока нет (ARCHITECTURE-WIN W-7) ни у MSI, ни у `setup.exe`, поэтому SmartScreen покажет
+предупреждение, а запрос UAC — «неизвестный издатель». Проверка файла:
 
 ```powershell
-Get-FileHash .\zaprett-1.0.0-x64.msi -Algorithm SHA256    # сравнить со строкой в SHA256SUMS релиза
+Get-FileHash .\zaprett-1.0.0-x64-setup.exe -Algorithm SHA256    # сравнить со строкой в SHA256SUMS релиза
+Get-FileHash .\zaprett-1.0.0-x64.msi -Algorithm SHA256
 ```
 
 Подпись манифеста (при наличии .NET SDK и исходников) — команда `verify` из раздела 7; служба делает то же

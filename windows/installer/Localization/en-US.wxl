@@ -23,6 +23,10 @@
   <String Id="ZaprettWarningDlgText" Value="zaprett intercepts network packets with the WinDivert driver (from the zapret project) and alters them so that the provider's DPI does not recognise a blocked site. Nothing is sent to third-party servers and there is no telemetry.&#xD;&#xA;&#xD;&#xA;Some antivirus products flag WinDivert and winws.exe as a hacking tool or a potentially unwanted application because the driver can intercept traffic. The engine files come unchanged from the official zapret releases and their checksums are verified at build time. If your antivirus removes them, add the zaprett install folder (C:\Program Files\zaprett by default) to its exclusions.&#xD;&#xA;&#xD;&#xA;GoodbyeDPI, another copy of zapret and other programs that use WinDivert must not run at the same time as zaprett." />
   <String Id="ZaprettWarningDlgTray" Value="Show the zaprett icon in the notification area at sign-in" />
   <String Id="LaunchTrayCheckbox" Value="Start zaprett" />
+  <String Id="ZaprettWarningDlgDesktop" Value="Create a zaprett shortcut on the desktop" />
+  <String Id="VerifyReadyDlgInstallText" Value="Click Install to begin the installation.&#xD;&#xA;&#xD;&#xA;If Windows asks whether to allow this app to make changes, click Yes. The prompt may open behind other windows: then click the flashing shield icon on the taskbar. Without an answer it closes by itself after about 2 minutes and nothing is installed." />
+  <String Id="UserExitDescription1" Value="[ProductName] setup was interrupted. Your computer has not been changed.&#xD;&#xA;&#xD;&#xA;If Windows asked for permission to make changes and Yes was not clicked (an unanswered prompt closes by itself after 2 minutes), run the setup again and click Yes. The easiest way is zaprett-setup.exe: it asks for permission right when it starts." />
+  <String Id="UserExitDescription2" Value="" />
   <String Id="PtInstallFiles" Value="Copying new files" />
   <String Id="PtRemoveFiles" Value="Removing files" />
   <String Id="PtStopServices" Value="Stopping services" />

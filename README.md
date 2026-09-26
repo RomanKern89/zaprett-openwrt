@@ -18,9 +18,9 @@
 
 | | Роутер с OpenWrt | Компьютер с Windows |
 |---|---|---|
-| **Версия** | 1.1.0-r1 | 0.1.2 |
+| **Версия** | 1.1.0-r1 | 0.1.3 |
 | **Для чего** | все устройства в доме: телефоны, телевизоры, приставки, консоли | один ПК с Windows 10/11 |
-| **Установка** | бандл `.tar.gz` и `sh install.sh` | установщик MSI |
+| **Установка** | бандл `.tar.gz` и `sh install.sh` | `zaprett-0.1.3-x64-setup.exe` (или MSI для администраторов) |
 | **Интерфейс** | LuCI → Службы → zaprett | приложение и значок в трее |
 | **Руководство** | [docs/GUIDE.md](docs/GUIDE.md) · [установка](docs/INSTALL.md) | [windows/README.md](windows/README.md) |
 
@@ -177,10 +177,12 @@ zaprett diag                  # отчёт для поиска проблем; -
 
 ## zaprett для Windows
 
-Нет роутера с OpenWrt или обход нужен только на одном компьютере? **zaprett для Windows 0.1.2** делает то же на ПК с
+Нет роутера с OpenWrt или обход нужен только на одном компьютере? **zaprett для Windows 0.1.3** делает то же на ПК с
 Windows 10 (2004 и новее, включая LTSC 2021) и Windows 11 x64: мастер первой настройки, проверка сайтов, автоподбор
-стратегии без остановки обхода, монитор, диагностика, свои списки и подписки. Один установщик MSI — среда .NET,
-драйвер WinDivert и движки zapret и zapret2 уже внутри; интерфейс на русском, английском и китайском.
+стратегии без остановки обхода, монитор, диагностика, свои списки и подписки. Один установщик — среда .NET,
+драйвер WinDivert и движки zapret и zapret2 уже внутри; интерфейс на русском, английском и китайском. Скачивайте
+`zaprett-0.1.3-x64-setup.exe`: он сразу спрашивает права администратора и запускает установку; сам `.msi` — для
+администраторов и тихой установки.
 
 | | |
 |---|---|
@@ -192,7 +194,7 @@ Windows 10 (2004 и новее, включая LTSC 2021) и Windows 11 x64: м�
 
 ## Политика подписи кода (Code signing policy)
 
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Выпуски для Windows подписываются после одобрения заявки в SignPath Foundation; до этого MSI не подписан Authenticode. Роли, что подписывается и конфиденциальность: [docs/CODE_SIGNING.ru.md](docs/CODE_SIGNING.ru.md).
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/). Выпуски для Windows подписываются после одобрения заявки в SignPath Foundation; до этого MSI и `setup.exe` не подписаны Authenticode. Роли, что подписывается и конфиденциальность: [docs/CODE_SIGNING.ru.md](docs/CODE_SIGNING.ru.md).
 
 ---
 

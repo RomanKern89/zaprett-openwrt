@@ -8,6 +8,9 @@
       <Platform Project="x64" />
     </Project>
   </Folder>
+  <Folder Name="/setup/">
+    <Project Path="setup/Zaprett.Setup.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Zaprett.Core.Tests/Zaprett.Core.Tests.csproj" />
     <Project Path="tests/Zaprett.Service.Tests/Zaprett.Service.Tests.csproj" />

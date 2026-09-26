@@ -10,7 +10,9 @@
   4. data from the router package (packages/zaprett/files/usr/share/zaprett: bundle\, guard\, presets.json);
   5. WiX v7 (installer/Zaprett.Installer.wixproj), one MSI per culture (ru-RU, en-US, zh-CN), same ProductCode;
   6. one multi-language MSI (ru-RU base + embedded en-US / zh-CN transforms, msi-languages.ps1):
-     artifacts\dist\zaprett-<version>-x64.msi + SHA256SUMS.
+     artifacts\dist\zaprett-<version>-x64.msi;
+  7. zaprett-<version>-x64-setup.exe: the same MSI inside a bootstrapper that asks for administrator rights right
+     at start (build-setup.ps1, ZERR-058), and SHA256SUMS of both files.
   Every run publishes afresh from THIS working tree with -p:Version=<version>, and then checks that every zaprett
   exe/dll carries that version (FileVersion X.Y.Z.0, ProductVersion X.Y.Z[+commit]); a mismatch stops the build
   (check-versions.ps1). Each run works in its own artifacts\run-<time>-<pid> (removed on success), and only one
@@ -276,9 +278,14 @@ else {
 }
 & (Join-Path $here 'check-arpsize.ps1') -Msi (Join-Path $OutDir $name)
 if ($LASTEXITCODE -ne 0) { throw 'ARPSIZE does not match the files of the package (check-arpsize.ps1)' }
-$sums = "$(Get-Sha (Join-Path $OutDir $name))  $name`n"
+# 7. zaprett-<version>-x64-setup.exe: the same MSI inside a bootstrapper that asks for elevation first (build-setup.ps1)
+$setupExe = & (Join-Path $here 'build-setup.ps1') -Msi (Join-Path $OutDir $name) -OutDir $OutDir -Configuration $Configuration
+if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'build-setup.ps1 failed' }
+$setupName = [IO.Path]::GetFileName([string]$setupExe)
+$sums = "$(Get-Sha (Join-Path $OutDir $name))  $name`n$(Get-Sha (Join-Path $OutDir $setupName))  $setupName`n"
 [IO.File]::WriteAllText((Join-Path $OutDir 'SHA256SUMS'), $sums, (New-Object Text.UTF8Encoding($false)))
 Write-Step ("{0}  {1:N1} MB" -f $name, ((Get-Item -LiteralPath (Join-Path $OutDir $name)).Length / 1MB))
+Write-Step ("{0}  {1:N1} MB" -f $setupName, ((Get-Item -LiteralPath (Join-Path $OutDir $setupName)).Length / 1MB))
 Write-Step "done: $OutDir"
 if ($isStub) { Write-Step 'WARNING: this MSI contains a placeholder UI and must not be released' }
 # the work folder of this run is only kept when the build fails (for diagnosis)
