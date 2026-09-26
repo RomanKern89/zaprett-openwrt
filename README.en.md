@@ -20,9 +20,9 @@ This is a port of the Android manager [zaprett](https://github.com/CherretGit/za
 
 | | OpenWrt router | Windows PC |
 |---|---|---|
-| **Version** | 1.1.0-r1 | 0.1.3 |
+| **Version** | 1.1.0-r1 | 0.1.4 |
 | **For** | every device at home: phones, TVs, set-top boxes, consoles | one Windows 10/11 PC |
-| **Install** | a `.tar.gz` bundle and `sh install.sh` | `zaprett-0.1.3-x64-setup.exe` (or the MSI for administrators) |
+| **Install** | a `.tar.gz` bundle and `sh install.sh` | `zaprett-0.1.4-x64-setup.exe` (or the MSI for administrators) |
 | **Interface** | LuCI → Services → zaprett | an app with a tray icon |
 | **Guide** | [docs/GUIDE.en.md](docs/GUIDE.en.md) · [install](docs/INSTALL.en.md) | [windows/README.en.md](windows/README.en.md) |
 
@@ -38,6 +38,7 @@ This is a port of the Android manager [zaprett](https://github.com/CherretGit/za
 - [Install in 5 minutes](#install-in-5-minutes)
 - [Command line](#command-line)
 - [zaprett for Windows](#zaprett-for-windows)
+  - [Install on Windows](#install-on-windows)
 - [Code signing policy](#code-signing-policy)
 - [What is new in 1.1](#what-is-new-in-11)
 - [What has been verified, and what has not](#what-has-been-verified-and-what-has-not)
@@ -215,18 +216,42 @@ are validated by the engine first. The full list: [user guide, §11](docs/GUIDE.
 
 ## zaprett for Windows
 
-No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.3** does the same on a
-Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC: a first-run wizard, site checks, automatic
-strategy selection that does not stop the bypass, a monitor, diagnostics, own lists and subscriptions. One
-installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines) — download
-`zaprett-0.1.3-x64-setup.exe`: it asks for administrator rights right away and runs the MSI; the `.msi` itself is for
-administrators and silent installs; the interface is in
-English, Russian and Chinese.
+No OpenWrt router, or you need the bypass on just one computer? **zaprett for Windows 0.1.4** does the same on a
+Windows 10 (2004 or later, including LTSC 2021) or Windows 11 x64 PC:
+
+- a first-run wizard: choose services, find programs that get in the way, start the bypass and check the sites;
+- a site check on demand and a scheduled availability monitor that warns you and can repair the bypass by itself;
+- automatic strategy selection (quick and full) that does not stop the bypass, own strategies checked by the engine;
+- diagnostics "How the provider blocks", a search for conflicting programs, a diagnostic report;
+- own lists of sites and IP networks, subscriptions to external lists;
+- a notification area icon: turn the bypass on and off, check the sites, close zaprett completely;
+- the interface in English, Russian and Chinese;
+- administrators and the "zaprett Operators" group change settings, everyone else gets view-only mode;
+- silent install with options for administrators.
+
+One installer with everything inside (.NET runtime, WinDivert driver, zapret and zapret2 engines) — download
+`zaprett-0.1.4-x64-setup.exe`: it asks for administrator rights right away and runs the MSI; the `.msi` itself is for
+administrators and silent installs.
 
 | | |
 |---|---|
 | [![Home](windows/docs/screenshots/light-en-01-home.png)](windows/docs/screenshots/light-en-01-home.png) | [![Setup wizard](windows/docs/screenshots/light-en-29-wizard-2-services.png)](windows/docs/screenshots/light-en-29-wizard-2-services.png) |
 | **Home:** bypass state and site check | **Wizard:** choose services in a couple of minutes |
+
+### Install on Windows
+
+1. Open the release [**zaprett for Windows 0.1.4**](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.4)
+   and download `zaprett-0.1.4-x64-setup.exe` and `SHA256SUMS`.
+2. Verify it in PowerShell: `Get-FileHash .\zaprett-0.1.4-x64-setup.exe -Algorithm SHA256` must match the line in
+   `SHA256SUMS`.
+3. Run it. The installer is not code-signed yet: in "Windows protected your PC" click **More info → Run anyway**, and in
+   "Do you want to allow this app to make changes?" click **Yes**.
+4. Go through the installer pages (the sign-in icon and the desktop shortcut are on by default) and click Finish — the
+   wizard opens: pick the services and zaprett finds a working strategy by itself.
+
+To upgrade, run the same `setup.exe` over the installed version; settings are kept. Silent install and deployment: the
+`.msi` ([section 16](windows/README.en.md#16-for-administrators-silent-install)). Step by step with screenshots:
+[sections 4–6 of the guide](windows/README.en.md#4-download-and-verify).
 
 Installation, SHA256 verification and all features: **[zaprett for Windows guide](windows/README.en.md)**
 ([Русский](windows/README.md), [简体中文](windows/README.zh-CN.md)).

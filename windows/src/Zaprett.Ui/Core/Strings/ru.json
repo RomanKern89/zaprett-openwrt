@@ -480,6 +480,7 @@
   "Tray.CheckNow": "Проверить сайты сейчас",
   "Tray.Open": "Открыть zaprett",
   "Tray.Exit": "Закрыть интерфейс (служба продолжит работу)",
+  "Tray.Quit": "Закрыть zaprett (выключить обход)",
   "Tray.CheckDone": "Проверка завершена",
   "Tray.CheckResult": "Открылось {0} из {1} адресов.",
   "Type.nfqws": "стратегия zapret",

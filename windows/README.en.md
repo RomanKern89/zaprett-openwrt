@@ -18,8 +18,8 @@ diagnostics. The interface is available in Russian, English and Simplified Chine
 > IP address or services that have closed access for your country themselves.
 
 > [!NOTE]
-> **Download:** the [**zaprett for Windows 0.1.3**](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.3)
-> release (tag `win-v0.1.3`), file `zaprett-0.1.3-x64-setup.exe` (recommended) or `zaprett-0.1.3-x64.msi` (for
+> **Download:** the [**zaprett for Windows 0.1.4**](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.4)
+> release (tag `win-v0.1.4`), file `zaprett-0.1.4-x64-setup.exe` (recommended) or `zaprett-0.1.4-x64.msi` (for
 > administrators). The installer is not yet signed with a code-signing
 > certificate, so Windows shows a SmartScreen warning: how to verify the file and what to click is in sections
 > [4](#4-download-and-verify) and [5](#5-install). More about signing: [Code signing policy](#code-signing-policy).
@@ -140,7 +140,7 @@ catalog ([section 19](#19-privacy)).
 | System | Windows 10 version 2004 (build 19041) or later, including **Windows 10 LTSC 2021**; Windows 11 |
 | Architecture | x64 only (64-bit Windows on Intel/AMD processors); ARM64 is not supported |
 | Rights | administrator rights **only to install and uninstall**; using the program does not need them ([section 14](#14-who-can-control-the-bypass)) |
-| Installer | `zaprett-0.1.3-x64-setup.exe` or `zaprett-0.1.3-x64.msi`, about 60 MB each |
+| Installer | `zaprett-0.1.4-x64-setup.exe` or `zaprett-0.1.4-x64.msi`, about 60 MB each |
 
 **Nothing else needs to be installed** — everything is inside the installer (`setup.exe` contains the same MSI and uses
 .NET Framework 4.8, which is already part of Windows 10 2004 and later and of Windows 11):
@@ -153,25 +153,25 @@ catalog ([section 19](#19-privacy)).
 
 ## 4. Download and verify
 
-1. Open the [**zaprett for Windows 0.1.3**](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.3)
-   release (tag `win-v0.1.3`). Releases for routers in the same section are named differently (tags `v1.1.0-r1` and
+1. Open the [**zaprett for Windows 0.1.4**](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.4)
+   release (tag `win-v0.1.4`). Releases for routers in the same section are named differently (tags `v1.1.0-r1` and
    so on).
 2. Download the installer and the `SHA256SUMS` file. The release has the installer in two forms:
 
    | File | For whom |
    |---|---|
-   | **`zaprett-0.1.3-x64-setup.exe`** | **recommended for a normal install.** It contains the same MSI. Windows asks for administrator permission right after the double click, before any installer page |
-   | `zaprett-0.1.3-x64.msi` | for administrators: silent install, deployment with Group Policy ([section 16](#16-for-administrators-silent-install)) |
+   | **`zaprett-0.1.4-x64-setup.exe`** | **recommended for a normal install.** It contains the same MSI. Windows asks for administrator permission right after the double click, before any installer page |
+   | `zaprett-0.1.4-x64.msi` | for administrators: silent install, deployment with Group Policy ([section 16](#16-for-administrators-silent-install)) |
 
 3. Check that the file is neither damaged nor replaced. Open PowerShell in your downloads folder and run:
 
    ```powershell
-   Get-FileHash .\zaprett-0.1.3-x64-setup.exe -Algorithm SHA256
+   Get-FileHash .\zaprett-0.1.4-x64-setup.exe -Algorithm SHA256
    ```
 
    The `Hash` value must match the line for this file in `SHA256SUMS` (letter case does not matter); `SHA256SUMS`
-   lists both files. For the MSI use `Get-FileHash .\zaprett-0.1.3-x64.msi -Algorithm SHA256`. In the classic command
-   prompt the same check is `certutil -hashfile zaprett-0.1.3-x64-setup.exe SHA256`.
+   lists both files. For the MSI use `Get-FileHash .\zaprett-0.1.4-x64.msi -Algorithm SHA256`. In the classic command
+   prompt the same check is `certutil -hashfile zaprett-0.1.4-x64-setup.exe SHA256`.
 
 If the hashes do not match, do not run the file — download it again.
 
@@ -183,10 +183,10 @@ Authenticode-signed. Team roles, what is signed and the privacy policy: [docs/CO
 
 ## 5. Install
 
-1. **Double-click** `zaprett-0.1.3-x64-setup.exe`.
+1. **Double-click** `zaprett-0.1.4-x64-setup.exe`.
 2. **If a blue "Windows protected your PC" window appears** (SmartScreen), click **"More info"**, then **"Run anyway"**.
    Windows shows this for installers that are not signed with a code-signing certificate and have few downloads yet.
-   The zaprett 0.1.3 installer is **not yet signed**; you have verified the file with the SHA256 hash in the previous
+   The zaprett 0.1.4 installer is **not yet signed**; you have verified the file with the SHA256 hash in the previous
    step.
 3. **Windows asks "Do you want to allow this app to make changes to your device?"** — click **"Yes"**. The publisher
    is shown as unknown — the same consequence of the missing signature. If you click "No" or close the prompt,
@@ -198,8 +198,8 @@ Authenticode-signed. Team roles, what is signed and the privacy policy: [docs/CO
    unchanged):
 
    ```powershell
-   .\zaprett-0.1.3-x64-setup.exe TRANSFORMS=:1033 LANG=en       # English
-   .\zaprett-0.1.3-x64-setup.exe TRANSFORMS=:2052 LANG=zh-CN    # Chinese
+   .\zaprett-0.1.4-x64-setup.exe TRANSFORMS=:1033 LANG=en       # English
+   .\zaprett-0.1.4-x64-setup.exe TRANSFORMS=:2052 LANG=zh-CN    # Chinese
    ```
 5. Go through the installer pages:
    - **welcome** and **license** (MIT);
@@ -221,7 +221,7 @@ Authenticode-signed. Team roles, what is signed and the privacy policy: [docs/CO
 > **"Install"** at the end of the installer pages. Click **"Yes"** in that prompt. If you do not see it, it opened
 > behind other windows: click the **flashing shield icon on the taskbar**. An unanswered prompt closes by itself after
 > about 2 minutes and the installer reports "zaprett Setup Wizard was interrupted" — then run the setup again or use
-> `zaprett-0.1.3-x64-setup.exe`.
+> `zaprett-0.1.4-x64-setup.exe`.
 
 **What the installer does:** it adds the Windows service **zaprett** (it starts with Windows and does the bypass; the
 zaprett window is only a remote control for it), creates the local group **"zaprett Operators"** and adds the user who
@@ -557,9 +557,19 @@ The zaprett icon next to the clock changes with the state of the bypass: on, off
 
 - **Click** — open the zaprett window.
 - **Right-click** — menu: **"Turn the bypass on"** / **"Turn the bypass off"**, **"Check the sites now"** (the result
-  comes as a notification), **"Open zaprett"**, **"Exit the interface (the service keeps working)"**.
+  comes as a notification), **"Open zaprett"**, **"Exit the interface (the service keeps working)"**,
+  **"Close zaprett (turn the bypass off)"**.
 
-Closing the window or the interface **does not turn the bypass off**: the Windows service does the bypass. Turn the
+**"Close zaprett (turn the bypass off)"** closes zaprett completely: it turns the bypass off, closes the window and
+removes the icon. In view-only mode the item is unavailable while the bypass is on, since that user cannot turn it off.
+The Windows service stays: at the next Windows start the bypass comes on again if "Turn the bypass on when Windows
+starts" is enabled.
+
+<img src="docs/screenshots/light-ru-37-tray-menu.png" width="380" alt="The zaprett icon menu on right-click, shown in the Russian interface: Turn the bypass off, Check the sites now, Open zaprett, Exit the interface (the service keeps working), Close zaprett (turn the bypass off)">
+
+<sub>The menu in the Russian interface (there is no English screenshot of it); in English the items are the ones listed above.</sub>
+
+Closing the window or **"Exit the interface"** **does not turn the bypass off**: the Windows service does the bypass. Turn the
 bypass off with the button on the home page or in the icon menu. Whether the icon appears at Windows sign-in is
 decided by the check box during installation; later you change it in "Settings" → "Show the zaprett icon at Windows
 sign-in".
@@ -587,7 +597,16 @@ The same applies to the user who has just installed zaprett.
 
 ## 15. Updating and uninstalling
 
-**What is new in 0.1.3:**
+**What is new in 0.1.4:**
+
+- the notification area icon menu (right-click) has a new item, **"Close zaprett (turn the bypass off)"**. It closes
+  zaprett completely: it turns the bypass off, closes the window and removes the icon. The older item **"Exit the
+  interface (the service keeps working)"** stays: it closes the window and the icon, and the bypass keeps running. In
+  view-only mode the new item is unavailable while the bypass is on. The Windows service stays installed and running;
+  at the next Windows start the bypass comes on again if "Turn the bypass on when Windows starts" is enabled
+  ([section 13](#13-notification-area-icon)).
+
+**What was new in 0.1.3:**
 
 - a new file **`zaprett-0.1.3-x64-setup.exe`** — the recommended way to install. It contains the same MSI; Windows asks
   for administrator permission right after the double click, and if the prompt is declined or closed, it explains what
@@ -608,11 +627,11 @@ The same applies to the user who has just installed zaprett.
 - updating from 0.1.1 needs no restart: the service, the bypass and the notification area icon work right after
   setup.
 
-**Updating.** Version 0.1.3 has no automatic program updates — they will come in a later version. To update, download
+**Updating.** Version 0.1.4 has no automatic program updates — they will come in a later version. To update, download
 the new installer (`setup.exe` or MSI) from the [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases) page (in the program,
 **"Settings" → "Open the releases page"** opens it) and run it over the installed version: the old version is
-replaced, **settings, your own lists and strategies, and the icon-at-sign-in choice are kept**. This is also how
-0.1.3 is installed over 0.1.2, 0.1.1 and 0.1.0. An older version cannot
+replaced, **settings, your own lists and strategies, the icon-at-sign-in choice and the desktop shortcut choice are kept**. This is also how
+0.1.4 is installed over 0.1.3, 0.1.2, 0.1.1 and 0.1.0. An older version cannot
 be installed over a newer one.
 
 **Uninstalling.** Settings → Apps → **zaprett** → Uninstall (or Control Panel → Programs and Features). The uninstaller
@@ -625,7 +644,7 @@ Settings and lists in `C:\ProgramData\zaprett` are **kept** on a normal uninstal
 remove them too (from an administrator command prompt):
 
 ```powershell
-msiexec /x zaprett-0.1.3-x64.msi REMOVEDATA=1
+msiexec /x zaprett-0.1.4-x64.msi REMOVEDATA=1
 ```
 
 ## 16. For administrators: silent install
@@ -634,25 +653,25 @@ All commands are run from an administrator command prompt.
 
 ```powershell
 # silent install: turn on YouTube and Discord and start the bypass right away, installer log to a file
-msiexec /i zaprett-0.1.3-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
+msiexec /i zaprett-0.1.4-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
 
 # the same with setup.exe: arguments go to msiexec unchanged, the exit code is msiexec's
-.\zaprett-0.1.3-x64-setup.exe /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
+.\zaprett-0.1.4-x64-setup.exe /qn SERVICES=youtube,discord AUTOSTART=1 LANG=en /l*v install.log
 
 # no notification area icon at user sign-in
-msiexec /i zaprett-0.1.3-x64.msi /qn TRAYAUTOSTART=0
+msiexec /i zaprett-0.1.4-x64.msi /qn TRAYAUTOSTART=0
 
 # no desktop shortcut
-msiexec /i zaprett-0.1.3-x64.msi /qn DESKTOPSHORTCUT=0
+msiexec /i zaprett-0.1.4-x64.msi /qn DESKTOPSHORTCUT=0
 
 # custom install folder
-msiexec /i zaprett-0.1.3-x64.msi /qn INSTALLFOLDER="D:\Apps\zaprett"
+msiexec /i zaprett-0.1.4-x64.msi /qn INSTALLFOLDER="D:\Apps\zaprett"
 
 # English installer and English program language (Chinese — TRANSFORMS=:2052 LANG=zh-CN)
-msiexec /i zaprett-0.1.3-x64.msi TRANSFORMS=:1033 LANG=en
+msiexec /i zaprett-0.1.4-x64.msi TRANSFORMS=:1033 LANG=en
 
 # silent uninstall together with settings and lists
-msiexec /x zaprett-0.1.3-x64.msi /qn REMOVEDATA=1
+msiexec /x zaprett-0.1.4-x64.msi /qn REMOVEDATA=1
 ```
 
 For Group Policy deployment use the `.msi`; `setup.exe` is handy in scripts and for running by hand.
@@ -732,7 +751,7 @@ Background jobs and other
 
 Flags: `--json` — JSON output, `--quiet` — print nothing on success, `--lang ru|en|zh-CN` — output language (the
 language from the settings by default). Help — `help`, `--help`, `-h` or `/?`. Exit codes: `0` — success, `1` —
-command failed, `2` — invalid arguments, `3` — service not available. In version 0.1.3 `update check` and
+command failed, `2` — invalid arguments, `3` — service not available. In version 0.1.4 `update check` and
 `update install` answer that program updates are not available ([section 15](#15-updating-and-uninstalling)).
 
 **Data on standard input.** `settings set` and `sources save` take a JSON object; `strategy save <id>` and
@@ -763,7 +782,7 @@ to your device?") and did not get a "Yes". When you install from the `.msi`, thi
 prompt closes by itself after about 2 minutes, and the setup ends without changing the computer.
 
 What to do: run the setup again and click **"Yes"** in the Windows prompt (if you do not see it, click the flashing
-shield icon on the taskbar). The easiest way is to install with **`zaprett-0.1.3-x64-setup.exe`**: it asks for
+shield icon on the taskbar). The easiest way is to install with **`zaprett-0.1.4-x64-setup.exe`**: it asks for
 permission right after it starts, before any installer page ([section 5](#5-install)).
 
 </details>
@@ -876,7 +895,7 @@ was in before the shutdown. The "Turn the bypass on when Windows starts" setting
     `'{"repo":{"autoupdate":false}}' | zaprett.exe settings set`).
 - If you turn on **encrypted DNS**, the computer's DNS requests go to Cloudflare's DNS over HTTPS instead of the
   provider's DNS.
-- Version 0.1.3 does not check for program updates.
+- Version 0.1.4 does not check for program updates.
 - In the diagnostic report, parameters are stripped from subscription addresses, so tokens do not end up in the
   report. The report is not sent anywhere by itself.
 
@@ -892,9 +911,14 @@ administrator rights), an upgrade from 0.1.2 with the app and icon running, the 
 upgrade with `DESKTOPSHORTCUT=0`, the choice kept by the next upgrade, removed with the app), silent install through
 `setup.exe` passing the options and the exit code; `.msi` — the hints on the "Ready to install" and "interrupted" pages.
 
-**Limitations of version 0.1.3:**
+Version 0.1.4 on Windows 11: an upgrade from 0.1.3 through `setup.exe` (silent, `/qn`) ends with exit code 0; the icon
+menu has the "Close zaprett (turn the bypass off)" item, and after choosing it the icon and the window are gone, the
+bypass is off (the `winws` engine is not running) and the service keeps running. The item being unavailable in
+view-only mode is covered by automated tests only.
 
-- the installer (both `zaprett-0.1.3-x64-setup.exe` and `zaprett-0.1.3-x64.msi`) is not yet signed with a
+**Limitations of version 0.1.4:**
+
+- the installer (both `zaprett-0.1.4-x64-setup.exe` and `zaprett-0.1.4-x64.msi`) is not yet signed with a
   code-signing certificate — SmartScreen shows a warning, and the Windows permission prompt shows "Unknown publisher"
   ([section 5](#5-install));
 - no automatic program updates yet — install a new version with a new installer ([section 15](#15-updating-and-uninstalling));

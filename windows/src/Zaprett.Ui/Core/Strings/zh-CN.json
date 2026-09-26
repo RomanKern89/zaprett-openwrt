@@ -480,6 +480,7 @@
   "Tray.CheckNow": "立即检查网站",
   "Tray.Open": "打开 zaprett",
   "Tray.Exit": "退出界面（服务继续运行）",
+  "Tray.Quit": "关闭 zaprett（关闭绕过）",
   "Tray.CheckDone": "检查完成",
   "Tray.CheckResult": "{1} 个地址中有 {0} 个可以打开。",
   "Type.nfqws": "zapret 策略",

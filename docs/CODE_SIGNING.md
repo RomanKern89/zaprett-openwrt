@@ -11,7 +11,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 > **Status.** The project has applied, or is going to apply, for free code signing from SignPath Foundation. Until the
 > first signed release is published, the MSI files on the releases page are **not** Authenticode-signed; Windows
 > SmartScreen may warn about them. Each release says in its notes whether it is signed. Releases up to and including
-> `win-v0.1.3` are not signed.
+> `win-v0.1.4` are not signed.
 
 ## What is signed
 
@@ -74,7 +74,7 @@ download or connection; none of them carries personal data:
 | When | Where to | Default |
 |------|----------|---------|
 | Daily update of strategies and lists installed from the repository | the repository index set in the settings (default: `raw.githubusercontent.com`, repository `CherretGit/zaprett-repo`) and the files it lists | **on** by default; the person installing the program sees this switch on the last step of the setup wizard and can turn it off there or later in **Settings**, group **Updates** (setting `repo.autoupdate`) |
-| Checking for a new version of the program | the releases of this project on GitHub | on, can be switched off in the settings; the in-app check is not active yet in version 0.1.3 |
+| Checking for a new version of the program | the releases of this project on GitHub | on, can be switched off in the settings; the in-app check is not active yet in version 0.1.4 |
 | Updating list subscriptions | the addresses of the subscriptions you switch on | off; every subscription is off until you enable it |
 | Site checks, diagnostics, automatic strategy selection | the sites of the services you select, and the DNS-over-HTTPS resolvers `dns.google` and `cloudflare-dns.com` to compare DNS answers | only when you start them |
 | Connection monitoring while the bypass is running | the sites of the services you selected and a few domains of the lists you use | on while the bypass is on; can be switched off |

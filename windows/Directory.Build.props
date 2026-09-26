@@ -8,7 +8,7 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <Company>zaprett-openwrt</Company>
     <Product>zaprett for Windows</Product>
-    <Version>0.1.3</Version>
+    <Version>0.1.4</Version>
     <Copyright>MIT License</Copyright>
     <!-- ProductVersion stays exactly the Version above: code signing (SignPath, docs/CODE_SIGNING.md) requires the same product
          version on every signed file. The commit goes to the Comments field instead (target below). -->

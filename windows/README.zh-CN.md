@@ -8,7 +8,7 @@
 
 ![zaprett Windows 版主页](docs/screenshots/light-zh-CN-01-home.png)
 
-> **版本 0.1.3。** 推荐下载 `zaprett-0.1.3-x64-setup.exe`；`zaprett-0.1.3-x64.msi` 供管理员使用。安装程序没有代码签名证书，
+> **版本 0.1.4。** 推荐下载 `zaprett-0.1.4-x64-setup.exe`；`zaprett-0.1.4-x64.msi` 供管理员使用。安装程序没有代码签名证书，
 > 运行时 Windows 会显示 SmartScreen 警告——下文说明如何校验文件以及该点击哪里。
 >
 > 本文截图均在界面的演示模式下拍摄（名称旁有“演示”标记），其中的数字仅为示例。
@@ -62,7 +62,7 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 | 系统 | Windows 10 2004 版（内部版本 19041）或更高版本，包括 **Windows 10 LTSC 2021**；Windows 11 |
 | 架构 | 仅 x64（Intel/AMD 上的 64 位 Windows）；不支持 ARM64 |
 | 权限 | **仅安装和卸载**需要管理员权限，日常使用不需要（见第 9 节） |
-| 安装程序 | `zaprett-0.1.3-x64-setup.exe` 或 `zaprett-0.1.3-x64.msi`，各约 60 MB |
+| 安装程序 | `zaprett-0.1.4-x64-setup.exe` 或 `zaprett-0.1.4-x64.msi`，各约 60 MB |
 
 **无需另外安装任何组件**——全部包含在安装程序中（`setup.exe` 内含同一个 MSI，使用 Windows 10 2004 及更高版本和 Windows 11 自带的 .NET Framework 4.8）：.NET 10 运行时和 Windows App SDK（WinUI 3 界面）随程序一起提供；
 不需要 Visual C++ 运行库；`winws` 引擎（zapret v72.13）和 WinDivert 驱动取自 zapret 官方发布版，未做修改，构建时会校验
@@ -70,29 +70,29 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 
 ## 3. 下载与校验
 
-1. 打开 [zaprett for Windows 0.1.3](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.3)
-   （标签 `win-v0.1.3`）。路由器版本使用其他标签（如 `v1.1.0-r1`）。
+1. 打开 [zaprett for Windows 0.1.4](https://github.com/RomanKern89/zaprett-openwrt/releases/tag/win-v0.1.4)
+   （标签 `win-v0.1.4`）。路由器版本使用其他标签（如 `v1.1.0-r1`）。
 2. 下载安装程序和 `SHA256SUMS`。安装程序有两种形式：
-   - **`zaprett-0.1.3-x64-setup.exe`**——**普通安装推荐使用**。内含同一个 MSI；双击后 Windows 会立即请求管理员许可，
+   - **`zaprett-0.1.4-x64-setup.exe`**——**普通安装推荐使用**。内含同一个 MSI；双击后 Windows 会立即请求管理员许可，
      在任何安装页面出现之前；
-   - `zaprett-0.1.3-x64.msi`——供管理员使用：静默安装、通过组策略部署（见第 9 节）。
+   - `zaprett-0.1.4-x64.msi`——供管理员使用：静默安装、通过组策略部署（见第 9 节）。
 3. 在下载文件夹中打开 PowerShell，运行：
 
    ```powershell
-   Get-FileHash .\zaprett-0.1.3-x64-setup.exe -Algorithm SHA256
+   Get-FileHash .\zaprett-0.1.4-x64-setup.exe -Algorithm SHA256
    ```
 
    `Hash` 的值必须与 `SHA256SUMS` 中该文件那一行一致（不区分大小写）；`SHA256SUMS` 列出了两个文件。MSI 请用
-   `Get-FileHash .\zaprett-0.1.3-x64.msi -Algorithm SHA256`。也可以在命令提示符中运行：
-   `certutil -hashfile zaprett-0.1.3-x64-setup.exe SHA256`。
+   `Get-FileHash .\zaprett-0.1.4-x64.msi -Algorithm SHA256`。也可以在命令提示符中运行：
+   `certutil -hashfile zaprett-0.1.4-x64-setup.exe SHA256`。
 
 校验和不一致时，请不要运行该文件，重新下载。
 
 ## 4. 安装
 
-1. **双击** `zaprett-0.1.3-x64-setup.exe`。
+1. **双击** `zaprett-0.1.4-x64-setup.exe`。
 2. **如果出现蓝色窗口“Windows 已保护你的电脑”**（SmartScreen），点击 **“更多信息”**，再点击 **“仍要运行”**。
-   对于没有代码签名证书、下载量还不多的安装程序，Windows 都会这样提示。zaprett 0.1.3 没有这样的签名：证书需要付费，
+   对于没有代码签名证书、下载量还不多的安装程序，Windows 都会这样提示。zaprett 0.1.4 没有这样的签名：证书需要付费，
    而本项目是非商业项目。上一步您已经用 SHA256 校验和确认了文件的真实性。
 3. **Windows 会询问“你要允许此应用对你的设备进行更改吗？”**——点击 **“是”**。发布者显示为未知——这同样是因为没有签名。
    如果点击“否”或关闭该窗口，`setup.exe` 会说明发生了什么，并提供 **“重试”** 或 **“取消”**。
@@ -101,8 +101,8 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
    如需明确指定语言，请在命令行中运行（`setup.exe` 会把参数原样传给 MSI 安装程序）：
 
    ```powershell
-   .\zaprett-0.1.3-x64-setup.exe TRANSFORMS=:2052 LANG=zh-CN    # 中文
-   .\zaprett-0.1.3-x64-setup.exe TRANSFORMS=:1033 LANG=en       # 英文
+   .\zaprett-0.1.4-x64-setup.exe TRANSFORMS=:2052 LANG=zh-CN    # 中文
+   .\zaprett-0.1.4-x64-setup.exe TRANSFORMS=:1033 LANG=en       # 英文
    ```
 5. 依次完成安装程序的各页：欢迎页、许可协议（MIT）、**“安装前须知”**（说明 zaprett 使用 WinDivert 驱动拦截网络数据包，
    部分杀毒软件会把 WinDivert 和 `winws.exe` 标记为“黑客工具”或“潜在有害应用”；同一页有复选框
@@ -112,7 +112,7 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 
 > **如果使用 `.msi` 安装：** Windows 不会立即请求管理员许可，而是在安装页面最后点击 **“安装”** 之后才询问。请在该窗口中点击
 > **“是”**。如果看不到该窗口，它可能出现在其他窗口后面：请点击**任务栏上闪烁的盾牌图标**。无人回答时，窗口会在大约 2 分钟后
-> 自动关闭，安装程序会提示安装已中断——此时请重新运行安装，或改用 `zaprett-0.1.3-x64-setup.exe`。
+> 自动关闭，安装程序会提示安装已中断——此时请重新运行安装，或改用 `zaprett-0.1.4-x64-setup.exe`。
 
 安装程序会添加 Windows 服务 **zaprett**（随 Windows 启动并执行绕过，窗口只是它的控制面板），创建本地组
 **“zaprett Operators”** 并把安装用户加入其中，还会在“开始”菜单添加快捷方式，并在未取消勾选时在桌面添加快捷方式。
@@ -169,7 +169,7 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 - **诊断：** **“运营商如何封锁”** → **“开始检测”**；**“冲突程序”**；**“配置检查”**；**“日志”**；**“诊断报告”**
   （可复制或保存，订阅地址中的参数会被移除）。
 - **设置：** 绕过（开机启动——只决定重启后的状态，立即开启或关闭用主页上的按钮；引擎、看门狗、处理 IPv6）；DNS、QUIC 和游戏（加密 DNS **仅限 Windows 11**、阻止 QUIC、
-  游戏过滤）；网络（生效范围、企业网络中不工作、定时检查网站、自动修复）；更新（“每天从仓库更新策略和列表”开关；0.1.3 中显示自动更新将在后续版本提供的说明，以及打开发布页面的按钮，见第 8 节）；
+  游戏过滤）；网络（生效范围、企业网络中不工作、定时检查网站、自动修复）；更新（“每天从仓库更新策略和列表”开关；0.1.4 中显示自动更新将在后续版本提供的说明，以及打开发布页面的按钮，见第 8 节）；
   界面（语言、主题、通知、关闭窗口后保留在通知区域、设置向导）。
 
 > **Windows 快速启动：** “Windows 启动时开启绕过”在 Windows 启动时生效。如果开启了快速启动（Windows 10 和 11 的默认设置），“关机”并不是完整启动：再次开机后，绕过保持关机前的状态，该设置会在下一次**重启**时生效。服务重启（更新、修复）也不会改变绕过的状态。
@@ -187,12 +187,22 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 ## 7. 通知区域图标
 
 时钟旁的 zaprett 图标随绕过状态变化（开启、关闭、需要注意、错误）。**单击**打开窗口；**右键**菜单包括：
-**“开启绕过”** / **“关闭绕过”**、**“立即检查网站”**、**“打开 zaprett”**、**“退出界面（服务继续运行）”**。
-关闭窗口或界面**不会**关闭绕过：绕过由 Windows 服务执行。
+**“开启绕过”** / **“关闭绕过”**、**“立即检查网站”**、**“打开 zaprett”**、**“退出界面（服务继续运行）”**、
+**“关闭 zaprett（关闭绕过）”**。**“关闭 zaprett（关闭绕过）”** 会完全关闭程序：关闭绕过、关闭窗口并移除图标（只读模式下绕过开启时不可用）；
+Windows 服务保留，若启用了“Windows 启动时开启绕过”，下次启动时绕过会再次开启。
+关闭窗口或 **“退出界面”** **不会**关闭绕过：绕过由 Windows 服务执行。
+
+![zaprett 图标的右键菜单（俄语界面；暂无中文截图，中文菜单项见上文）](docs/screenshots/light-ru-37-tray-menu.png)
 
 ## 8. 更新与卸载
 
-**0.1.3 的新功能：**
+**0.1.4 中新增：**
+
+- 通知区域图标的右键菜单新增 **“关闭 zaprett（关闭绕过）”**：完全关闭程序——关闭绕过、关闭窗口并移除图标。原有的
+  **“退出界面（服务继续运行）”** 保留：它关闭窗口和图标，绕过继续运行。只读模式下绕过开启时新菜单项不可用。Windows 服务仍然安装并运行；
+  若启用了“Windows 启动时开启绕过”，下次 Windows 启动时绕过会再次开启（见第 7 节）。
+
+**0.1.3 中新增：**
 
 - 新文件 **`zaprett-0.1.3-x64-setup.exe`**——推荐的安装方式。内含同一个 MSI；双击后 Windows 立即请求管理员许可，若许可窗口被拒绝或关闭，
   它会说明发生了什么并提供重试。`.msi` 仍在发布页中，供管理员使用；
@@ -207,26 +217,26 @@ zaprett 没有自己的服务器：程序只在检查网站、下载列表和策
 - 通知区域图标在启动后更可靠地立即出现；
 - 从 0.1.1 更新无需重启：安装完成后服务、绕过和通知区域图标立即工作。
 
-**更新：** 0.1.3 没有自动更新，该功能将在后续版本提供。请从 [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases)
-下载新的安装程序（`setup.exe` 或 MSI）并运行（“设置”的更新部分有按钮可打开该页面）：旧版本会被替换，设置、自定义列表和策略会保留。
-0.1.3 可直接安装在 0.1.2、0.1.1 和 0.1.0 之上。不能在新版本上安装旧版本。
+**更新：** 0.1.4 没有自动更新，该功能将在后续版本提供。请从 [Releases](https://github.com/RomanKern89/zaprett-openwrt/releases)
+下载新的安装程序（`setup.exe` 或 MSI）并运行（“设置”的更新部分有按钮可打开该页面）：旧版本会被替换，设置、自定义列表和策略、登录时显示图标的选择以及桌面快捷方式的选择会保留。
+0.1.4 可直接安装在 0.1.3、0.1.2、0.1.1 和 0.1.0 之上。不能在新版本上安装旧版本。
 
 **卸载：** “设置” → “应用” → **zaprett** → “卸载”。卸载程序会停止服务和引擎，卸载 WinDivert 驱动（仅当它由 zaprett
 自己的副本加载时；其他程序的驱动不受影响，无需重启），删除 zaprett 的防火墙规则、“zaprett Operators”组以及“开始”菜单和桌面快捷方式，并在 zaprett
 修改过 DNS 时恢复网卡的 DNS 服务器。普通卸载会**保留** `C:\ProgramData\zaprett` 中的设置和列表；如需一并删除：
 
 ```powershell
-msiexec /x zaprett-0.1.3-x64.msi REMOVEDATA=1
+msiexec /x zaprett-0.1.4-x64.msi REMOVEDATA=1
 ```
 
 ## 9. 面向管理员：静默安装
 
 ```powershell
-msiexec /i zaprett-0.1.3-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=zh-CN /l*v install.log
-.\zaprett-0.1.3-x64-setup.exe /qn SERVICES=youtube,discord AUTOSTART=1 LANG=zh-CN /l*v install.log   # 同上，参数原样传给 msiexec，返回码即 msiexec 的返回码
-msiexec /i zaprett-0.1.3-x64.msi /qn DESKTOPSHORTCUT=0                 # 不创建桌面快捷方式
-msiexec /i zaprett-0.1.3-x64.msi TRANSFORMS=:2052 LANG=zh-CN          # 中文安装程序和中文界面
-msiexec /x zaprett-0.1.3-x64.msi /qn REMOVEDATA=1                      # 静默卸载并删除设置和列表
+msiexec /i zaprett-0.1.4-x64.msi /qn SERVICES=youtube,discord AUTOSTART=1 LANG=zh-CN /l*v install.log
+.\zaprett-0.1.4-x64-setup.exe /qn SERVICES=youtube,discord AUTOSTART=1 LANG=zh-CN /l*v install.log   # 同上，参数原样传给 msiexec，返回码即 msiexec 的返回码
+msiexec /i zaprett-0.1.4-x64.msi /qn DESKTOPSHORTCUT=0                 # 不创建桌面快捷方式
+msiexec /i zaprett-0.1.4-x64.msi TRANSFORMS=:2052 LANG=zh-CN          # 中文安装程序和中文界面
+msiexec /x zaprett-0.1.4-x64.msi /qn REMOVEDATA=1                      # 静默卸载并删除设置和列表
 ```
 
 属性：`SERVICES`（逗号分隔：`youtube`、`discord`、`telegram`、`rutracker`、`cloudflare`、`roblox`、`signal`、`rkn_full`；
@@ -259,7 +269,7 @@ $z = "C:\Program Files\zaprett\zaprett.exe"
 - **安装程序提示安装已中断，“应用”/“程序和功能”中没有 zaprett：** 通常是 Windows 请求管理员许可（“你要允许此应用对你的设备进行更改吗？”）
   时没有得到“是”。使用 `.msi` 安装时，该窗口在点击 **“安装”** 后出现，有时位于其他窗口后面，任务栏上的盾牌图标会闪烁；无人回答时
   约 2 分钟后自动关闭，计算机不会被更改。请重新运行安装并点击 **“是”**（看不到窗口时点击闪烁的盾牌图标）。最简单的方法是使用
-  **`zaprett-0.1.3-x64-setup.exe`**：它在启动时就会请求许可。
+  **`zaprett-0.1.4-x64-setup.exe`**：它在启动时就会请求许可。
 - **绕过已开启但网站打不开：** 在主页点击 **“立即检查”**；在 **“策略”** 页运行自动选择（先 **“快速”**，必要时 **“完整”**）；
   仍无效时在 **“诊断”** 中 **“开始检测”**——若是 DNS 劫持，请开启加密 DNS（Windows 11）；若按 IP 地址封锁，zaprett 无能为力，
   需要 VPN。网站不在任何列表中时，把它加入 **“列表” → “自定义列表” → “我的网站”**。
@@ -286,7 +296,10 @@ zaprett **不会发送**任何关于您或您电脑的信息：没有遥测，�
 全新安装（程序以非管理员权限启动）；在程序和图标运行时从 0.1.2 升级；桌面快捷方式（创建、升级时用 `DESKTOPSHORTCUT=0` 删除、
 下次升级保留选择、随程序一起删除）；通过 `setup.exe` 静默安装并传递参数和退出代码；`.msi` 的“准备安装”和“已中断”页面提示。
 
-**0.1.3 的限制：** `setup.exe` 和 MSI 都没有代码签名（会出现 SmartScreen 警告，许可窗口显示“未知发布者”）；暂无自动更新；加密 DNS 仅支持 Windows 11；
+0.1.4 在 Windows 11 上验证：通过 `setup.exe` 静默（`/qn`）从 0.1.3 升级，退出代码为 0；图标菜单中有“关闭 zaprett（关闭绕过）”，
+选择后图标和窗口关闭，绕过已关闭（`winws` 引擎未运行），服务继续运行。只读模式下该菜单项不可用仅由自动化测试覆盖。
+
+**0.1.4 的限制：** `setup.exe` 和 MSI 都没有代码签名（会出现 SmartScreen 警告，许可窗口显示“未知发布者”）；暂无自动更新；加密 DNS 仅支持 Windows 11；
 仅支持 x64；没有按程序过滤；不处理共享给其他设备的流量；与各种 VPN 和杀毒软件的兼容性尚未全面测试。
 
 zaprett 代码采用 MIT 许可证（[LICENSE](../LICENSE)）。引擎：[bol-van/zapret](https://github.com/bol-van/zapret)、

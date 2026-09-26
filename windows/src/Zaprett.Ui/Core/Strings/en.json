@@ -480,6 +480,7 @@
   "Tray.CheckNow": "Check the sites now",
   "Tray.Open": "Open zaprett",
   "Tray.Exit": "Exit the interface (the service keeps working)",
+  "Tray.Quit": "Close zaprett (turn the bypass off)",
   "Tray.CheckDone": "Check finished",
   "Tray.CheckResult": "Opened {0} of {1} addresses.",
   "Type.nfqws": "zapret strategy",

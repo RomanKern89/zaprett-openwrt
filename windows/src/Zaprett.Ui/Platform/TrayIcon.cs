@@ -10,7 +10,7 @@ namespace Zaprett.Ui.Platform;
 /// <summary>
 /// Icon in the notification area (Shell_NotifyIcon on a hidden top-level window of the UI thread (message-only windows miss the "TaskbarCreated" broadcast)): colour by state
 /// (on / off / warn / error), left click opens the window, right click shows the menu
-/// "Turn on/off · Check now · Open · Exit interface". Re-added when Explorer restarts ("TaskbarCreated").
+/// "Turn on/off · Check now · Open · Exit interface · Close zaprett (bypass off, then exit)". Re-added when Explorer restarts ("TaskbarCreated").
 /// </summary>
 public sealed partial class TrayIcon : IDisposable, INotifyArea
 {
@@ -23,7 +23,7 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
     private const uint NifMessage = 0x1, NifIcon = 0x2, NifTip = 0x4, NifState = 0x8, NifInfo = 0x10, NifShowTip = 0x80;
     private const uint NisHidden = 0x1;
     private const uint NiifInfo = 0x1;
-    private const int CmdToggle = 1, CmdCheck = 2, CmdOpen = 3, CmdExit = 4;
+    private const int CmdToggle = 1, CmdCheck = 2, CmdOpen = 3, CmdExit = 4, CmdQuit = 5;
     private const uint WmTimer = 0x0113;
     private const uint RetryMs = 3000;
     private static readonly IntPtr RetryTimer = 1;
@@ -219,6 +219,8 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
         AppendMenu(menu, separator, 0, null);
         AppendMenu(menu, 0, CmdOpen, L.T("Tray.Open"));
         AppendMenu(menu, 0, CmdExit, L.T("Tray.Exit"));
+        var quit = TrayQuit.Decide(available, running, _state.CanModify);
+        AppendMenu(menu, quit == TrayQuitAction.NotAllowed ? grayed : 0u, CmdQuit, L.T("Tray.Quit"));
         GetCursorPos(out var pt);
         SetForegroundWindow(_hwnd);
         var cmd = TrackPopupMenuEx(menu, 0x0100 /* TPM_RETURNCMD */ | 0x0020 /* TPM_BOTTOMALIGN */, pt.X, pt.Y, _hwnd, IntPtr.Zero);
@@ -247,6 +249,15 @@ public sealed partial class TrayIcon : IDisposable, INotifyArea
                     _window.ShowFromTray();
                     break;
                 case CmdExit:
+                    _window.ExitFromTray();
+                    break;
+                case CmdQuit:
+                    // the state is read again: the menu may have stayed open while the bypass changed
+                    var action = TrayQuit.Decide(_state.IsAvailable, _state.Status.Bool("running"), _state.CanModify);
+                    if (action == TrayQuitAction.NotAllowed)
+                        break;
+                    if (action == TrayQuitAction.StopThenExit)
+                        await _state.CallAsync("stop"); // a failure ends in the catch below: the balloon says why, nothing closes
                     _window.ExitFromTray();
                     break;
             }
